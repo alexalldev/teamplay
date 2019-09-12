@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>TeamPlay Stream</title>
+    <% include blocks/tittle %>
+  </head>
+  <body style="background: url(/public/images/bg.jpg) no-repeat; -moz-background-size: 100%; -webkit-background-size: 100%; -o-background-size: 100%; background-size: 100%;">
+  	<section>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <h2><%= game.GameName %></h2>
+                </div>
+            </div>
+        </div>
+        <div class="container QuestionContainer">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <h1 class="QuestionText" style="font-size: 2.5rem;"></h1>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <img src="" class="QuestionImage" style="height: 50vh;" alt="">
+                </div>
+            </div>
+        </div>
+        <div class="container TeamsContainer">
+
+        </div>
+  	</section>
+  </body>
+  <script src="/socket.io/socket.io.js"></script>
+<script src="/public/js/Stream/index.js"></script>
+</html>

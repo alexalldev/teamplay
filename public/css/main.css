@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300');
+
+section
+{
+	font-family: 'Open Sans Condensed', sans-serif;
+}
+
+.Info
+{
+	font-family: 'Open Sans Condensed', sans-serif;
+}
+
+* ::selection
+{
+	background-color: #99CCFF;
+}
+
+a:hover
+{
+	color: red;
+}

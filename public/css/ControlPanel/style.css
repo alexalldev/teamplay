@@ -1,0 +1,127 @@
+.Team
+{
+    background-color: #d2efff;
+    border: #6699FF solid 2px;
+}
+
+.Game
+{
+    background-color: #5bc0de;
+    color: #fff;
+
+    margin: auto;
+    margin-bottom: 1rem;
+    padding: 2px;
+}
+
+a
+{ 
+    text-decoration: none!important;
+} 
+
+.Team, .Game
+{
+    border-radius: 5px;
+    transition: 0.3s all;
+}
+
+.New
+{
+    opacity: 0;
+}
+
+.btnRemoveGame
+{
+    cursor: pointer;
+}
+
+.Game:hover, .VerifyTeam:hover, .Team:hover
+{
+    transform: scale(1.02);
+}
+
+.GamesGrid
+{
+    width: 100%;
+}
+
+.RemoveGame
+{
+    transition: 0.3s all;
+}
+
+.RemoveGame:hover
+{
+    color: #d9534f;
+}
+
+/* cube */
+
+.cubeContainer {
+    width: 10em;
+    height: 10em;
+    transform-style: preserve-3d;
+    transform: rotateX(345deg) rotateY(340deg) rotateZ(0deg);
+    cursor: pointer;
+    transition: 0.3s all;
+    }
+  
+  .cubeContainer:hover
+  {
+      animation: rotate 5s infinite linear;
+  }
+  
+  .side {
+    position: absolute;
+    width: 10em;
+    height: 10em;
+    border: 2px solid white;
+    opacity: .9;
+    text-align: center;
+    background: #2e608c;
+    border-radius: 10px;
+    }
+
+    .cubeRow
+    {
+        margin-right: 3rem;
+        margin-bottom: 3rem;
+        display: inline-block;
+    }
+  
+  .side-1 /*back*/ {
+    transform: translateZ(-5em);
+    }
+.side-2/*left*/ {
+    transform: translateX(-5em) rotateY(90deg);
+    }
+.side-3/*right*/ {
+    transform: translateX(5em) rotateY(90deg);
+    }
+.side-4 /*top*/ {
+    transform: translateY(-5em) rotateX(90deg);
+    }
+  .side-6 /*front*/ {
+    transform: translateZ(5em);
+    }
+  
+  .side-5 /*bottom*/ {
+    transform: translateY(5em) rotateX(90deg);
+    }
+  
+    @keyframes rotate {
+    100% {
+      transform: rotateX(-15deg) rotateY(-20deg) rotateZ(360deg);
+    }
+  }
+  .cube
+  {
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+  
+  .block
+  {
+      display: block;
+  }

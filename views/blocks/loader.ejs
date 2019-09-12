@@ -1,0 +1,100 @@
+<style>
+.loader
+{
+    background: rgba(255, 255, 255, 0.5);
+
+    position: fixed;
+    width: 100%;
+    height: 100%;
+
+    z-index: 1000;
+}
+
+.loader[hide="0"]
+{
+    display: table;
+}
+
+.loader[hide="1"]
+{
+    display: none;
+}
+
+.loader_container
+{
+    width: 100px;
+    height: 100px;
+    display: -webkit-inline-box;
+    display: -moz-inline-box;
+    border-radius: 100px;
+    box-shadow: 0 0 0px #6699FF, inset 0 0 0px #6699FF;
+    text-align: -webkit-center;
+    text-align: -moz-center;
+
+    animation: animate_loader_shadow 2.5s infinite;
+}
+
+.loader_image
+{
+    margin-top: 40%;
+    transform: scale(1.2);
+    animation: animate_loader_image 2.5s infinite;
+}
+
+@keyframes animate_loader_shadow
+{
+    0%
+    {
+        box-shadow: 0 0 5px #6699FF, inset 0 0 5px #6699FF;
+    }
+    50%
+    {
+        box-shadow: 0 0 55px 4px #6699FF, inset 0 0 35px -4px #6699FF;
+    }
+    100%
+    {
+        box-shadow: 0 0 5px #6699FF, inset 0 0 5px #6699FF;
+    }
+}
+
+@keyframes animate_loader_image
+{
+    0%
+    {
+        transform: scale(1.2) rotate(0deg);
+    }
+    50%
+    {
+        transform: scale(1) rotate(0deg);
+    }
+    100%
+    {
+        transform: scale(1.2) rotate(360deg);
+    }
+}
+</style>
+<table class="loader" hide="1">
+    <tr align="center">
+        <td valign="center">
+            <div class="loader_container">
+            <img class="loader_image" src="/public/images/logo.svg" alt="" width="50" height="50">
+            </div>
+        </td>
+    </tr>
+</table>
+<script>
+    ShowLoader();
+    $(document).ready(function() {
+        HideLoader();
+    });
+    function ShowLoader() {
+        $('.loader').css('opacity', 1);
+        $('.loader').attr('hide', '0');
+    }
+
+    function HideLoader() {
+        $('.loader').animate({opacity: 0}, 500, function() {
+            $('.loader').attr('hide', '1')
+        })
+    }
+</script>

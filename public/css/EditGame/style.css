@@ -1,0 +1,37 @@
+.SettingsGroup
+{
+    border: #ccc 2px dotted;
+    border-radius: 10px;
+}
+
+.alert
+{
+    cursor: pointer;
+    transition: 0.3s all;
+}
+
+.pointer
+{
+    cursor: pointer;
+}
+
+.alert:hover
+{
+    transform: scale(1.02);
+}
+
+.New
+{
+    opacity: 0;
+}
+
+.QuestionImage
+{
+    width: 100px;
+    height: 100px;;
+}
+
+.Time_info_label
+{
+    color: red;
+}

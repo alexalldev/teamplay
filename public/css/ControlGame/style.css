@@ -1,0 +1,128 @@
+.card
+{
+    transition: 0.3s all;
+}
+
+.Team
+{
+    border: 1px solid rgba(0,0,0,.125);
+}
+
+.NewTeam
+{
+    animation: NewTeam 1s;
+}
+
+.RemoveTeam
+{
+    animation: RemoveTeam 1s;
+}
+
+.VerifyTeam
+{
+    cursor: pointer;
+}
+
+.VerifyTeam[verified="true"]
+{
+    color: #5cb85c!important;
+
+    transition: 0.3s all;
+}
+
+.VerifyTeam[verified="false"]
+{
+    color: #d9534f!important;
+
+    transition: 0.3s all;
+}
+
+.btnKickTeam
+{
+    color: #d9534f!important;
+    cursor: pointer;
+}
+
+.btnPauseTeam
+{
+    cursor: pointer;
+}
+
+.StartTime, .StopTime, .btnStreamParametrs
+{
+    position: fixed;
+}
+
+.StartTime
+{
+    right: 0;
+}
+
+.btnStreamParametrs
+{
+    right: 0;
+    z-index: 1000;
+    display: none;
+}
+
+.btnStopGame
+{
+    display: none;
+}
+
+.SingleAnswersContainer
+{
+    display: none;
+}
+
+.btnConfrimSingleAnswers
+{
+    display: none;
+}
+
+@keyframes NewTeam
+{
+    from
+    {
+        box-shadow: 0 0 10px #5cb85c;
+        transform: scale(0);
+    }
+
+    50%
+    {
+        transform: scale(1.05);
+    }
+
+    to
+    {
+        box-shadow: 0 0 0px #5cb85c;
+        transform: scale(1);
+        box-shadow: none;
+    }
+}
+
+@keyframes RemoveTeam
+{
+    from
+    {
+        box-shadow: 0 0 2px #d9534f;
+    }
+
+    25%
+    {
+        transform: scale(1.05);
+    }
+
+    50%
+    {
+        box-shadow: 0 0 10px #d9534f;
+        transform: scale(1);
+    }
+
+    to
+    {
+        box-shadow: 0 0 0px #d9534f;
+        transform: scale(0);
+        box-shadow: none;
+    }
+}

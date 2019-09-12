@@ -1,0 +1,168 @@
+/*CAVA WEB COLORS CBL  - CYAN BLUE LIME 5x*/
+
+/*CYAN*/
+  /*background*/
+    .b-c-1
+    {
+      background-color: #006666!important;
+    }
+    .b-c-2
+    {
+      background-color: #336666!important;
+    }
+    .b-c-3
+    {
+      background-color: #009999!important;
+    }
+    .b-c-4
+    {
+      background-color: #33CCCC!important;
+    }
+    .b-c-5
+    {
+      background-color: #66CCCC!important;
+    }
+  /*/background*/
+  /*text*/
+    .t-c-1
+    {
+      color: #006666!important;
+    }
+    .t-c-2
+    {
+      color: #336666!important;
+    }
+    .t-c-3
+    {
+      color: #009999!important;
+    }
+    .t-c-4
+    {
+      color: #33CCCC!important;
+    }
+    .t-c-5
+    {
+      color: #66CCCC!important;
+    }
+  /*/text*/
+/*/CYAN*/
+
+/*BLUE*/
+  /*background*/
+    .b-b-1
+    {
+      background-color: #003366!important;
+    }
+    .b-b-2
+    {
+      background-color: #333366!important;
+    }
+    .b-b-3
+    {
+      background-color: #003399!important;
+    }
+    .b-b-4
+    {
+      background-color: #3366CC!important;
+    }
+    .b-b-5
+    {
+      background-color: #6699CC!important;
+    }
+  /*/background*/
+  /*text*/
+    .t-b-1
+    {
+      color: #003366!important;
+    }
+    .t-b-2
+    {
+      color: #333366!important;
+    }
+    .t-b-3
+    {
+      color: #003399!important;
+    }
+    .t-b-4
+    {
+      color: #3366CC!important;
+    }
+    .t-b-5
+    {
+      color: #6699CC!important;
+    }
+  /*/text*/
+/*/BLUE*/
+
+/*LIME*/
+  /*background*/
+    .b-l-1
+    {
+      background-color: #339900!important;
+    }
+    .b-l-2
+    {
+      background-color: #339933!important;
+    }
+    .b-l-3
+    {
+      background-color: #33CC00!important;
+    }
+    .b-l-4
+    {
+      background-color: #66FF33!important;
+    }
+    .b-l-5
+    {
+      background-color: #99FF66!important;
+    }
+  /*/background*/
+  /*text*/
+    .t-l-1
+    {
+      color: #339900!important;
+    }
+    .t-l-2
+    {
+      color: #339933!important;
+    }
+    .t-l-3
+    {
+      color: #33CC00!important;
+    }
+    .t-l-4
+    {
+      color: #66FF33!important;
+    }
+    .t-l-5
+    {
+      color: #99FF66!important;
+    }
+  /*/text*/
+/*/LIME*/
+
+
+/*BLACK AND WHITE*/
+  /*background*/
+    .b-b
+    {
+      background-color: #333!important;
+    }
+
+    .b-w
+    {
+      background-color: #eee!important;
+    }
+  /*/background*/
+  /*text*/
+    .t-b
+    {
+      color: #333!important;
+    }
+
+    .t-w
+    {
+      color: #eee!important;
+    }
+  /*/text*/
+/*/BLACK AND WHITE*/

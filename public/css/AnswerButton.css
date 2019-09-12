@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300');
+	.AnswerButton
+	{
+		border: solid 2px #00bc1c!important;
+		border-radius: 0.2rem!important;
+		animation: AnswerButtonAnimate 10s infinite!important;
+		transition: 0.3s all!important;
+		font-family: 'Open Sans Condensed', sans-serif!important;
+
+		font-size: 2rem;
+	}
+
+	.AnswerButton:focus
+	{
+		border-width: 3px!important;
+	}
+
+	@keyframes AnswerButtonAnimate
+	{
+		from
+		{
+			box-shadow: 0 0 0.5rem #007016;
+			transform: rotateZ(0deg)
+		}
+		25%
+		{
+			transform: rotateZ(2deg)
+		}
+		50%
+		{
+			box-shadow: 0 0 1.75rem #007016;
+			transform: rotateZ(0deg)
+		}
+		75%
+		{
+			transform: rotateZ(-2deg)
+		}
+		to
+		{
+			box-shadow: 0 0 0.5rem #007016;
+			transform: rotateZ(0deg)
+		}
+	}
