@@ -41,8 +41,7 @@ router.post('/getNotification', async function (req, res) {
     let info = await transporter.sendMail({
         from: 'info@teamplay.space', // sender address
         to: 'ilubvys@gmail.com', // list of receivers
-        subject: 'Hello', // Subject line
-        html: '' // plain text 
+        subject: 'Hello' // Subject line
     })
     console.log('info')
     console.log(info)

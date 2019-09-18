@@ -4,7 +4,7 @@ notification = {
     receiverId: 1,
     header: 'Lorem',
     mainText: 'Ipsum',
-    isNotification: true,
+    isInfoNotification: true,
     isRead: 0
 }
 
@@ -14,7 +14,7 @@ module.exports = function (callback) {
         receiverId: notification.receiverId,
         header: notification.header,
         mainText: notification.mainText,
-        isNotification: notification.isNotification,
+        isInfoNotification: notification.isInfoNotification,
         isRead: notification.isRead
     })
         .then(result => {

@@ -19,7 +19,7 @@ const Game = db.define('notification', {
     mainText: {
         type: Sequelize.STRING
     },
-    isNotification: {
+    isInfoNotification: {
         type: Sequelize.BOOLEAN
     },
     isRead: {
