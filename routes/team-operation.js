@@ -3,15 +3,20 @@ let {
     passport,
     Team,
     Player,
+    urlencodedParser
 } = require('../config/routers-config');
 
 
-router.post("/createTeam/:teamName", function(req, res){
-    Team.findAll({ where: { TeamName: req.params.teamName }}).then(team => {
-        if(team != null){
+router.get('/team-operation', function(req, res) {
+    res.render('team-operation');
+});
+
+router.post("/createTeam", urlencodedParser, function(req, res){
+    Team.findOne({ where: { TeamName: req.body.teamName }}).then(team => {
+        if (team) {
             res.send(false);
         } else {
-            Team.create({ TeamName: req.params.teamName, GroupName: "test", Email: "test"})
+            Team.create({ TeamName: req.body.teamName, GroupName: "test", Email: "test"})
             .catch(err => {
                 console.log("CreateTeamError");
                 res.send(false);
@@ -19,7 +24,7 @@ router.post("/createTeam/:teamName", function(req, res){
             res.send(true);
         }
     }).catch(err => {
-        console.log("FindTeamError");
+        console.log(err);
         res.send(false);
     });
 });
@@ -56,7 +61,9 @@ router.post("/invite/:PlayerID", function (req, res) {
                 res.send(true);
             }
         });
-    });
+    });fs.readFile(function(data) {
+        var email = data.split(CONFRIM_NEW_CREATOR_BUTTON);
+    })
 });
 
 router.post("/changeTeamName/:newName/:oldName", function(req, res) {
