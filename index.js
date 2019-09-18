@@ -77,6 +77,8 @@ app.use('/EditGame', require('./routes/editGame'));
 
 app.use('/Stream', require('./routes/stream'));
 
+app.use('/team-operation', require('./routes/team-operation'));
+
 app.get('/QuestionImage', function(req, res) {
   if (req.query.QuestionId)
     Question.findOne({raw: true, where: {QuestionId: req.query.QuestionId}})
