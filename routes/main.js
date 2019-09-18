@@ -43,6 +43,10 @@ router.get('/', RedirectRules, function(req, res)
     });
 });
 
+router.get('/home', function(req, res) {
+    res.render('home');
+});
+
 router.get('/Admin', RedirectRules, function(req, res) {
     Admin.findAll({
         raw: true
