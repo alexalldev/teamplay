@@ -96,3 +96,5 @@ router.post("/changeCapitan/:oldCapitanId/:newCapitanId/:teamId", function(req, 
         res.send(false);
     });
 });
+
+module.exports = router;
