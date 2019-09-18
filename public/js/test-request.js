@@ -18,14 +18,8 @@ $(function () {
             }
         });
         $('#notificationForm').on("submit", function (event) {
-            var res = ($(document.activeElement).val()).toLowerCase()
-            //TODO: без if
-            if (res == 'accept' || res == 'ok') {
-                console.log(true)
-            } else if (res == 'reject') {
-                console.log(false)
-            }
-            window.location.replace("");
+            var res = $(document.activeElement).val()
+            console.log();
             event.preventDefault()
         })
     });
