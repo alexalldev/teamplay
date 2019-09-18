@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <form id="notificationForm"></form>
+    <form action="" id="notification-form">
+        <input type="text" id="senderId">
+        <input type="text" id="receiverId">
+        <input type="text" id="header">
+        <input type="text" id="mainText">
+        <input type="text" id="isInfoNotification">
+        <input type="text" id="isRead">
+        <input type="submit" value="post" id="submit-btn">
+    </form>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script>
+
+    $('#notification-form').on('submit', function (event) {
+        $.ajax({
+            type: "POST",
+            url: 'notification/getNotification',
+            data: {
+                senderId: $('#senderId').val(),
+                receiverId: $('#receiverId').val(),
+                header: $('#header').val(),
+                mainText: $('#mainText').val(),
+                isInfoNotification: $('#isInfoNotification').val(),
+                isRead: $('#isRead').val()
+            },
+            dataType: 'json',
+            success: function (data) {
+                console.log('data:')
+                console.log(data)
+                var submitBtns = ''
+                if (data.isInfoNotification) {
+                    submitBtns = "<input type='submit' value='OK'>"
+                } else {
+                    submitBtns = "<input type='submit' value='Accept'><input type='submit' value='Reject'>"
+                }
+                var page = "<span class='h1 notification-header'>" + data.header + "</span><span class='h3 notification-mainText'>" + data.mainText + "</span><span class='h6 notification-from-to'>" + "from:" + data.senderId + ":" + "to:" + data.receiverId + "</span>" + submitBtns
+                //TODO: аякс запрос при нажатии на кнопку
+                console.log('page')
+                console.log(page)
+                $('#notificationForm').append(page)
+            },
+            error: function (xhr, str) {
+                alert('Возникла ошибка: ' + xhr.responseCode);
+            }
+        });
+        event.preventDefault()
+    });
+    $('#notificationForm').on("submit", function (event) {
+        var res = ($(document.activeElement).val()).toLowerCase()
+        if (res == 'reject') {
+            console.log(false)
+        }
+        else if (res == 'ok' || res == 'accept') {
+            console.log(true)
+        }
+        event.preventDefault()
+    })
+</script>
+
+</html>

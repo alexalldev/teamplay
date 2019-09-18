@@ -22,34 +22,6 @@ const Op = require('sequelize').Op;
 
 const GamePlay = require('../models/GamePlay');
 
-const notification = require('../public/js/notifications')
-
-const nodeMailer = require('nodemailer')
-
-let transporter = nodeMailer.createTransport({
-    host: 'mail.alexall.dev',
-    port: 465,
-    secure: true,
-    auth: {
-        user: 'info@teamplay.space',
-        pass: 'teamplayspace'
-    }
-})
-
-router.post('/getNotification', async function (req, res) {
-
-    let info = await transporter.sendMail({
-        from: 'info@teamplay.space', // sender address
-        to: 'ilubvys@gmail.com', // list of receivers
-        subject: 'Hello' // Subject line
-    })
-    console.log('info')
-    console.log(info)
-    notification(function (data) {
-        res.json(data)
-    })
-})
-
 router.get('/', RedirectRules, function (req, res) {
     Team.hasMany(Player, { foreignKey: "Team_Id" });
     Player.belongsTo(Team, { foreignKey: "Team_Id" });

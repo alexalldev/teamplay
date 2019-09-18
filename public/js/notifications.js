@@ -1,14 +1,6 @@
-const notifcationModel = require('../../models/Notification')
-notification = {
-    senderId: 1,
-    receiverId: 1,
-    header: 'Lorem',
-    mainText: 'Ipsum',
-    isInfoNotification: true,
-    isRead: 0
-}
+const notifcationModel = require('./../../models/Notification')
 
-module.exports = function (callback) {
+module.exports = function (notification, callback) {
     notifcationModel.create({
         senderId: notification.senderId,
         receiverId: notification.receiverId,
