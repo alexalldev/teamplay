@@ -61,9 +61,7 @@ router.post("/invite", urlencodedParser, function (req, res) {
                 res.send(true);
             }
         });
-    });fs.readFile(function(data) {
-        var email = data.split(CONFRIM_NEW_CREATOR_BUTTON);
-    })
+    });
 });
 
 router.post("/changeTeamName", urlencodedParser, function(req, res) {
