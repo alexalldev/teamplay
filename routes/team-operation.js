@@ -13,7 +13,7 @@ router.get('/team-operation', function(req, res) {
 
 router.post("/createTeam", urlencodedParser, function(req, res){
     Team.findOne({ where: { TeamName: req.body.teamName }}).then(team => {
-        if (team) {
+        if (!team) {
             res.send(false);
         } else {
             Team.create({ TeamName: req.body.teamName, GroupName: "test", Email: "test"})
@@ -29,12 +29,12 @@ router.post("/createTeam", urlencodedParser, function(req, res){
     });
 });
 
-router.post("/deleteTeam/:teamName", function(req, res){
-    Team.findAll({ where: { TeamName: req.params.teamName }}).then(team => {
-        if(team = null){
+router.post("/deleteTeam", urlencodedParser, function(req, res){
+    Team.findOne({ where: { TeamName: req.body.teamName }}).then(team => {
+        if(!team){
             res.send(false);
         } else {
-            Team.destroy({ where: { TeamName: req.params.teamName }})
+            Team.destroy({ where: { TeamName: req.body.teamName }})
             .catch(err => {
                 console.log("DeleteTeamError");
                 res.send(false);
@@ -47,10 +47,10 @@ router.post("/deleteTeam/:teamName", function(req, res){
     });
 });
 
-router.post("/invite/:PlayerID", function (req, res) {
-    Player.findOne({ where: { PlayerId: req.params.PlayerID }}).then(player => {
+router.post("/invite", urlencodedParser, function (req, res) {
+    Player.findOne({ where: { PlayerId: req.body.PlayerId }}).then(player => {
         Team.findOne({ raw:true, where: { TeamId: player.Team_Id }}).then( team => {
-            if( team ){
+            if( !team ){
                 res.send(false);
             } else {
                 Player.update( { Team_Id: team.TeamId }, { where: { PlayerId: player.PlayerId }})
@@ -66,12 +66,12 @@ router.post("/invite/:PlayerID", function (req, res) {
     })
 });
 
-router.post("/changeTeamName/:newName/:oldName", function(req, res) {
-    Team.findOne({ where: { TeamName: req.params.oldName } }).then(team => {
+router.post("/changeTeamName", urlencodedParser, function(req, res) {
+    Team.findOne({ where: { TeamName: req.body.oldName } }).then(team => {
         if(!team) {
             res.send(false);
         } else {
-            Team.update({TeamName: req.params.newName}, { where: { TeamName: req.params.oldName } })
+            Team.update({TeamName: req.body.newName}, { where: { TeamName: req.body.oldName } })
             .then(team => {
                 res.send(true);
             })
@@ -86,10 +86,10 @@ router.post("/changeTeamName/:newName/:oldName", function(req, res) {
     });
 });
 
-router.post("/changeCapitan/:oldCapitanId/:newCapitanId/:teamId", function(req, res) {
-    Player.update({Capitan: 0}, { where: { PlayerId: req.params.oldCapitanId, Team_Id: req.params.teamId } })
+router.post("/changeCapitan", urlencodedParser, function(req, res) {
+    Player.update({Capitan: 0}, { where: { PlayerId: req.body.oldCapitanId, Team_Id: req.body.teamId } })
     .then(player => {
-        Player.update({Capitan: 1}, { where: { PlayerId: req.params.newCapitanId, Team_Id: req.params.teamId } })
+        Player.update({Capitan: 1}, { where: { PlayerId: req.body.newCapitanId, Team_Id: req.body.teamId } })
         .then(player => {
             res.send(true);
         })
