@@ -35,7 +35,7 @@ function ClientsStore() {
   };
 
   this.pushUser = async function (User) {
-    for (const U in User) {
+    for (const U in Users) {
       if (Users[U].Id == User.Id)
         Users.splice(U, 1);
     }
@@ -119,6 +119,8 @@ io.emitUser = function (userId, eventName, data) {
     } catch (err) {
       console.log(err);
     }
+  else
+    return 'there is no such user'
 }
 
 io.emitAdmin = function (adminId, eventName, data) {
@@ -153,10 +155,11 @@ io.on('connection', function (socket) {
       });
 
   if (session.passport)
-    io.ClientsStore.pushUser({
-      Id: session.passport.user,
-      SocketId: socket.id
-    });
+      if (session.passport.user)
+        io.ClientsStore.pushUser({
+          Id: session.passport.user,
+          SocketId: socket.id
+        });
   //Подключение к комнате в зависимости от типа пользователя
   if (session.Team) {
     if (session.Game)

@@ -10,7 +10,7 @@ router.get('/notification', function (req, res) {
 })
 
 router.post('/sendNotification', urlencodedParser, async function (req, res) {
-    notification(11, 'Head', 'Text', true, function(err) {
+    notification(req.body.receiverId, req.body.header, req.body.mainText, true, function(err) {
         if (err)
             res.end(JSON.stringify(err));
         else
