@@ -142,36 +142,6 @@ router.post('/SignIn', RedirectRules, function (req, res, next) {
     })(req, res, next);
 });
 
-router.get('/Admin', RedirectRules, function (req, res) {
-    Admin.findAll({
-        raw: true
-    })
-        .then(admins => {
-            res.render('admin.ejs', { admins });
-        })
-        .catch(err => {
-            res.end(err);
-        })
-});
-
-router.get('/Room', function (req, res) {
-    if (req.session.Game)
-        res.redirect('/Room/' + req.session.Game.Tag);
-    else if (req.session.Team)
-        Team.findOne({ raw: true, where: { TeamId: req.session.Team.TeamId } })
-            .then(team => {
-                if (team != null)
-                    Player.findAll({ raw: true, where: { Team_Id: req.session.Team.TeamId } })
-                        .then(players => res.render('room', { team: team, players: players }))
-                        .catch(err => console.log(err));
-                else
-                    res.render('info', { message: "Команда была удалена." });
-            })
-            .catch(err => console.log(err))
-    else
-        res.redirect("/");
-});
-
 router.get('/Room/:GameTag', function (req, res) {
     if (req.session.Team) {
         Game.findOne({ where: { GameTag: req.params.GameTag } })
@@ -246,23 +216,6 @@ router.get('/Room/:GameTag', function (req, res) {
         res.redirect('/');
 });
 
-router.post('/Start', urlencodedParser, function (req, res) {
-    var teamId = req.body.TeamId;
-    if (!req.body) res.sendStatus(400);
-    Team.findByPk(teamId, { raw: true })
-        .then(team => {
-            if (team) {
-                req.session.Team = team;
-                res.end('1');
-            }
-            else
-                res.end("team_not_exists")
-        })
-        .catch(err => {
-            res.end(err)
-        })
-});
-
 router.get('/logout', function (req, res) {
     req.query.reason ? LogOut(req, res, req.query.reason) : LogOut(req, res)
 });
@@ -294,21 +247,6 @@ function LogOut(req, res, reason = '') {
         res.redirect('/');
     }
 }
-
-router.post('/AdminEnter', RedirectRules, function (req, res, next) {
-    if (!req.session.Team) passport.authenticate('local', { failureFlash: true }, function (err, admin, info) {
-        if (err) return next(err);
-        if (info) return res.send(info.message);
-        if (!admin) return res.send("USER IS NULL");
-
-        req.logIn(admin, function (err) {
-            if (err) {
-                return next(admin);
-            }
-            return res.send(true);
-        });
-    })(req, res, next);
-});
 
 router.get('/ControlPanel', app.protect, function (req, res) {
     if (req.session.Game)

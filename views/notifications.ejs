@@ -11,12 +11,10 @@
 <body>
     <form id="notificationForm"></form>
     <form action="" id="notification-form">
-        <input type="text" id="senderId">
-        <input type="text" id="receiverId">
-        <input type="text" id="header">
-        <input type="text" id="mainText">
-        <input type="text" id="isInfoNotification">
-        <input type="text" id="isRead">
+        <input type="text" id="receiverId" placeholder="receiverId">
+        <input type="text" id="header" placeholder="header">
+        <input type="text" id="mainText" placeholder="mainText">
+        <input type="checkbox" id="isInfoNotification">
         <input type="submit" value="post" id="submit-btn">
     </form>
 </body>
@@ -29,14 +27,12 @@
     $('#notification-form').on('submit', function (event) {
         $.ajax({
             type: "POST",
-            url: 'notification/getNotification',
+            url: 'notification/sendNotification',
             data: {
-                senderId: $('#senderId').val(),
                 receiverId: $('#receiverId').val(),
                 header: $('#header').val(),
                 mainText: $('#mainText').val(),
                 isInfoNotification: $('#isInfoNotification').val(),
-                isRead: $('#isRead').val()
             },
             dataType: 'json',
             success: function (data) {
