@@ -149,3 +149,8 @@ app.get('/StreamImage', function (req, res) {
     fs.createReadStream(__dirname + "/IMAGES/NULL_IMAGE").pipe(res);
   }
 });
+
+app.get('/UserImage', function (req, res) {
+  res.writeHead(200, { "Content-Type": "application/msword" });
+  fs.createReadStream(__dirname + "/IMAGES/NULL_IMAGE").pipe(res);
+});

@@ -1,33 +1,31 @@
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 var Hash = require('password-hash');
-const Admin = require('../models/Admin');
+const User = require('../models/User');
 
-passport.serializeUser(function(user, done) {
-  done(null, user.AdminId);
+passport.serializeUser(function (user, done) {
+  done(null, user.UserId);
 });
 
-passport.deserializeUser(function(id, done) {
-  Admin.findByPk(id)
-  .then(admin =>
-    {
-      done(null, admin);
+passport.deserializeUser(function (id, done) {
+  User.findByPk(id)
+    .then(user => {
+      done(null, user);
     })
-  .catch(err => {return done(err)})
+    .catch(err => { return done(err) })
 });
 
-passport.use(new LocalStrategy(function(username, password, done) {
-  Admin.findByPk(username, {raw: true})
-  .then(admin =>
-    {
-      if (!admin)
-        return done(null, false, {message: 'null_admin'});
-      if (!Hash.verify(password, admin.AdminPassword))
-        return done(null, false, {message: 'pass'});
-      return done(null, admin);
+passport.use(new LocalStrategy(function (username, password, done) {
+  User.findOne({ where: { UserEmail: username }, raw: true })
+    .then(user => {
+      if (!user)
+        return done(null, false, { message: 'null_user' });
+      if (!Hash.verify(password, user.UserPassword))
+        return done(null, false, { message: 'pass' });
+      return done(null, user);
     })
-  .catch(err => {
-    return done(err);
-  })
-  })
+    .catch(err => {
+      return done(err);
+    })
+})
 );

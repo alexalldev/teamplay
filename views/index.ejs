@@ -1,93 +1,110 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>TeamPlay HOME</title>
-    <% include blocks/tittle %>
-    <link rel="stylesheet" href="/public/css/ControlPanel/style.css">
-  </head>
-  <% include blocks/loader %>
-  <body>
-  	<section>
-  		<table style="width: 100vw; height: 100vh;">
-  			<tr>
-  				<td>
-  					<div class="container">
-  						<div class="row">
-  							<div class="col-md-12 text-center">
-                  <div class="row mb-2">
-                    <div class="col-md-12">
-                      <img src="public/images/logo.svg" width="100" height="100">
-                    </div>
-                  </div>
-                  <div class="row mb-2">
-                    <div class="col-md-12">
-                      <h1>TeamPlay</h1>
-                    </div>
-                  </div>
-                  <div class="row mb-2">
-                      <div class="col-md-12">
-                        <h2>Выберите команду</h2>
-                      </div>
-                    </div>
-  								<form class="StartForm" action="javascript:void(null)">
-  									<div class="form-group">
-                        <div class="container">
-                            <div class="card-columns">
-                                <% for(var team in teams) {%>
-                                  <div class="card Team" id="Team-<%= teams[team]['team.TeamId'] %>" title="Нажмите для входа">
-                                      <div class="card-body text-center">
-                                          <div class="row">
-                                              <div class="col-md-12">
-                                                  <span class="h1"><%= teams[team]['team.TeamName'] %></span>
-                                              </div>
-                                          </div>
-                                          <div class="row">
-                                              <div class="col-md-12">
-                                                  <span class="h2"><%= teams[team]['team.GroupName']%></span>
-                                              </div>
-                                          </div>
-                                          <div class="row">
-                                              <div class="col-md-12 text-center">
-                                                  <span class="h4"><u>Capitan: <%= teams[team].PlayerFamily
-                                                     + '.' + teams[team].PlayerName.charAt(0)
-                                                     + '.' + teams[team].PlayerLastName.charAt(0) %></u></span>
-                                              </div>
-                                          </div>
-                                      </div>
-                                  </div>
-                                <%} %>
-                            </div>
-                        </div>
-                    </div>
-  								</form>
-  							</div>
-  						</div>
+
+<head>
+  <meta charset="utf-8">
+  <title>Teamplay</title>
+  <% include blocks/tittle %>
+  <link rel="stylesheet" href="/public/css/main.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/public/css/login-form.css">
+  <link rel="stylesheet" href="/public/css/animated_loader.css">
+</head>
+<% include blocks/loader %>
+
+<body>
+  <div class="door door-left door-hidden">
+    <table style="width: 100%; height: 100%;">
+      <tr align="center">
+        <td valign="center">
+          <div class="animated_loader">Loading...</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="door door-right door-hidden">
+    <table style="width: 100%; height: 100%;">
+      <tr align="center">
+        <td valign="center">
+          <div class="animated_loader">Loading...</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <section class="content">
+    <div class="container">
+      <div class="frame">
+
+        <div class="nav">
+          <ul class="links">
+            <li class="signin-active"><a class="btn">Вход</a></li>
+            <li class="signup-inactive"><a class="btn">Регистрация</a></li>
+          </ul>
+        </div>
+        <div ng-app ng-init="checked = false">
+          <form class="form-signin" action="" method="post" name="form">
+            <label for="username">Email</label>
+            <input class="form-styling" type="text" value="<%= User != null ? User : '' %>" name="username"
+              id="username" placeholder="" required />
+            <label for="password">Пароль</label>
+            <input class="form-styling" type="password" name="password" id="password" placeholder="" required />
+            <input type="checkbox" id="remember_me" name="remember_me" />
+            <label class="rememberme" for="remember_me"><span class="ui"></span>Запомнить меня</label>
+            <div class="btn-animate">
+              <button class="btn-signin">Войти</button>
             </div>
-  				</td>
-  			</tr>
-  		</table>
-  	</section>
-  </body>
-  <script>
-    $(document).ready(function() {
-      $('.Team').click(function () {
-        $.ajax({
-          type: "POST",
-          url: 'Start',
-          data: {TeamId: $(this).attr('id').split('Team-')[1]},
-          dataType: 'text',
-          success: function(data) {
-            if (data)
-              location.href = 'Room';
-            if (data == 'team_not_exists')
-              Swal("Ошибка", "Такой команды не существует или она была удалена", "error");
-          },
-          error: function(xhr, str) {
-            alert('Возникла ошибка: ' + xhr.responseCode);
-          }
-        });
-      });
-    });
-  </script>
+            <div class="Message-container">
+              <span id="Message"><%= Code == 'NeedSignIn' ? 'Авторизуйтесь пожалуйста' : '' %></span>
+            </div>
+          </form>
+
+          <form class="form-signup" action="" id="RegisterNewUserForm" method="post" name="form">
+            <span id="Info"></span>
+            <label for="fullname">ФИО</label>
+            <input class="form-styling input-signup" type="text" name="fullname" placeholder="" required />
+            <label for="email">Email</label>
+            <input class="form-styling input-signup" type="email" name="email" id="email" placeholder="" required />
+            <label for="password">Пароль</label>
+            <input class="form-styling input-signup" type="password" name="password" placeholder="" required />
+            <label for="confirmpassword">Повтор пароля</label>
+            <input class="form-styling input-signup" type="password" name="confirmpassword" placeholder="" required />
+            <button ng-click="checked = !checked" class="btn-signup">Зарегистрироваться</button>
+          </form>
+
+          <div class="success">
+            <div width="270" height="270">
+              <i class="fa fa-check fa-10x text-white"></i>
+            </div>
+            <div class="successtext">
+              <p>Отлично, что вы с нами. Проверьте почту для подтверждения.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="forgot">
+          <div class="row mb-2">
+            <div class="col-md-12 text-center">
+              <a href="#" class="text-info">Восстановление</a>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <span><img src="/public/images/logo.svg" width="15" height="15" alt=""> Teamplay 2019</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="cover-photo"></div>
+          <img class="profile-photo" src="https://picsum.photos/200/300">
+          <h1 class="welcome">Welcome, Chris</h1>
+          <a class="btn-forward btn-hidden" onclick="ShowTheDoors();">Создавать!</a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="footer"></section>
+</body>
+<script src="/public/js/login-form.js"></script>
+
 </html>

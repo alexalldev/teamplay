@@ -9,11 +9,12 @@ const GameTeam = require('../models/GameTeam')
 const Category = require('../models/Category');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
+const User = require('../models/User');
 
 const app = require('../config/server-config')
 
 var bodyParser = require('body-parser')
-var urlencodedParser = bodyParser.urlencoded({extended: false})
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 const io = require('./sockets')
 
@@ -32,5 +33,6 @@ module.exports = {
     io,
     Category,
     Question,
-    Answer
+    Answer,
+    User
 }
