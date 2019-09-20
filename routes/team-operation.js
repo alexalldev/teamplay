@@ -13,7 +13,7 @@ router.get('/team-operation', function(req, res) {
 
 router.post("/createTeam", urlencodedParser, function(req, res){
     Team.findOne({ where: { TeamName: req.body.teamName }}).then(team => {
-        if (!team) {
+        if (team) {
             res.send(false);
         } else {
             Team.create({ TeamName: req.body.teamName, GroupName: "test", Email: "test"})
