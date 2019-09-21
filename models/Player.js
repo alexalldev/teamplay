@@ -10,16 +10,15 @@ const Player = db.define('player', {
     PlayerName: {
         type: Sequelize.STRING
     },
-    PlayerFamily: {
-        type: Sequelize.STRING
-    },
-    PlayerLastName: {
-        type: Sequelize.STRING
-    },
-    Capitan: {
+    isCouch: {
         type: Sequelize.BOOLEAN
     },
     Team_Id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        foreignKey : true
+    },
+    User_Id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         foreignKey : true

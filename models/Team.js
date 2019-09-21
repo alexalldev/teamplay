@@ -10,13 +10,7 @@ var Team = db.define('team', {
     },
     TeamName: {
         type: Sequelize.STRING
-    },
-    GroupName: {
-        type: Sequelize.STRING
-    },
-    Email: {
-        type: Sequelize.STRING
-    },
+    }
 });
 
 Team.AddTeamPlayers = function (team, callback) {
