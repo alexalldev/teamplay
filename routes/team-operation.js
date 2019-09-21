@@ -85,20 +85,28 @@ router.post("/changeTeamName", urlencodedParser, function(req, res) {
 });
 
 router.post("/changeCapitan", urlencodedParser, function(req, res) {
-    Player.update({Capitan: 0}, { where: { PlayerId: req.body.oldCapitanId, Team_Id: req.body.teamId } })
-    .then(player => {
-        Player.update({Capitan: 1}, { where: { PlayerId: req.body.newCapitanId, Team_Id: req.body.teamId } })
-        .then(player => {
-            res.send(true);
-        })
-        .catch(err => {
-            console.log("changeCaptainError");
+    Player.findOne({ where: { PlayerId: req.body.oldCapitanId, Team_Id: req.body.teamId } })
+    .then(old => {
+        if(!old) {
             res.send(false);
-        });
+        } else {
+            Player.findOne({ where: { PlayerId: req.body.newCapitanId, Team_Id: req.body.teamId } })
+            .then(newCap => {
+                if(!newCap) {
+                    res.send(false);
+                } else {
+                    old.update({ Capitan: 0 });
+                    newCap.update({ Capitan: 1 });
+                    res.send(true);
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        }
     })
     .catch(err => {
-        console.log("FindCaptainError");
-        res.send(false);
+        console.log(err);
     });
 });
 

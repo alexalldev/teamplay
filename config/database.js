@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-module.exports = new Sequelize('teamplay', 'root', '', {
+module.exports = new Sequelize('allexallr_team_play_1', 'root', '', {
   host: 'localhost',
   dialect: 'mysql',
   logging: false,
