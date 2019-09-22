@@ -31,17 +31,15 @@ module.exports = function (senderId, receiverId, header, mainText, isInfoNotific
 						mainText: mainText,
 						isInfoNotification: isInfoNotification,
 						isRead: false,
-						InvitationHash: crypto.randomBytes(Math.ceil(120 / 2))
-							.toString('hex')
-							.slice(0, 120),
+						InvitationHash: (isInfoNotification) ? crypto.randomBytes(Math.ceil(120 / 2)).toString('hex').slice(0, 120) : '',
 						InvitationType: InvitationType
 					})
 					.then(notification => {
 						notification = notification.get();
+						console.log(notification);
 						io.emitUser(receiverId, "receiveNotification", {
 							createdNotification: notification,
-							//?InvitationHash=${notification.InvitationHash}
-							actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction`
+							actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}`
 						});
 						callback("true");
 					})

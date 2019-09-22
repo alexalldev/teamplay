@@ -27,8 +27,32 @@ router.post("/sendNotification", urlencodedParser, function (req, res) {
 
 router.post("/notificationAction", urlencodedParser, function (req, res) {
 	console.log('req.body')
-	console.log(req.body.InvitationHash)
-	notificationModel.findOne({ where: { InvitationHash: req.body.InvitationHash } })
+	console.log(req.body);
+	userModel.findOne({ where: { UserId: req.body.UserId } }).then(User => {
+		Team.findOne({ raw: true, where: { TeamId: User.Team_Id } }).then(team => {
+			if (!team) {
+				res.send(false);
+			} else {
+				if (req.query.answer == 'accept') {
+					User.update({ Team_Id: team.TeamId }, {
+						where: {
+							UserId: User.update({ Team_Id: team.TeamId }, { where: { UserId: User.UserId } })
+								.catch(err => {
+									console.log("InviteUserError");
+									res.send(false);
+								})
+						}
+					})
+						.catch(err => {
+							console.log("InviteUserError");
+							res.send(false);
+						});
+				}
+				res.send(true);
+			}
+		});
+	});
+	notificationModel.findOne({ where: { InvitationHash: req.query.InvitationHash } })
 		.then(notification => {
 			console.log('notification');
 			if (notification.isInfoNotification) {

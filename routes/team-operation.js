@@ -2,10 +2,11 @@ let {
     router,
     passport,
     Team,
-    Player,
+    User,
     urlencodedParser
 } = require('../config/routers-config');
 
+const notification = require("../modules/teamplay-norifications");
 
 router.get('/team-operation', function (req, res) {
     res.render('team-operation');
@@ -48,20 +49,11 @@ router.post("/deleteTeam", urlencodedParser, function (req, res) {
 });
 
 router.post("/invite", urlencodedParser, function (req, res) {
-    Player.findOne({ where: { PlayerId: req.body.PlayerId } }).then(player => {
-        Team.findOne({ raw: true, where: { TeamId: player.Team_Id } }).then(team => {
-            if (!team) {
-                res.send(false);
-            } else {
-                Player.update({ Team_Id: team.TeamId }, { where: { PlayerId: player.PlayerId } })
-                    .catch(err => {
-                        console.log("InvitePlayerError");
-                        res.send(false);
-                    });
-                res.send(true);
-            }
-        });
-    });
+    notification(req.body.senderId, req.body.receiverId, req.body.header, req.body.mainText, req.body.isInfoNotifications,
+        req.body.InvitationType, function (err) {
+            if (err) res.end(JSON.stringify(err));
+            else res.end("true");
+        }, req);
 });
 
 router.post("/changeTeamName", urlencodedParser, function (req, res) {
@@ -85,12 +77,12 @@ router.post("/changeTeamName", urlencodedParser, function (req, res) {
 });
 
 router.post("/changeCapitan", urlencodedParser, function (req, res) {
-    Player.findOne({ where: { PlayerId: req.body.oldCapitanId, Team_Id: req.body.teamId } })
+    User.findOne({ where: { UserId: req.body.oldCapitanId, Team_Id: req.body.teamId } })
         .then(old => {
             if (!old) {
                 res.send(false);
             } else {
-                Player.findOne({ where: { PlayerId: req.body.newCapitanId, Team_Id: req.body.teamId } })
+                User.findOne({ where: { UserId: req.body.newCapitanId, Team_Id: req.body.teamId } })
                     .then(newCap => {
                         if (!newCap) {
                             res.send(false);

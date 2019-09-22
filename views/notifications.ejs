@@ -29,7 +29,7 @@
     $('#notification-form').on('submit', function (event) {
         $.ajax({
             type: "POST",
-            url: 'notification/sendNotification',
+            url: 'teamOperation/invite',
             data: {
                 receiverId: $('#receiverId').val(),
                 senderId: $('#senderId').val(),

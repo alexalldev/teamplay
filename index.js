@@ -77,7 +77,9 @@ app.use('/EditGame', require('./routes/editGame'));
 
 app.use('/Stream', require('./routes/stream'));
 
-app.use('/notification', require('./routes/notifications'))
+app.use('/notification', require('./routes/notifications'));
+
+app.use('/teamOperation', require('./routes/team-operation'));
 
 app.get('/QuestionImage', function (req, res) {
   if (req.query.QuestionId)

@@ -7,10 +7,10 @@ socket.on("receiveNotification", function (result) {
 	console.log(notification)
 	console.log(actionUrl);
 	if (notification.isInfoNotification) {
-		submitBtns = `<button class='btn btn-info text-white' onclick='action("${notification.InvitationHash}", "read", "${actionUrl}")'><i class=\"fa fa-check\"></i></button>`;
+		submitBtns = `<button class='btn btn-info text-white' onclick='action("read", "${actionUrl}")'><i class=\"fa fa-check\"></i></button>`;
 	} else {
-		submitBtns = `<button class='btn btn-success text-white' onclick='action("${notification.InvitationHash}", "accept", "${actionUrl}")'><i class='fa fa-check'></i></button>
-			<button class='btn btn-danger text-white' onclick='action("${notification.InvitationHash}", "reject", "${actionUrl}")'><i class='fa fa-times'></i></button>`;
+		submitBtns = `<button class='btn btn-success text-white' onclick='action("accept", "${actionUrl}")'><i class='fa fa-check'></i></button>
+			<button class='btn btn-danger text-white' onclick='action("reject", "${actionUrl}")'><i class='fa fa-times'></i></button>`;
 	}
 	var page = `<span class='h1 notification-header'>${notification.header}</span><span class='h3 notification-mainText'>
 		${notification.mainText}</span><span class='h6 notification-from-to'>
@@ -47,14 +47,11 @@ socket.on("sendAnswer", serverAnswer => {
 	}
 });
 
-function action(InvitationHash, answer, actionUrl) {
+function action(answer, actionUrl) {
 	$.ajax({
 		type: "POST",
 		url: actionUrl,
-		data: {
-			answer: answer,
-			InvitationHash: InvitationHash
-		},
+		data: { answer: answer },
 		dataType: "text",
 		success: function (data) {
 			console.log('data')
