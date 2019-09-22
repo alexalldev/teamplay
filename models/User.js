@@ -27,6 +27,12 @@ const User = db.define('user', {
     },
     UserIsActive: {
         type: Sequelize.BOOLEAN
+    },
+    isCoach: {
+        type: Sequelize.BOOLEAN
+    },
+    Team_Id: {
+        type: Sequelize.INTEGER
     }
 });
 

@@ -27,12 +27,12 @@ socket.on("sendAnswer", serverAnswer => {
 	if (serverAnswer.InvitationType) {
 		switch (serverAnswer.InvitationType) {
 			case "inviteTeam":
-				text = `Уважаемый ${serverAnswer.senderFullName.join()}, пользователь ${serverAnswer.receiverFullName.join()} 
+				text = `Уважаемый ${serverAnswer.senderFullName.join(' ')}, пользователь ${serverAnswer.receiverFullName.join(' ')} 
 			${answer} ваше приглашение.`;
 				console.log(text);
 				break;
 			case "joinTeam":
-				text = `Ваша заявка на вступление в команду была ${answer} пользователем ${serverAnswer.receiverFullName.join()}`;
+				text = `Ваша заявка на вступление в команду была ${answer} пользователем ${serverAnswer.senderFullName.join(' ')}`;
 				break;
 		}
 
@@ -51,7 +51,9 @@ function action(answer, actionUrl) {
 	$.ajax({
 		type: "POST",
 		url: actionUrl,
-		data: { answer: answer },
+		data: {
+			answer: answer
+		},
 		dataType: "text",
 		success: function (data) {
 			console.log('data')

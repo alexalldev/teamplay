@@ -49,7 +49,7 @@ router.post("/deleteTeam", urlencodedParser, function (req, res) {
 });
 
 router.post("/invite", urlencodedParser, function (req, res) {
-    notification(req.body.senderId, req.body.receiverId, req.body.header, req.body.mainText, req.body.isInfoNotifications,
+    notification(req.body.senderId, req.body.receiverId, req.body.header, req.body.mainText, req.body.isInfoNotification,
         req.body.InvitationType, function (err) {
             if (err) res.end(JSON.stringify(err));
             else res.end("true");
