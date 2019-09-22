@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script>
+$(document).ready(function() {
+    $.ajax({
+        type: "POST",
+        url: '/team-operation/changeCapitan',
+        data: {oldCapitanId: 171, newCapitanId: 169, teamId: 74},
+        dataType: 'text',
+        success: function(data) {
+            console.log(data);
+        },
+        error: function(xhr, str) {
+          alert('Возникла ошибка: ' + xhr.responseCode);
+        }
+    });
+});
+</script>
+</html>
