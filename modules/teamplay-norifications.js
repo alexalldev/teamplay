@@ -43,23 +43,25 @@ module.exports = function(senderId, receiverId, header, mainText, isInfoNotifica
               createdNotification: notification,
               actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}`
             });
+            //Если это заявка, то отправляем на почту
+            if (!isInfoNotification)
+                fs.readFile(__dirname + '/../html_mail/TeamPlayNotificationEmail.html', 'utf-8', function(err, data) {
+                if (err) callback(err);
+                var html_mail_array = data.split('INVITATION_ACTION');
+                var html_mail_text = html_mail_array[0].split('NOTIFICATION_TEXT');
+                var html_mail = html_mail_text[0] + notification.mainText + html_mail_text[1] + `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=accept` + html_mail_array[1] + `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=reject` + html_mail_array[2];
+                
+                transporter.sendMail({
+                        from: 'info@teamplay.space', // sender address
+                        to: user.UserEmail, // list of receivers
+                        subject: header, // Subject line
+                        html: html_mail
+                    });
+                });
             callback('true');
           })
           .catch(err => {
             console.log(err);
-          });
-        //Если это заявка, то отправляем на почту
-        if (!isInfoNotification)
-          fs.readFile(__dirname + '/../html_mail/TeamPlayNotificationEmail.html', 'utf-8', function(err, data) {
-            if (err) callback(err);
-            var html_mail_array = data.split('NOTIFICATION_TEXT');
-            var html_mail = html_mail_array[0] + mainText + html_mail_array[1];
-            transporter.sendMail({
-              from: 'info@teamplay.space', // sender address
-              to: user.UserEmail, // list of receivers
-              subject: header, // Subject line
-              html: html_mail
-            });
           });
       }
     })

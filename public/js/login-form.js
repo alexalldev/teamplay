@@ -36,7 +36,7 @@ $(function () {
                     $("#Info").html('Позаботьтесь о своей безопасности, придумав пароль длинной от шести символов.');
                 else if (data == 'user_exists')
                     $("#Info").html('Такой email зарегистрирован, хотите <u class="u-enter-toggle" onclick="ToggleBtn(true)">войти<u>?');
-                else if (data == 'incorrect_confrim_password')
+                else if (data == 'incorrect_confirm_password')
                     $("#Info").html('Неверный повтор пароля');
                 else if (data == 'incorrect_fio')
                     $("#Info").html('Введите ФИО через пробел');

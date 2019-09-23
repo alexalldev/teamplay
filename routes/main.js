@@ -48,11 +48,11 @@ router.post('/RegisterNewUser', urlencodedParser, function (req, res) {
 
                 fs.readFile(__dirname + '/../html_mail/TeamPlayVerificationEmail.html', 'utf-8', function (err, data) {
                     if (err) res.end(JSON.stringify(err));
-                    var html_mail_array = data.split('CONFRIM_NEW_USER_BUTTON');
-                    var confrimation_hash = crypto.randomBytes(Math.ceil(120 / 2))
+                    var html_mail_array = data.split('CONFIRM_NEW_USER_BUTTON');
+                    var confirmation_hash = crypto.randomBytes(Math.ceil(120 / 2))
                         .toString('hex') // convert to hexadecimal format
                         .slice(0, 120);
-                    var html_mail = html_mail_array[0] + req.protocol + '://' + req.hostname + '/ConfrimNewUserAccount?confrimation_type=email&security_code=' + confrimation_hash + html_mail_array[1];
+                    var html_mail = html_mail_array[0] + req.protocol + '://' + req.hostname + '/ConfirmNewUserAccount?confirmation_type=email&security_code=' + confirmation_hash + html_mail_array[1];
 
 
                     let mailOptions = {
@@ -73,7 +73,7 @@ router.post('/RegisterNewUser', urlencodedParser, function (req, res) {
                                         UserFamily: UserFio[0].charAt(0).toUpperCase() + UserFio[0].substring(1).toLowerCase(),
                                         UserLastName: UserFio[2].charAt(0).toUpperCase() + UserFio[2].substring(1).toLowerCase(),
                                         UserPassword: Hash.generate(req.body.password),
-                                        UserRegistrationToken: confrimation_hash,
+                                        UserRegistrationToken: confirmation_hash,
                                         UserIsActive: false
                                     })
                                         .then(() => {
@@ -102,11 +102,11 @@ router.post('/RegisterNewUser', urlencodedParser, function (req, res) {
             res.end('poor_password');
     }
     else
-        res.end('incorrect_confrim_password');
+        res.end('incorrect_confirm_password');
 });
 
-router.get('/ConfrimNewUserAccount', function (req, res, next) {
-    if (req.query.confrimation_type = 'email')
+router.get('/ConfirmNewUserAccount', function (req, res, next) {
+    if (req.query.confirmation_type = 'email')
         if (req.query.security_code != '')
             User.findOne({ where: { UserRegistrationToken: req.query.security_code } })
                 .then(user => {
