@@ -41,7 +41,6 @@ router.get('/notificationAction', function(req, res) {
                     if (req.query.answer == 'accept') {
                       userReceiver.update({ Team_Id: team.TeamId });
                     }
-                    console.log(notification.senderId);
                     io.emitUser(notification.senderId, 'sendAnswer', {
                       //sender full name при join team в notificationSocket
                       senderFullName: [userSender.UserName, userSender.UserFamily, userSender.UserLastName],
@@ -49,6 +48,7 @@ router.get('/notificationAction', function(req, res) {
                       answer: req.query.answer,
                       InvitationType: notification.InvitationType
                     });
+                    res.end('true')
                   });
                 }
               });
@@ -59,9 +59,8 @@ router.get('/notificationAction', function(req, res) {
         }
       }
       else
-        res.end('Notification read')
+        res.end('You have already responded to this message.')
     })
-    .then(res.end('notifications123'))
     .catch(err => {
       console.log(err);
     });

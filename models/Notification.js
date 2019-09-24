@@ -25,6 +25,9 @@ const Game = db.define('notification', {
     isRead: {
         type: Sequelize.BOOLEAN
     },
+    isViewed: {
+        type: Sequelize.BOOLEAN
+    },
     InvitationHash: {
         type: Sequelize.STRING
     },

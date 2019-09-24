@@ -39,7 +39,6 @@ module.exports = function(senderId, receiverId, header, mainText, isInfoNotifica
           })
           .then(notification => {
             notification = notification.get();
-            console.log(io.ClientsStore.users());
             io.emitUser(receiverId, 'receiveNotification', {
               createdNotification: notification,
               actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}`
