@@ -74,7 +74,8 @@ router.post('/RegisterNewUser', urlencodedParser, function (req, res) {
                                         UserLastName: UserFio[2].charAt(0).toUpperCase() + UserFio[2].substring(1).toLowerCase(),
                                         UserPassword: Hash.generate(req.body.password),
                                         UserRegistrationToken: confirmation_hash,
-                                        UserIsActive: false
+                                        UserIsActive: false,
+                                        isCoach: false
                                     })
                                         .then(() => {
                                             transporter.sendMail(mailOptions, (error, info) => {

@@ -39,12 +39,13 @@ module.exports = function(senderId, receiverId, header, mainText, isInfoNotifica
           })
           .then(notification => {
             notification = notification.get();
+            console.log(io.ClientsStore.users());
             io.emitUser(receiverId, 'receiveNotification', {
               createdNotification: notification,
               actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}`
             });
             //Если это заявка, то отправляем на почту
-            if (!isInfoNotification)
+            if (isInfoNotification == 'false')
                 fs.readFile(__dirname + '/../html_mail/TeamPlayNotificationEmail.html', 'utf-8', function(err, data) {
                 if (err) callback(err);
                 var html_mail_array = data.split('INVITATION_ACTION');

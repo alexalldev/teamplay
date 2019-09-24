@@ -40,11 +40,8 @@ socket.on('sendAnswer', serverAnswer => {
 
 function action(answer, actionUrl) {
   $.ajax({
-    type: 'POST',
-    url: actionUrl,
-    data: {
-      answer: answer
-    },
+    type: 'GET',
+    url: actionUrl + '&answer=' + answer,
     dataType: 'text',
     success: function(data) {
       console.log(data);
