@@ -32,6 +32,10 @@ router.get('/', RedirectRules, function (req, res) {
     res.render('index', { Code: req.query.Code, User: req.query.User });
 });
 
+router.get('/rooms', function (req, res) {
+res.render('roomTest');
+});
+
 router.post('/RegisterNewUser', urlencodedParser, function (req, res) {
     if (req.body.password === req.body.confirmpassword) {
         if (req.body.password.length > 5) {

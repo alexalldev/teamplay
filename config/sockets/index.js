@@ -1,8 +1,8 @@
 const app = require('../server-config');
-const socketIo = require('socket.io')
-const http = require('http')
-const server = http.createServer(app)
-const io = socketIo(server)
+const socketIo = require('socket.io');
+const http = require('http');
+const server = http.createServer(app);
+const io = socketIo(server);
 
 const Game = require('../../models/Game');
 const Team = require('../../models/Team');
@@ -12,127 +12,113 @@ const Category = require('../../models/Category');
 const Question = require('../../models/Question');
 const Answer = require('../../models/Answer');
 
-
-function ClientsStore() {
-  var Admins = []
-  var Teams = []
+function ClientsStore () {
+  var Admins = [];
+  var Teams = [];
   var Users = [];
 
   this.pushAdmin = async function (Admin) {
     for (const A in Admins) {
-      if (Admins[A].Id == Admin.Id)
-        Admins.splice(A, 1);
+      if (Admins[A].Id == Admin.Id) Admins.splice(A, 1);
     }
     Admins.push(Admin);
   };
 
   this.pushTeam = async function (Team) {
     for (const T in Teams) {
-      if (Teams[T].Id == Team.Id)
-        Teams.splice(T, 1);
+      if (Teams[T].Id == Team.Id) Teams.splice(T, 1);
     }
     Teams.push(Team);
   };
 
   this.pushUser = async function (User) {
     for (const U in Users) {
-      if (Users[U].Id == User.Id)
-        Users.splice(U, 1);
+      if (Users[U].Id == User.Id) Users.splice(U, 1);
     }
     Users.push(User);
   };
 
   this.removeById = async function (socketId) {
     for (const T in Teams) {
-      if (Teams[T].SocketId == socketId)
-        Teams.splice(T, 1);
+      if (Teams[T].SocketId == socketId) Teams.splice(T, 1);
     }
     for (const A in Admins) {
-      if (Admins[A].SocketId == socketId)
-        Admins.splice(A, 1);
+      if (Admins[A].SocketId == socketId) Admins.splice(A, 1);
     }
 
     for (const U in Users) {
-      if (Users[U].SocketId == socketId)
-        Users.splice(U, 1);
+      if (Users[U].SocketId == socketId) Users.splice(U, 1);
     }
   };
 
   this.clients = function () {
-    return { Admins, Teams, Users }
-  }
+    return { Admins, Teams, Users };
+  };
 
   this.admins = function () {
     return Admins;
-  }
+  };
 
   this.teams = function () {
     return Teams;
-  }
+  };
 
   this.users = function () {
     return Users;
-  }
+  };
 
   this.teamById = function (teamId) {
     for (const team of Teams) {
-      if (team.Id == teamId)
-        return team;
+      if (team.Id == teamId) return team;
     }
     return null;
-  }
+  };
 
   this.adminById = function (adminId) {
     for (const admin of Admins) {
-      if (admin.Id == adminId)
-        return admin;
+      if (admin.Id == adminId) return admin;
     }
     return null;
-  }
+  };
 
   this.userById = function (userId) {
     for (const user of Users) {
-      if (user.Id == userId)
-        return user;
+      if (user.Id == userId) return user;
     }
     return null;
-  }
-};
+  };
+}
 
 io.emitTeam = function (teamId, eventName, data) {
   var team = io.ClientsStore.teamById(teamId);
   if (team != null)
     try {
-      if (io.sockets.connected[team.SocketId])
-        io.sockets.connected[team.SocketId].emit(eventName, data);
+      if (io.sockets.connected[team.SocketId]) io.sockets.connected[team.SocketId].emit(eventName, data);
     } catch (err) {
       console.log(err);
     }
-}
+};
 
 io.emitUser = function (userId, eventName, data) {
   var user = io.ClientsStore.userById(userId);
   if (user != null)
     try {
-      if (io.sockets.connected[user.SocketId])
-        io.sockets.connected[user.SocketId].emit(eventName, data);
+      if (io.sockets.connected[user.SocketId]) io.sockets.connected[user.SocketId].emit(eventName, data);
     } catch (err) {
       console.log(err);
     }
-  else
-    return 'there is no such user'
-}
+  else return 'there is no such user';
+};
 
 io.emitAdmin = function (adminId, eventName, data) {
   var admin = io.ClientsStore.adminById(adminId);
   if (admin != null)
     try {
-      if (io.sockets.connected[admin.SocketId])
-        io.sockets.connected[admin.SocketId].emit(eventName, data);
+      if (io.sockets.connected[admin.SocketId]) io.sockets.connected[admin.SocketId].emit(eventName, data);
     } catch (err) {
       console.log(err);
     }
-}
+};
 
 io.ClientsStore = new ClientsStore();
 
@@ -144,31 +130,32 @@ io.on('connection', function (socket) {
   //Вход в ClientStore
   if (socket.LoggedAdmin)
     io.ClientsStore.pushAdmin({
-      Id: socket.LoggedAdmin ? session.passport.user : '',
+      Id:
+        socket.LoggedAdmin ? session.passport.user :
+        '',
       SocketId: socket.id
     });
   else if (session.Team)
     if (session.Game)
       io.ClientsStore.pushTeam({
-        Id: session.Game.GameTeamId ? session.Game.GameTeamId : '',
+        Id:
+          session.Game.GameTeamId ? session.Game.GameTeamId :
+          '',
         SocketId: socket.id
       });
 
   if (session.passport)
-      if (session.passport.user)
-        io.ClientsStore.pushUser({
-          Id: session.passport.user,
-          SocketId: socket.id
-        });
+    if (session.passport.user)
+      io.ClientsStore.pushUser({
+        Id: session.passport.user,
+        SocketId: socket.id
+      });
   //Подключение к комнате в зависимости от типа пользователя
   if (session.Team) {
-    if (session.Game)
-      socket.join('Teams' + session.Game.Id);
+    if (session.Game) socket.join('Teams' + session.Game.Id);
     socket.join('Teams');
-  }
-  else if (socket.LoggedAdmin) {
-    if (session.Game)
-      socket.join('Admins' + session.Game.Id);
+  } else if (socket.LoggedAdmin) {
+    if (session.Game) socket.join('Admins' + session.Game.Id);
     socket.join('Admins');
   }
 
@@ -186,11 +173,11 @@ io.on('connection', function (socket) {
         GameTag = GameTag.substr(0, GameTag.length - 1);
       }
       Game.findOrCreate({ where: { GameName: data.GameName, GameTag: GameTag } })
-        .then(([game, created]) => {
+        .then(([ game, created
+        ]) => {
           if (created == true)
-            socket.emit("GameAdded", game.get()) //Вернуть добавленную в базу Game
-          else
-            socket.emit("GameExists") //Игра существует
+            socket.emit('GameAdded', game.get()); //Вернуть добавленную в базу Game
+          else socket.emit('GameExists'); //Игра существует
         })
         .catch(err => console.log(err));
     }
@@ -199,8 +186,7 @@ io.on('connection', function (socket) {
   socket.on('LoadGames', function () {
     Game.findAll({ raw: true })
       .then(games => {
-        if (games.length > 0)
-          socket.emit("ReciveGames", games); //Вернуть все игры
+        if (games.length > 0) socket.emit('ReciveGames', games); //Вернуть все игры
       })
       .catch(err => console.log(err));
   });
@@ -219,17 +205,11 @@ io.on('connection', function (socket) {
             Question.findAll({ raw: true, where: { Category_Id: categoriesIds[c] } })
               .then(async questions => {
                 for (var question of questions) {
-                  await Question.RemoveQuestionImage(question.QuestionId, function (result) { });
-                  await Answer.destroy({ where: { Question_Id: question.QuestionId } })
-                    .then()
-                    .catch(err => console.log(err));
+                  await Question.RemoveQuestionImage(question.QuestionId, function (result) {});
+                  await Answer.destroy({ where: { Question_Id: question.QuestionId } }).then().catch(err => console.log(err));
                 }
 
-                Question.destroy({ where: { Category_Id: categoriesIds[c] } })
-                  .then(questionRemoved => {
-
-                  })
-                  .catch(err => console.log(err));
+                Question.destroy({ where: { Category_Id: categoriesIds[c] } }).then(questionRemoved => {}).catch(err => console.log(err));
               })
               .catch(err => console.log(err));
           }
@@ -240,18 +220,15 @@ io.on('connection', function (socket) {
                 .then(gameTeamRemoved => {
                   Game.destroy({ where: { GameId: GameId } })
                     .then(gameRemoved => {
-                      socket.emit("GameRemoved", GameId); //Игра удалена
+                      socket.emit('GameRemoved', GameId); //Игра удалена
                     })
                     .catch(err => console.log(err));
                 })
                 .catch(err => console.log(err));
             })
             .catch(err => console.log(err));
-
-
-
         })
-        .catch(err => console.log(err))
+        .catch(err => console.log(err));
     }
   });
 
@@ -260,22 +237,27 @@ io.on('connection', function (socket) {
   //Запрос на получение всех команд и их игроков
   socket.on('LoadTeams', function () {
     if (socket.HasControlGame) {
-      Team.hasMany(GameTeam, { foreignKey: "Team_Id" });
-      GameTeam.belongsTo(Team, { foreignKey: "Team_Id" });
+      Team.hasMany(GameTeam, { foreignKey: 'Team_Id' });
+      GameTeam.belongsTo(Team, { foreignKey: 'Team_Id' });
 
       GameTeam.findAll({
         raw: true,
-        order: [['Points', 'DESC']],
+        order: [
+          [
+            'Points',
+            'DESC'
+          ]
+        ],
         where: { Game_Id: session.Game.Id },
-        include: [Team]
+        include: [
+          Team
+        ]
       })
         .then(gameTeams => {
           AddTeamsPlayers(gameTeams, function (fullTeams) {
             for (var gameTeam of gameTeams) {
-              if (gameTeam.Play == 1)
-                return socket.emit('ReciveTeams', fullTeams, 1);
-              if (gameTeam.Play == 2)
-                return socket.emit('ReciveTeams', fullTeams, 2);
+              if (gameTeam.Play == 1) return socket.emit('ReciveTeams', fullTeams, 1);
+              if (gameTeam.Play == 2) return socket.emit('ReciveTeams', fullTeams, 2);
             }
             return socket.emit('ReciveTeams', fullTeams, false);
           });
@@ -284,50 +266,57 @@ io.on('connection', function (socket) {
     }
   });
 
-  socket.on('ToggleVerifyTeam', function (gameTeamId, state) { //Переключить верификацию команды
+  socket.on('ToggleVerifyTeam', function (gameTeamId, state) {
+    //Переключить верификацию команды
     if (socket.HasControlGame) {
-      state = state == 'true' ? false : true
+      state =
+
+          state == 'true' ? false :
+          true;
       GameTeam.findOne({ where: { GameTeamId: gameTeamId } })
         .then(gameTeam => {
           if (gameTeam != null)
-            gameTeam.update({
-              Verified: state
-            })
-              .then(() => {
-                io.emitTeam(gameTeam.GameTeamId, "VerifiedToggle", state);
+            gameTeam
+              .update({
+                Verified: state
               })
+              .then(() => {
+                io.emitTeam(gameTeam.GameTeamId, 'VerifiedToggle', state);
+              });
         })
         .catch(err => console.log(err));
     }
   });
 
-  socket.on('GetVerification', function () { //Запрос на получения состояния верификации команды
+  socket.on('GetVerification', function () {
+    //Запрос на получения состояния верификации команды
     if (session.Team && session.Game) {
       GameTeam.findOne({ raw: true, where: { GameTeamId: session.Game.GameTeamId } })
         .then(gameTeam => {
-          socket.emit("ReciveVerification", gameTeam.Verified);
+          socket.emit('ReciveVerification', gameTeam.Verified);
         })
         .catch(err => console.log(err));
     }
   });
 
-  socket.on('KickTeam', function (gameTeamId) { //Исключить команду
+  socket.on('KickTeam', function (gameTeamId) {
+    //Исключить команду
     if (socket.HasControlGame) {
       GameTeam.findOne({ raw: true, where: { GameTeamId: gameTeamId } })
         .then(gameTeam => {
           GameTeam.destroy({ where: { GameTeamId: gameTeamId } })
             .then(() => {
-              io.emitTeam(gameTeam.GameTeamId, "Kick", "ADMIN_KICK");
+              io.emitTeam(gameTeam.GameTeamId, 'Kick', 'ADMIN_KICK');
             })
-            .catch(err => console.log(err))
+            .catch(err => console.log(err));
         })
-        .catch(err => console.log(err))
+        .catch(err => console.log(err));
     }
   });
 
-  socket.on('BroadcastTeams', function (message) { //Вещание из ControlPanel
-    if (socket.HasControlGame)
-      io.to('Teams' + session.Game.Id).emit("Broadcast", message);
+  socket.on('BroadcastTeams', function (message) {
+    //Вещание из ControlPanel
+    if (socket.HasControlGame) io.to('Teams' + session.Game.Id).emit('Broadcast', message);
   });
 
   socket.on('disconnect', function (reason) {
@@ -338,21 +327,27 @@ io.on('connection', function (socket) {
   require('./GamePlaySockets')(socket, io);
 
   /********************Stream******************/
-  require('./StreamSockets')(socket, io);
-})
+  require('./rooms')(socket, io);
 
-async function AddTeamsPlayers(teams, callback) {
+  /********************Rooms******************/
+});
+
+async function AddTeamsPlayers (teams, callback) {
   for (const T in teams) {
-    teams[T].TeamId = teams[T]['team.TeamId']; delete teams[T]['team.TeamId'];
-    teams[T].TeamName = teams[T]['team.TeamName']; delete teams[T]['team.TeamName'];
-    teams[T].GroupName = teams[T]['team.GroupName']; delete teams[T]['team.GroupName'];
-    teams[T].Email = teams[T]['team.Email']; delete teams[T]['team.Email'];
+    teams[T].TeamId = teams[T]['team.TeamId'];
+    delete teams[T]['team.TeamId'];
+    teams[T].TeamName = teams[T]['team.TeamName'];
+    delete teams[T]['team.TeamName'];
+    teams[T].GroupName = teams[T]['team.GroupName'];
+    delete teams[T]['team.GroupName'];
+    teams[T].Email = teams[T]['team.Email'];
+    delete teams[T]['team.Email'];
 
     await Player.findAll({ raw: true, where: { Team_Id: teams[T].Team_Id } })
       .then(teamPlayers => {
         teams[T].players = teamPlayers;
       })
-      .catch(err => console.log(err))
+      .catch(err => console.log(err));
   }
   callback(teams);
 }

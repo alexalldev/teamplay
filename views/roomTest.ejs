@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <form action="" id="roomform">
+        <input type="text" id="roomName" placeholder="roomName">
+        <input type="text" id="roomCreator" placeholder="roomCreator">
+        <input type="submit" value="post" id="submit-btn">
+    </form>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    var socket = io();
+
+    $('#roomform').on('submit', function (event) {
+        console.log($('#roomName').val() + $('#roomCreator').val());
+        socket.emit('createRoom', $('#roomName').val(), $('#roomCreator').val());
+        event.preventDefault();
+    });
+
+    socket.on('roomAdded', function () {
+        console.log("room was created successfully");
+    });
+
+    socket.on('roomExists', function () {
+        console.log("room with the same name is already exists");
+    });
+</script>
+
+</html>
