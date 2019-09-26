@@ -49,24 +49,34 @@ router.post("/deleteTeam", urlencodedParser, function (req, res) {
 });
 
 router.post("/invite", urlencodedParser, function (req, res) {
-    User.findOne({where: {UserId: req.body.senderId}, raw: true})
-    .then(sender_user => {
-        User.findOne({where: {UserId: req.body.receiverId}, raw: true})
-            .then(reciever_user => {
-                if ((sender_user.isCoach && reciever_user.Team_Id == 0) ||
-                    (sender_user.Team_Id == 0 && reciever_user.isCoach))
-                    notification(req.body.senderId, req.body.receiverId, req.body.header, req.body.mainText, req.body.isInfoNotification,
-                        sender_user.isCoach ? 'inviteTeam' : 'joinTeam', function (err) {
-                            if (err) res.end(JSON.stringify(err));
-                            else res.end("true");
-                        }, req);
-                else
-                    res.end("You can't send invitation to this player");
-            })
-            .catch(err => console.log(err))
-       
-    })
-    .catch(err => console.log(err))
+    let invitationType = '';
+    let canSend = true;
+    User.findOne({ where: { UserId: req.body.senderId }, raw: true })
+        .then(sender_user => {
+            User.findOne({ where: { UserId: req.body.receiverId }, raw: true })
+                .then(reciever_user => {
+                    if (!req.body.isInfoNotification)
+                        if ((sender_user.isCoach && reciever_user.Team_Id == 0) ||
+                            (sender_user.Team_Id == 0 && reciever_user.isCoach)) {
+                            invitationType = sender_user.isCoach ? 'inviteTeam' : 'joinTeam'
+                            canSend = true;
+                        } else
+                            canSend = false;
+                    console.log(canSend)
+
+                    if (canSend)
+                        notification(req.body.senderId, req.body.receiverId, req.body.header, req.body.mainText, req.body.isInfoNotification,
+                            invitationType, function (err) {
+                                if (err) res.end(JSON.stringify(err));
+                                else res.end("true");
+                            }, req);
+                    else
+                        res.end("You can't send invitation to this player");
+                })
+                .catch(err => console.log(err))
+
+        })
+        .catch(err => console.log(err))
 });
 
 router.post("/changeTeamName", urlencodedParser, function (req, res) {

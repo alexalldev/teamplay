@@ -1,14 +1,20 @@
 const socket = io();
 
-socket.on('receiveNotification', function(result) {
+socket.on('receiveNotification', function (result) {
   let submitBtns;
   let notification = result.createdNotification;
   let actionUrl = result.actionUrl;
   if (notification.isInfoNotification) {
     submitBtns = `<button class='btn btn-info text-white' onclick='action("${actionUrl}read")'><i class=\"fa fa-check\"></i></button>`;
   } else {
-    submitBtns = `<button class='btn btn-success text-white' onclick='action("${actionUrl}${getAnswer(notification.InvitationType, 'accept')}")'><i class='fa fa-check'></i></button>
-			<button class='btn btn-danger text-white' onclick='action("${actionUrl}${getAnswer(notification.InvitationType, 'reject')}")'><i class='fa fa-times'></i></button>`;
+    submitBtns = `<button class='btn btn-success text-white' onclick='action("${actionUrl}${getAnswer(
+      notification.InvitationType,
+      'accept'
+    )}")'><i class='fa fa-check'></i></button>
+			<button class='btn btn-danger text-white' onclick='action("${actionUrl}${getAnswer(
+      notification.InvitationType,
+      'reject'
+    )}")'><i class='fa fa-times'></i></button>`;
   }
   var page = `<span class='h1 notification-header'>${notification.header}</span><span class='h3 notification-mainText'>
 		${notification.mainText}</span><span class='h6 notification-from-to'>
@@ -38,21 +44,21 @@ socket.on('sendAnswer', serverAnswer => {
   }
 });
 
-function action(actionUrl) {
+function action (actionUrl) {
   $.ajax({
     type: 'GET',
     url: actionUrl,
     dataType: 'text',
-    success: function(data) {
+    success: function (data) {
       console.log(data);
     },
-    error: function(xhr, str) {
+    error: function (xhr, str) {
       alert('Возникла ошибка: ' + xhr.responseCode);
     }
   });
 }
 
-function getAnswer(InvitationType, answer) {
+function getAnswer (InvitationType, answer) {
   if (InvitationType == 'inviteTeam') {
     if (answer == 'reject') {
       return 'отклонил';
