@@ -35,13 +35,14 @@ module.exports = function(senderId, receiverId, header, mainText, isInfoNotifica
                   .toString('hex')
                   .slice(0, 120)
               : '',
-            InvitationType: InvitationType
+            InvitationType: InvitationType,
+            isViewed: false
           })
           .then(notification => {
             notification = notification.get();
             io.emitUser(receiverId, 'receiveNotification', {
               createdNotification: notification,
-              actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}`
+              actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
             });
             //Если это заявка, то отправляем на почту
             if (isInfoNotification == 'false')

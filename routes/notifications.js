@@ -21,7 +21,7 @@ router.get('/notificationAction', function(req, res) {
       {
         notification.update({ isRead: 1});
         if (notification.isInfoNotification) {
-          notification.update({ isRead: 1, InvitationType: '' });
+          notification.update({ InvitationType: '' });
         } else {
           if (notification.InvitationType == 'joinTeam') {
             setUserId = notification.senderId;
@@ -38,14 +38,14 @@ router.get('/notificationAction', function(req, res) {
                   console.log('team not found');
                 } else {
                   userModel.findOne({ where: { UserId: setUserId } }).then(userReceiver => {
-                    if (req.query.answer == 'accept') {
+                    if (req.query.action == 'accept') {
                       userReceiver.update({ Team_Id: team.TeamId });
                     }
                     io.emitUser(notification.senderId, 'sendAnswer', {
                       //sender full name при join team в notificationSocket
                       senderFullName: [userSender.UserName, userSender.UserFamily, userSender.UserLastName],
                       receiverFullName: [userReceiver.UserName, userReceiver.UserFamily, userReceiver.UserLastName],
-                      answer: req.query.answer,
+                      answer: req.query.action,
                       InvitationType: notification.InvitationType
                     });
                     res.end('true')
