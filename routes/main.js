@@ -47,6 +47,10 @@ router.get('/home', function(req, res) {
     res.render('home');
 });
 
+router.get('/room/:RoomTag', function(req, res) {
+    res.render('room', {RoomTag: req.params.RoomTag});
+});
+
 router.get('/Admin', RedirectRules, function(req, res) {
     Admin.findAll({
         raw: true
@@ -59,7 +63,7 @@ router.get('/Admin', RedirectRules, function(req, res) {
     })
 });
   
-router.get('/Room', function(req, res) {
+router.get('/RoomOLD', function(req, res) {
     if (req.session.Game)
         res.redirect('/Room/' + req.session.Game.Tag);
     else if (req.session.Team)
