@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <% include blocks/tittle %>
     <title>Document</title>
 </head>
 
@@ -13,19 +14,25 @@
     <form action="" id="roomform">
         <input type="text" id="roomName" placeholder="roomName">
         <input type="text" id="roomCreator" placeholder="roomCreator">
+        <input type="text" id="action" placeholder="action">
         <input type="submit" value="post" id="submit-btn">
     </form>
 </body>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-<script src="/socket.io/socket.io.js"></script>
+<% include blocks/socket %>
 <script>
-    var socket = io();
-
+    //переменная для теста
+    const roomTag = 'stas--logvin';
     $('#roomform').on('submit', function (event) {
         console.log($('#roomName').val() + $('#roomCreator').val());
-        socket.emit('createRoom', $('#roomName').val(), $('#roomCreator').val());
+        if ($('#action').val() == 'createRoom')
+            socket.emit('createRoom', $('#roomName').val(), $('#roomCreator').val());
+        else if ($('#action').val() == 'getConnectedUsers') {
+            socket.emit('getConnectedUsers', roomTag);
+        }
+        else if ($('#action').val() == 'getCreatorStatus') {
+            socket.emit('getCreatorStatus', roomTag);
+        }
+
         event.preventDefault();
     });
 
@@ -36,6 +43,20 @@
     socket.on('roomExists', function () {
         console.log("room with the same name is already exists");
     });
+
+    socket.on('sendConnectedUsers', function (users) {
+        if (users.err) {
+            console.log(users.err)
+        } else {
+            console.log(users);
+        }
+    });
+
+    socket.on('sendCreatorStatus', function (status) {
+        console.log(status);
+    });
+
+
 </script>
 
 </html>
