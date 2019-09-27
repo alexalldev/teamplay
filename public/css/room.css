@@ -1,0 +1,31 @@
+.players-list
+{
+    width: 15rem;
+    border: solid 1.75px #eee;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.user_organizer
+{
+    width: 3rem;
+}
+
+.organizer-connection
+{
+    position: absolute;
+    top: 3.3rem;
+    left: 2.4rem;
+    font-size: 4rem;
+    transition: 0.3s all;
+}
+
+.organizer-connection[connection="online"]
+{
+    color: #28a745!important
+}
+
+.organizer-connection[connection="offline"]
+{
+    color: #dc3545!important;
+}

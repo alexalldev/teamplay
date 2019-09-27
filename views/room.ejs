@@ -3,14 +3,28 @@
   <head>
     <meta charset="utf-8">
     <title>TeamPlay ControlPanel</title>
-    <link rel="stylesheet" href="/public/css/home.css">
+    <link rel="stylesheet" href="/public/css/room.css">
     <% include blocks/tittle %>
   </head>
   <body>
     <% include blocks/loader %>
     <% include blocks/header %>
     <section class="app-container">
-		<%= RoomTag %>
+      <div class="organizer">
+          <span class="organizer-connection" connection="online">•</span>
+          <img class="user_organizer" src="/public/user_organizer.png" alt="">
+      </div>
+		<div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h1 id="RoomName"><%= RoomTag %></h1>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12 players-list text-center">
+        </div>
+      </div>
+    </div>
     </section>
     <% include blocks/footer %>
   </body>
