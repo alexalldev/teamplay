@@ -1,95 +1,88 @@
-var socket = io.connect(location.protocol + '//' + location.host);
-$(document).ready(function() {
-  socket.emit('LoadTeams');
-    $('.btnStreamParametrs').click(function() {
+$(document).ready(function () {
+    socket.emit('LoadTeams');
+    $('.btnStreamParametrs').click(function () {
         $('.StreamParametrsModal').modal('show');
     });
 
-  $("#AddStreamImage").submit(function(e) {
-      e.preventDefault();
-      var data = new FormData();
-      data.append('StreamImage', $("#StreamImage")[0].files[0]);
-      $.ajax({
-        type: "POST",
-        url: '/SetStreamBackground',
-        data: data,
-        cache: false,
-        contentType: false,
-        processData: false,
-        success: function(data) {
-            console.log(data);
-            if (data != 'null')
-            {
-                if (data == 'incorrect_format')
-                    Swal("Ошибка", "Неверный формат изображения", "error");
+    $("#AddStreamImage").submit(function (e) {
+        e.preventDefault();
+        var data = new FormData();
+        data.append('StreamImage', $("#StreamImage")[0].files[0]);
+        $.ajax({
+            type: "POST",
+            url: '/SetStreamBackground',
+            data: data,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                console.log(data);
+                if (data != 'null') {
+                    if (data == 'incorrect_format')
+                        Swal("Ошибка", "Неверный формат изображения", "error");
                     else if (data == 'incorrect_size')
                         Swal("Ошибка", "Слишком большое изображение", "error");
-                    else
-                    {
+                    else {
                         var res = JSON.parse(data);
                         if (res.name)
                             Swal("Ошибка", "Данные не были получены: " + res.name, "error");
-                        else
-                        {
+                        else {
                             Swal("Готово", "фон установлен", "success");
                         }
                     }
+                }
+                $("#QuestionImage").val('');
+            },
+            error: function (xhr, str) {
+                alert('Возникла ошибка: ' + xhr.responseCode);
+                $("#QuestionImage").val('');
             }
-            $("#QuestionImage").val('');
-        },
-        error: function(xhr, str) {
-            alert('Возникла ошибка: ' + xhr.responseCode);
-            $("#QuestionImage").val('');
-        }
-      });
-  });
+        });
+    });
 });
 
 async function AddTeam(Team) {
     Team.playersList = '';
-    for (const P in Team.players)
-    {
-        if (Team.players[P].Capitan == true)
-        {
+    for (const P in Team.players) {
+        if (Team.players[P].Capitan == true) {
             Team.Capitan = Team.players[P];
             Team.players.splice(P, 1);
         }
     }
-    for (const player of Team.players)
-    {
+    for (const player of Team.players) {
         Team.playersList += player.PlayerFamily
-         + ' ' + player.PlayerName.charAt(0)
-         + '.' + player.PlayerLastName.charAt(0) + '. ';
+            + ' ' + player.PlayerName.charAt(0)
+            + '.' + player.PlayerLastName.charAt(0) + '. ';
     }
     var flag = false;
-    $('.Team').each(function(i) {
+    $('.Team').each(function (i) {
         if ($('.Team').is("#Team-" + Team.GameTeamId))
             flag = true;
     });
-    if (!flag) $('.TeamsList').html($('.TeamsList').html() + '<div class="card Team NewTeam" id="Team-'+ Team.GameTeamId +'">\
+    if (!flag) $('.TeamsList').html($('.TeamsList').html() + '<div class="card Team NewTeam" id="Team-' + Team.GameTeamId + '">\
     <div class="card-body text-center">\
-    <table style="width: 100%"><tr><td align="left"><i class="far fa-check-circle fa-2x VerifyTeam" onclick="ToggleVerifyTeam('+ Team.GameTeamId +')" id="ToggleVerifyTeam-'+ Team.GameTeamId +'" verified="'+ (Team.Verified ? 'true' : 'false') +'" title="Верифицировать команду"></i></td>\
-      <td align="right"><i class="fa fa-trash fa-2x btnKickTeam" onclick="KickTeam('+ Team.GameTeamId +')" title="Исключить команду"></i></td></tr></table>\
+    <table style="width: 100%"><tr><td align="left"><i class="far fa-check-circle fa-2x VerifyTeam" onclick="ToggleVerifyTeam('+ Team.GameTeamId + ')" id="ToggleVerifyTeam-' + Team.GameTeamId + '" verified="' + (Team.Verified ? 'true' : 'false') + '" title="Верифицировать команду"></i></td>\
+      <td align="right"><i class="fa fa-trash fa-2x btnKickTeam" onclick="KickTeam('+ Team.GameTeamId + ')" title="Исключить команду"></i></td></tr></table>\
         <div class="row">\
             <div class="col-md-12">\
-                <span class="h1">'+ Team.TeamName +'</span>\
+                <span class="h1">'+ Team.TeamName + '</span>\
             </div>\
         </div>\
         <div class="row RowGroupName">\
             <div class="col-md-12">\
-                <span class="h2">'+ Team.GroupName +'</span>\
+                <span class="h2">'+ Team.GroupName + '</span>\
             </div>\
         </div>\
         <div class="row RowCapitan">\
             <div class="col-md-12 text-center">\
-                <span class="h4"><u>Capitan: '+ Team.Capitan.PlayerFamily +' '
-                + Team.Capitan.PlayerName.charAt(0) +'.'
-                + Team.Capitan.PlayerLastName.charAt(0) +'</u></span>\
+                <span class="h4"><u>Capitan: '+ Team.Capitan.PlayerFamily + ' '
+        + Team.Capitan.PlayerName.charAt(0) + '.'
+        + Team.Capitan.PlayerLastName.charAt(0) + '</u></span>\
             </div>\
         </div>\
         <div class="row RowplayersList">\
             <div class="col-md-12 text-center">\
-                '+ Team.playersList +'\
+                '+ Team.playersList + '\
             </div>\
         </div>\
     </div>\
@@ -98,26 +91,26 @@ async function AddTeam(Team) {
         $('.Team').removeClass('NewTeam');
     }, 1000);
     TryNullTeams();
-  return true;
+    return true;
 }
 
 async function AddPreparedTeam(Team) {
     var flag = false;
-    $('.Team').each(function(i) {
+    $('.Team').each(function (i) {
         if ($('.Team').is("#Team-" + Team.GameTeamId))
             flag = true;
     });
-    if (!flag) $('.TeamsList').html($('.TeamsList').html() + '<tr class="Team NewTeam" id="Team-'+ Team.GameTeamId +'" GameTeamId="'+ Team.GameTeamId +'">\
-        <td class="TeamPoints TeamPoints-'+ Team.GameTeamId +'">'+ Team.Points +'</td>\
-        <td>'+ Team.PlayId +'</td>\
-        <td class="TeamName-'+ Team.GameTeamId +'">'+ Team.TeamName +'</td>\
-        <td><i class="fa fa-trash btnKickTeam" onclick="KickTeam('+ Team.GameTeamId +', true)" title="Исключить команду"></i></td>\
+    if (!flag) $('.TeamsList').html($('.TeamsList').html() + '<tr class="Team NewTeam" id="Team-' + Team.GameTeamId + '" GameTeamId="' + Team.GameTeamId + '">\
+        <td class="TeamPoints TeamPoints-'+ Team.GameTeamId + '">' + Team.Points + '</td>\
+        <td>'+ Team.PlayId + '</td>\
+        <td class="TeamName-'+ Team.GameTeamId + '">' + Team.TeamName + '</td>\
+        <td><i class="fa fa-trash btnKickTeam" onclick="KickTeam('+ Team.GameTeamId + ', true)" title="Исключить команду"></i></td>\
     </tr>');
     setTimeout(() => {
         $('.Team').removeClass('NewTeam');
     }, 1000);
     TryNullTeams();
-  return true;
+    return true;
 }
 
 function RemoveTeam(gameTeamId) {
@@ -140,8 +133,7 @@ function ClearSingleAnswers() {
     $('.SingleAnswersList').html('');
 }
 
-function TryNullTeams()
-{
+function TryNullTeams() {
     if ($('.card').is('.Team') || $('tbody').is('.TeamsList'))
         $('.NullTeams').css('display', 'none');
     else
@@ -150,19 +142,16 @@ function TryNullTeams()
 
 function KickTeam(gameTeamId, play = false) {
     if (play == true)
-        KickAnswer(function() {
+        KickAnswer(function () {
             socket.emit('KickTeam', gameTeamId);
         });
-    else
-    {
-        if ($("#ToggleVerifyTeam-" + gameTeamId).attr('verified') == 'true')
-        {
-            KickAnswer(function() {
+    else {
+        if ($("#ToggleVerifyTeam-" + gameTeamId).attr('verified') == 'true') {
+            KickAnswer(function () {
                 socket.emit('KickTeam', gameTeamId);
             });
         }
-        else
-        {
+        else {
             socket.emit('KickTeam', gameTeamId);
         }
     }
@@ -177,11 +166,11 @@ function KickAnswer(callback) {
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#6699FF',
         confirmButtonText: 'Yes'
-      }).then((result) => {
+    }).then((result) => {
         if (result.value) {
             callback()
         }
-      })
+    })
 }
 
 function ToggleVerifyTeam(gameTeamId) {
@@ -190,45 +179,41 @@ function ToggleVerifyTeam(gameTeamId) {
     $("#ToggleVerifyTeam-" + gameTeamId).attr('verified', state == 'true' ? 'false' : 'true');
 }
 
-$('.BroadcastForm').submit(function(e) {
+$('.BroadcastForm').submit(function (e) {
     e.preventDefault();
     var message = $('.BroadcastMessage').val();
     socket.emit('BroadcastTeams', message);
     $('.BroadcastMessage').val('');
-    animateCSS('.BroadcastMessage', 'bounceOutRight', function() {
+    animateCSS('.BroadcastMessage', 'bounceOutRight', function () {
         animateCSS('.BroadcastMessage', 'bounceInLeft');
-    });    
+    });
 });
 
-socket.on('ReciveTeams', function(Teams, Play) {
-    if (Play == 1 || Play == 2)
-    {
+socket.on('ReciveTeams', function (Teams, Play) {
+    if (Play == 1 || Play == 2) {
         PrepareTeamList.Prepared();
 
         TryNullTeams();
-        for (var i in Teams)
-        {
+        for (var i in Teams) {
             AddPreparedTeam(Teams[i]);
         }
     }
-    else if (Play == 0)
-    {
+    else if (Play == 0) {
         PrepareTeamList.noPrepared();
 
         TryNullTeams();
-        for (var i in Teams)
-        {
+        for (var i in Teams) {
             AddTeam(Teams[i]);
         }
     }
 });
 
-socket.on('JoinTeam', function(Team) {
+socket.on('JoinTeam', function (Team) {
     AddTeam(Team);
     PlaySound('In');
 });
 
-socket.on('LeftTeam', function(gameTeamId) {
+socket.on('LeftTeam', function (gameTeamId) {
     RemoveTeam(gameTeamId);
     PlaySound('Out');
 });

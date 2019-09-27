@@ -1,69 +1,74 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>TeamPlay ControlPanel</title>
-    <link rel="stylesheet" href="/public/css/ControlPanel/style.css">
-    <% include blocks/tittle %>
-  </head>
-  <body>
-      <% include blocks/loader %>
-    <% include blocks/header %>
-      <section>
-        <div class="container mt-5">
-        <form action="javascript:void(null)" class="NewGame">
-            <div class="row mt-2 mb-2">
-                <div class="col-md-12 text-center">
-                        <input type="text" class="form-control" id="GameName" placeholder="Game Name" required="">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12 text-center">
-                        <button class="btn btn-lg btn-info AddGame">New Game</button>
-                </div>
-            </div>
-        </form>
+
+<head>
+  <meta charset="utf-8">
+  <title>TeamPlay ControlPanel</title>
+  <link rel="stylesheet" href="/public/css/ControlPanel/style.css">
+  <% include blocks/tittle %>
+</head>
+
+<body>
+  <% include blocks/loader %>
+  <% include blocks/header %>
+  <section>
+    <div class="container mt-5">
+      <form action="javascript:void(null)" class="NewGame">
+        <div class="row mt-2 mb-2">
+          <div class="col-md-12 text-center">
+            <input type="text" class="form-control" id="GameName" placeholder="Game Name" required="">
+          </div>
         </div>
-        <div class="container text-center mt-4">
-            <div class="mb-4">
-                <span class="h1">Текущие игры</span>
-            </div>
-            <table class="cube GamesList" style="border-spacing: 2.5rem">
-                
-              </table>
-            <span class="h2 NullGames">Нет активных игр</span>
-        </div>   
+        <div class="row">
+          <div class="col-md-12 text-center">
+            <button class="btn btn-lg btn-info AddGame">New Game</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="container text-center mt-4">
+      <div class="mb-4">
+        <span class="h1">Текущие игры</span>
+      </div>
+      <table class="cube GamesList" style="border-spacing: 2.5rem">
 
-        <div class="modal fade" id="GameMenu">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              
-              <!-- Modal Header -->
-              <div class="modal-header">
-                <h4 class="modal-title GameMenu_GameName"></h4>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-              </div>
-              
-              <!-- Modal body -->
-              <div class="modal-body">
-                <div class="row">
-                  <div class="col-md-4 mb-2 text-center">
-                      <a href="" class="GameMenu_EditGame"><i class="fas fa-edit fa-2x text-info ml-2 EditGame"></i></a>
-                  </div>
-                  <div class="col-md-4 mb-2 text-center">
-                      <a href="" class="GameMenu_ControlPanel"><span class="h1 text-info">Перейти</span></a>
-                  </div>
-                  <div class="col-md-4 mb-2 text-center">
-                      <i class="fa fa-trash fa-2x mr-2 text-danger btnRemoveGame" onclick="RemoveGame($(this).attr('GameId'))"></i>
-                  </div>
-                </div>
-              </div>
+      </table>
+      <span class="h2 NullGames">Нет активных игр</span>
+    </div>
 
+    <div class="modal fade" id="GameMenu">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title GameMenu_GameName"></h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-4 mb-2 text-center">
+                <a href="" class="GameMenu_EditGame"><i class="fas fa-edit fa-2x text-info ml-2 EditGame"></i></a>
+              </div>
+              <div class="col-md-4 mb-2 text-center">
+                <a href="" class="GameMenu_ControlPanel"><span class="h1 text-info">Перейти</span></a>
+              </div>
+              <div class="col-md-4 mb-2 text-center">
+                <i class="fa fa-trash fa-2x mr-2 text-danger btnRemoveGame"
+                  onclick="RemoveGame($(this).attr('GameId'))"></i>
+              </div>
             </div>
           </div>
-        </div>     
-      </section>
-  </body>
+
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+<% include blocks/socket %>
 <script src="/public/js/ControlPanel/index.js"></script>
 <script src="/public/js/animateCSS.js"></script>
+
 </html>

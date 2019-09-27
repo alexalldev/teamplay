@@ -33,7 +33,7 @@ router.get('/', RedirectRules, function (req, res) {
 });
 
 router.get('/rooms', function (req, res) {
-res.render('roomTest');
+    res.render('roomTest');
 });
 
 router.post('/RegisterNewUser', urlencodedParser, function (req, res) {
