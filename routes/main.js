@@ -34,27 +34,33 @@ router.get('/', RedirectRules, function (req, res) {
     res.render('index', { Code: req.query.Code, User: req.query.User });
 });
 
+router.get('/rooms', function (req, res) {
+    res.render('roomTest');
+});
+
 router.get('/home', function (req, res) {
     Game.findAll({ where: { QuizCreatorId: req.session.passport.user }, raw: true })
-        .then(games => {
-            games.forEach(game => {
-                Category.findAll({ where: { Game_Id: game.GameId } })
-                    .then(categories => {
-                        // db.query(`SELECT COUNT(*) FROM questions WHERE Category_Id = ${category.CategoryId}`)
-                        categories.forEach(category => {
-                            Question.count({ where: { Category_Id: category.CategoryId } })
+        .then(async games => {
+            for await (const game of games) {
+                console.log('game')
+                console.log(game)
+                await Category.findAll({ where: { Game_Id: game.GameId }, raw: true })
+                    .then(async categories => {
+                        console.log('categories')
+                        console.log(categories)
+                        for await (const category of categories) {
+                            await Question.count({ where: { Category_Id: category.CategoryId } })
                                 .then(questionCount => {
                                     game.questionCount = questionCount;
                                     console.log('game in loop')
                                     console.log(game)
                                 })
-                        });
+                        }
                     })
-                console.log('games')
-                console.log(games)
-            });
-            console.log(games);
-            //res.render('home', { games: games });
+            }
+            console.log('games')
+            console.log(games)
+            res.render('home', { games: games });
         })
 });
 
