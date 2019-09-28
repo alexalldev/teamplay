@@ -2,9 +2,10 @@ const Room = require('../../models/Room');
 const RoomPlayer = require('../../models/RoomPlayer');
 const User = require('../../models/User');
 function roomsSocket (socket, io) {
+	const session = socket.request.session;
 	socket.on('createRoom', function (roomName, creatorID) {
 		console.log(roomName, creatorID);
-		gameTag = roomName.replace(/[^a-zA-Zа-яА-Я ]/g, '').toLowerCase().replace(/\s/g, '-');
+		gameTag = roomName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
 		Room.findOrCreate({ where: { RoomTag: gameTag, RoomName: roomName, RoomCreatorID: creatorID } })
 			.then(([ game, created
 			]) => {
@@ -43,6 +44,7 @@ function roomsSocket (socket, io) {
 	socket.on('leave room', function (userId, roomTag) {
 		RoomPlayer.destroy({ where: { UserId: userId, RoomTag: roomTag }, raw: true }).then(roomPlayer => {
 			//.to(roomTag)
+			//session.passport.user
 			User.findOne({ where: { UserId: userId }, raw: true }).then(user => {
 				//.to(roomTag)
 				socket.emit('left room', setUserFIOproperty(user));
@@ -56,6 +58,8 @@ function roomsSocket (socket, io) {
 			io.emit('sendCreatorStatus', io.ClientsStore.userById(room.RoomCreatorID) ? true : false);
 		});
 	});
+
+	socket.on('disconnect', () => {});
 
 	async function findRoomPlayers (room, users) {
 		let roomPlayersArray = [];
