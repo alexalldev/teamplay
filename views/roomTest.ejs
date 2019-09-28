@@ -24,20 +24,26 @@
     //переменная для теста
     const roomTag = 'stas--logvin';
     $('#roomform').on('submit', function (event) {
-        console.log($('#roomName').val() + $('#roomCreator').val());
-        if ($('#action').val() == 'createRoom')
-            socket.emit('createRoom', $('#roomName').val(), $('#roomCreator').val());
-        else if ($('#action').val() == 'getRoomPlayers') {
-            socket.emit('getRoomPlayers', roomTag);
-        }
-        else if ($('#action').val() == 'getCreatorStatus') {
-            socket.emit('getCreatorStatus', roomTag);
-        }
-        else if ($('#action').val() == 'enter room') {
-            socket.emit('enter room', $('#userId').val());
-        }
-        else if ($('#action').val() == 'leave room') {
-            socket.emit('leave room', $('#userId').val());
+        switch ($('#action').val()) {
+            case 'createRoom':
+                socket.emit('createRoom', $('#roomName').val(), $('#roomCreator').val());
+                break;
+            case 'getRoomPlayers':
+                socket.emit('getRoomPlayers', roomTag);
+                break;
+            case 'getCreatorStatus':
+                socket.emit('getCreatorStatus', roomTag);
+                break;
+            case 'enter room':
+                socket.emit('enter room', $('#userId').val(), roomTag);
+                break;
+            case 'leave room':
+                socket.emit('leave room', $('#userId').val(), roomTag);
+                break;
+
+            default:
+                console.log('wrong operation');
+                break;
         }
 
         event.preventDefault();

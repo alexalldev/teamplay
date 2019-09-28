@@ -1,5 +1,5 @@
 const Room = require('../../models/Room');
-const roomPlayer = require('../../models/RoomPlayer');
+const RoomPlayer = require('../../models/RoomPlayer');
 const User = require('../../models/User');
 function roomsSocket (socket, io) {
 	socket.on('createRoom', function (roomName, creatorID) {
@@ -22,29 +22,31 @@ function roomsSocket (socket, io) {
 	socket.on('getRoomPlayers', function (roomTag) {
 		let users = {};
 		roomPlayer.findAll({ where: { RoomTag: roomTag }, raw: true }).then(room => {
-			if (!room) {
-				users.err = 'room not found';
-			} else {
-				(async () => {
-					//.to(room[0].RoomTag)
-					io.emit('sendRoomPlayers', await findRoomPlayers(room, users));
-				})();
-			}
+			+(async () => {
+				//.to(room[0].RoomTag)
+				io.emit('sendRoomPlayers', await findRoomPlayers(room, users));
+			})();
 		});
 	});
 
 	socket.on('enter room', function (userId, roomTag) {
 		socket.join(roomTag);
-		User.findOne({ where: { UserId: userId }, raw: true }).then(user => {
-			io.ClientsStore.pushUser(user);
-			socket.to(roomTag).emit('entered room', setUserFIOproperty(user));
+		RoomPlayer.create({ RoomTag: roomTag, UserID: userId }).then(roomPlayer => {
+			User.findOne({ where: { UserId: userId }, raw: true }).then(user => {
+				console.log(user);
+				//.to(roomTag)
+				if (user) socket.emit('entered room', setUserFIOproperty(user));
+			});
 		});
 	});
 
 	socket.on('leave room', function (userId, roomTag) {
-		io.ClientsStore.removeById(userId);
-		User.findOne({ where: { UserId: userId }, raw: true }).then(user => {
-			socket.to(roomTag).emit('left room', setUserFIOproperty(user));
+		RoomPlayer.destroy({ where: { UserId: userId, RoomTag: roomTag }, raw: true }).then(roomPlayer => {
+			//.to(roomTag)
+			User.findOne({ where: { UserId: userId }, raw: true }).then(user => {
+				//.to(roomTag)
+				socket.emit('left room', setUserFIOproperty(user));
+			});
 		});
 	});
 
