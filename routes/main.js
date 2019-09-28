@@ -17,6 +17,8 @@ let {
     User
 } = require('../config/routers-config');
 
+const db = require('../config/database')
+
 var formidable = require('formidable');
 
 var nodeMailer = require('nodemailer');
@@ -32,12 +34,32 @@ router.get('/', RedirectRules, function (req, res) {
     res.render('index', { Code: req.query.Code, User: req.query.User });
 });
 
-router.get('/home', function(req, res) {
-    res.render('home');
+router.get('/home', function (req, res) {
+    Game.findAll({ where: { QuizCreatorId: req.session.passport.user }, raw: true })
+        .then(games => {
+            games.forEach(game => {
+                Category.findAll({ where: { Game_Id: game.GameId } })
+                    .then(categories => {
+                        // db.query(`SELECT COUNT(*) FROM questions WHERE Category_Id = ${category.CategoryId}`)
+                        categories.forEach(category => {
+                            Question.count({ where: { Category_Id: category.CategoryId } })
+                                .then(questionCount => {
+                                    game.questionCount = questionCount;
+                                    console.log('game in loop')
+                                    console.log(game)
+                                })
+                        });
+                    })
+                console.log('games')
+                console.log(games)
+            });
+            console.log(games);
+            //res.render('home', { games: games });
+        })
 });
 
-router.get('/room/:RoomTag', function(req, res) {
-    res.render('room', {RoomTag: req.params.RoomTag});
+router.get('/room/:RoomTag', function (req, res) {
+    res.render('room', { RoomTag: req.params.RoomTag });
 });
 
 router.get('/ConfirmNewUserAccount', function (req, res, next) {

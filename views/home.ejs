@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <title>TeamPlay ControlPanel</title>
     <link rel="stylesheet" href="/public/css/home.css">
-    <% include blocks/tittle %>
-  </head>
-  <body>
+    <% include blocks/title %>
+</head>
+
+<body>
     <% include blocks/loader %>
     <% include blocks/header %>
     <section class="app-container">
@@ -20,97 +22,71 @@
                                 <button class="btn btn-info h4">Общий доступ</button>
                                 <button class="btn btn-info h4">Команды</button>
                                 <button class="btn btn-info h4">Игроки</button>
-                                <button class="btn btn-info h4">Организаторы</button> 
+                                <button class="btn btn-info h4">Организаторы</button>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-10 working-area">
                     <div class="container mt-2">
-                        <div class="quiz">
-                            <div class="row">
-                                <div class="quiz-col-40">
-                                    <img src="https://picsum.photos/100/100" class="mt-1 ml-1 img-fluid rounded" alt="">
-                                </div>
-                                <div class="text-center mt-1 quiz-col-55">
-                                    <span class="text-dark h5">Quiz Name</span>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="quiz-col-40">
-                                    <div class="row">
-                                        <div class="col-md-12 text-left">
-                                            <span><i class="fas fa-clock ml-1 quiz-i"></i> 15.3s</span>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12 text-left">
-                                            <span class="text-dark h5"><i class="fas fa-question ml-1 quiz-i"></i> 16</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="quiz-col-55">
-                                    <div class="row mt-3">
-                                        <div class="col-md-12 text-right">
-                                            <span class="text-dark h5 mr-1">Created at 01.01.1970</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <% games.forEach(function(quiz){ %>
+                        <%- include('blocks/quiz', {quiz: quiz}); %>
+                        <% }); %>
                     </div>
                     <!--PanelTeams-->
-                    
-                        <div class="container">
-                            <div class ="teams" >
-                                 <div class="row">
-                                    <div class="quiz-col-40">
-                                        <div>
-                                            <span class="text-dark h5 font-weight-bold">Name Тeam</span>
-                                        </div>
-                                        <div>
-                                            <span><i class="fas fa-fire-alt text-danger p-1"></i>Новичок</span>
-                                        </div>
-                                        <div>
-                                                <span><i class="far fa-smile text-success pl-2"></i> 20000</span>  
-                                        </div> 
-                                        <div>
-                                                <span><i class="far fa-meh text-warning pl-2"></i> 10000</span>
 
-                                        </div>
-                                        <div>
-                                                <span><i class="far fa-frown text-danger pl-2 "></i> 10000</span> 
-                                        </div>
+                    <div class="container">
+                        <div class="teams">
+                            <div class="row">
+                                <div class="quiz-col-40">
+                                    <div>
+                                        <span class="text-dark h5 font-weight-bold">Name Тeam</span>
                                     </div>
-                                    <div >
-                                            <img style="position:relative; left: 18%" src="https://picsum.photos/110/110" class="mt-1 ml-1 img-fluid rounded imgbord"  alt="">
+                                    <div>
+                                        <span><i class="fas fa-fire-alt text-danger p-1"></i>Новичок</span>
+                                    </div>
+                                    <div>
+                                        <span><i class="far fa-smile text-success pl-2"></i> 20000</span>
+                                    </div>
+                                    <div>
+                                        <span><i class="far fa-meh text-warning pl-2"></i> 10000</span>
+
+                                    </div>
+                                    <div>
+                                        <span><i class="far fa-frown text-danger pl-2 "></i> 10000</span>
                                     </div>
                                 </div>
-                                <div class="row" style="position:relative; left: 50%">
-                                        <div class="quiz-col-40">
-                                            <div class="row">
-                                                <div class="col-md-12 text-left">
-                                                    <span><i class="fas fa-user-tie "></i> Иванов Иван </span>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-12 text-left">
-                                                    <span class="text-dark h5"><i class="fas fa-users"></i> 700</span>
-                                                </div>
-                                            </div>
+                                <div>
+                                    <img style="position:relative; left: 18%" src="https://picsum.photos/110/110"
+                                        class="mt-1 ml-1 img-fluid rounded imgbord" alt="">
+                                </div>
+                            </div>
+                            <div class="row" style="position:relative; left: 50%">
+                                <div class="quiz-col-40">
+                                    <div class="row">
+                                        <div class="col-md-12 text-left">
+                                            <span><i class="fas fa-user-tie "></i> Иванов Иван </span>
                                         </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 text-left">
+                                            <span class="text-dark h5"><i class="fas fa-users"></i> 700</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                     
-                    
-                    <!--/PanelTeams-->
+
+
+                        <!--/PanelTeams-->
+                    </div>
                 </div>
             </div>
-        </div>
     </section>
     <% include blocks/footer %>
-  </body>
+</body>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/public/js/animateCSS.js"></script>
 <script src="/public/js/home.js"></script>
+
 </html>

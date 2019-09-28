@@ -16,8 +16,8 @@
     $(document).ready(function () {
         $.ajax({
             type: "POST",
-            url: '/team-operation/changeCapitan',
-            data: { oldCapitanId: 171, newCapitanId: 169, teamId: 74 },
+            url: '/team-operation/changeCoach',
+            data: { oldCoachId: 171, newCoachId: 169, teamId: 74 },
             dataType: 'text',
             success: function (data) {
                 console.log(data);
