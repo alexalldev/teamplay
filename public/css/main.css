@@ -19,3 +19,8 @@ a:hover
 {
 	color: red;
 }
+
+.footer
+{
+	bottom: 0;
+}

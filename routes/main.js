@@ -32,82 +32,12 @@ router.get('/', RedirectRules, function (req, res) {
     res.render('index', { Code: req.query.Code, User: req.query.User });
 });
 
-router.get('/rooms', function (req, res) {
-    res.render('roomTest');
+router.get('/home', function(req, res) {
+    res.render('home');
 });
 
-router.post('/RegisterNewUser', urlencodedParser, function (req, res) {
-    if (req.body.password === req.body.confirmpassword) {
-        if (req.body.password.length > 5) {
-            if (validateEmail(req.body.email)) {
-                let transporter = nodeMailer.createTransport({
-                    host: 'mail.alexall.dev',
-                    port: 465,
-                    secure: true,
-                    auth: {
-                        user: 'info@teamplay.space',
-                        pass: 'teamplayspace'
-                    }
-                });
-
-                fs.readFile(__dirname + '/../html_mail/TeamPlayVerificationEmail.html', 'utf-8', function (err, data) {
-                    if (err) res.end(JSON.stringify(err));
-                    var html_mail_array = data.split('CONFIRM_NEW_USER_BUTTON');
-                    var confirmation_hash = crypto.randomBytes(Math.ceil(120 / 2))
-                        .toString('hex') // convert to hexadecimal format
-                        .slice(0, 120);
-                    var html_mail = html_mail_array[0] + req.protocol + '://' + req.hostname + '/ConfirmNewUserAccount?confirmation_type=email&security_code=' + confirmation_hash + html_mail_array[1];
-
-
-                    let mailOptions = {
-                        from: '"Teamplay info" <info@teamplay.space>', // sender address
-                        to: req.body.email,
-                        subject: 'Подтвердите регистрацию Teamplay', // Subject line
-                        html: html_mail
-                    };
-
-                    var UserFio = req.body.fullname.split(' ');
-                    if (UserFio.length == 3 && UserFio[0] != '' && UserFio[1] != '' && UserFio[2] != '')
-                        User.findOrCreate({ where: { UserEmail: req.body.email.toLowerCase() } })
-                            .then(([user, created]) => {
-                                if (created == true) {
-
-                                    user.update({
-                                        UserName: UserFio[1].charAt(0).toUpperCase() + UserFio[1].substring(1).toLowerCase(),
-                                        UserFamily: UserFio[0].charAt(0).toUpperCase() + UserFio[0].substring(1).toLowerCase(),
-                                        UserLastName: UserFio[2].charAt(0).toUpperCase() + UserFio[2].substring(1).toLowerCase(),
-                                        UserPassword: Hash.generate(req.body.password),
-                                        UserRegistrationToken: confirmation_hash,
-                                        UserIsActive: false,
-                                        isCoach: false
-                                    })
-                                        .then(() => {
-                                            transporter.sendMail(mailOptions, (error, info) => {
-                                                if (error) {
-                                                    return res.end(JSON.stringify(error));
-                                                }
-                                                //console.log('Message %s sent: %s', info.messageId, info.response);
-                                                res.end('true');
-                                            });
-                                        })
-                                }
-                                else {
-                                    res.end('user_exists');
-                                }
-                            })
-                            .catch(err => console.log(err));
-                    else
-                        res.end('incorrect_fio');
-                });
-            }
-            else
-                res.end('incorrect_email');
-        }
-        else
-            res.end('poor_password');
-    }
-    else
-        res.end('incorrect_confirm_password');
+router.get('/room/:RoomTag', function(req, res) {
+    res.render('room', {RoomTag: req.params.RoomTag});
 });
 
 router.get('/ConfirmNewUserAccount', function (req, res, next) {
