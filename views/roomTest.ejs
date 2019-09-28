@@ -15,6 +15,7 @@
         <input type="text" id="roomName" placeholder="roomName">
         <input type="text" id="roomCreator" placeholder="roomCreator">
         <input type="text" id="action" placeholder="action">
+        <input type="text" id="userId" placeholder="userId">
         <input type="submit" value="post" id="submit-btn">
     </form>
 </body>
@@ -32,6 +33,9 @@
         else if ($('#action').val() == 'getCreatorStatus') {
             socket.emit('getCreatorStatus', roomTag);
         }
+        else if ($('#action').val() == 'user login') {
+            socket.emit('user login', $('#userId').val());
+        }
 
         event.preventDefault();
     });
@@ -48,9 +52,14 @@
         if (users.err) {
             console.log(users.err)
         } else {
-            console.log(users);
+            console.log(users.result);
         }
     });
+
+    socket.on('user logged in', user => {
+        console.log('user logged in')
+        console.log(user)
+    })
 
     socket.on('sendCreatorStatus', function (status) {
         console.log(status);
