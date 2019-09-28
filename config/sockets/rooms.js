@@ -22,7 +22,7 @@ function roomsSocket (socket, io) {
 	socket.on('getRoomPlayers', function (roomTag) {
 		let users = {};
 		roomPlayer.findAll({ where: { RoomTag: roomTag }, raw: true }).then(room => {
-			+(async () => {
+			(async () => {
 				//.to(room[0].RoomTag)
 				io.emit('sendRoomPlayers', await findRoomPlayers(room, users));
 			})();
