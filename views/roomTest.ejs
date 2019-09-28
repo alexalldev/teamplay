@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <% include blocks/tittle %>
+    <% include blocks/title %>
     <title>Document</title>
 </head>
 
@@ -27,19 +27,28 @@
         console.log($('#roomName').val() + $('#roomCreator').val());
         if ($('#action').val() == 'createRoom')
             socket.emit('createRoom', $('#roomName').val(), $('#roomCreator').val());
-        else if ($('#action').val() == 'getConnectedUsers') {
-            socket.emit('getConnectedUsers', roomTag);
+        else if ($('#action').val() == 'getRoomPlayers') {
+            socket.emit('getRoomPlayers', roomTag);
         }
         else if ($('#action').val() == 'getCreatorStatus') {
             socket.emit('getCreatorStatus', roomTag);
         }
-        else if ($('#action').val() == 'user login') {
-            socket.emit('user login', $('#userId').val());
+        else if ($('#action').val() == 'enter room') {
+            socket.emit('enter room', $('#userId').val());
+        }
+        else if ($('#action').val() == 'leave room') {
+            socket.emit('leave room', $('#userId').val());
         }
 
         event.preventDefault();
     });
 
+    socket.on('entered room', function (user) {
+        console.log(user.UserFIO);
+    });
+    socket.on('left room', function (user) {
+        console.log(user.UserFIO);
+    });
     socket.on('roomAdded', function () {
         console.log("room was created successfully");
     });
@@ -48,7 +57,7 @@
         console.log("room with the same name is already exists");
     });
 
-    socket.on('sendConnectedUsers', function (users) {
+    socket.on('sendRoomPlayers', function (users) {
         if (users.err) {
             console.log(users.err)
         } else {

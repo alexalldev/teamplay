@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>TeamPlay Info</title>
-    <% include blocks/tittle %>
-  </head>
-  <body>
-  	<section>
-          <div style="position: absolute; left: 50%;">
-              Info
-          </div>
-        <table style="height: 98vh; width: 100%;">
-                <tr align="center">
-                    <td valign="center">
-                        <span class="h1"><%= message == 'ADMIN_KICK' ? 'Ваша команда исключена Администратором' : message %></span>
-                    </td>
-                </tr>
-                <tr align="center">
-                  <td valign="center">
-                      <a href="/">Главная</a>
-                  </td>
-                </tr>
-            </table>
-  	</section>
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <title>TeamPlay Info</title>
+  <% include blocks/title %>
+</head>
+
+<body>
+  <section>
+    <div style="position: absolute; left: 50%;">
+      Info
+    </div>
+    <table style="height: 98vh; width: 100%;">
+      <tr align="center">
+        <td valign="center">
+          <span class="h1"><%= message == 'ADMIN_KICK' ? 'Ваша команда исключена Администратором' : message %></span>
+        </td>
+      </tr>
+      <tr align="center">
+        <td valign="center">
+          <a href="/">Главная</a>
+        </td>
+      </tr>
+    </table>
+  </section>
+</body>
+
 </html>

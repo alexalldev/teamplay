@@ -1,70 +1,74 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>TeamPlay HOME</title>
-    <% include blocks/tittle %>
-  </head>
-  <% include blocks/loader %>
-  <body>
-  	<section>
-  		<table style="width: 100vw; height: 100vh;">
-  			<tr>
-  				<td>
-  					<div class="container">
-  						<div class="row">
-  							<div class="col-md-12 text-center">
-  								<form class="EnterForm" action="javascript:void(null)">
-  									<div class="form-group">
-                      <img src="public/images/logo.svg" width="100" height="100">
-                      <span class="h1">Admin</span>
-  									</div>
-                    <div class="form-group">
-  										<select class="form-control" name="username">
-                        <% for(var admin in admins) {%>
-                            <option value="<%=admins[admin].AdminId %>"><%=admins[admin].AdminFamily%> <%=admins[admin].AdminName%> <%=admins[admin].AdminLastName%></option>
-                        <%} %>
-  										</select>
-  									</div>
-  									<div class="form-group">
-                      <input type="password" class="form-control Password" name="password" value="" placeholder="• • •">
-  									</div>
-  									<div class="form-group">
-  										<button class="btn btn-info btn-lg">E n t e r</button>
-  									</div>
-  								</form>
-  							</div>
-  						</div>
-  					</div>
-  				</td>
-  			</tr>
-  		</table>
-  	</section>
-  </body>
-  <script>
-    $(document).ready(function() {
-      $('.EnterForm').submit(function () {
-        var FormData = $('.EnterForm').serialize();
-        $.ajax({
-          type: "POST",
-          url: 'AdminEnter',
-          data: FormData,
-          dataType: 'text',
-          success: function(data) {
-            if (data == 'true')
-              location.href = 'ControlPanel';
-            else if (data == 'pass')
-              Swal("Ошибка", "Неверный пароль", "error");
-            else if (data == 'null_admin')
-              Swal("Ошибка", "Этот администратор не существует или был удален", "error");
-            else if (data == 'Missing credentials')
-              Swal("Ошибка", "Пароль отсутствует", "error");
-          },
-          error: function(xhr, str) {
-            alert('Возникла ошибка: ' + xhr.responseCode);
-          }
-        });
+
+<head>
+  <meta charset="utf-8">
+  <title>TeamPlay HOME</title>
+  <% include blocks/title %>
+</head>
+<% include blocks/loader %>
+
+<body>
+  <section>
+    <table style="width: 100vw; height: 100vh;">
+      <tr>
+        <td>
+          <div class="container">
+            <div class="row">
+              <div class="col-md-12 text-center">
+                <form class="EnterForm" action="javascript:void(null)">
+                  <div class="form-group">
+                    <img src="public/images/logo.svg" width="100" height="100">
+                    <span class="h1">Admin</span>
+                  </div>
+                  <div class="form-group">
+                    <select class="form-control" name="username">
+                      <% for(var admin in admins) {%>
+                      <option value="<%=admins[admin].AdminId %>"><%=admins[admin].AdminFamily%>
+                        <%=admins[admin].AdminName%> <%=admins[admin].AdminLastName%></option>
+                      <%} %>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <input type="password" class="form-control Password" name="password" value="" placeholder="• • •">
+                  </div>
+                  <div class="form-group">
+                    <button class="btn btn-info btn-lg">E n t e r</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </section>
+</body>
+<script>
+  $(document).ready(function () {
+    $('.EnterForm').submit(function () {
+      var FormData = $('.EnterForm').serialize();
+      $.ajax({
+        type: "POST",
+        url: 'AdminEnter',
+        data: FormData,
+        dataType: 'text',
+        success: function (data) {
+          if (data == 'true')
+            location.href = 'ControlPanel';
+          else if (data == 'pass')
+            Swal("Ошибка", "Неверный пароль", "error");
+          else if (data == 'null_admin')
+            Swal("Ошибка", "Этот администратор не существует или был удален", "error");
+          else if (data == 'Missing credentials')
+            Swal("Ошибка", "Пароль отсутствует", "error");
+        },
+        error: function (xhr, str) {
+          alert('Возникла ошибка: ' + xhr.responseCode);
+        }
       });
     });
-  </script>
+  });
+</script>
+
 </html>
