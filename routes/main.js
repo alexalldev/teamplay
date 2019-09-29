@@ -38,7 +38,7 @@ router.get('/rooms', function(req, res) {
 	res.render('roomTest');
 });
 
-router.get('/home', function(req, res) {
+router.get('/home', app.protect, function(req, res) {
 	Game.findAll({ where: { QuizCreatorId: req.session.passport.user }, raw: true }).then(async games => {
 		for await (const game of games) {
 			await Category.findAll({ where: { Game_Id: game.GameId }, raw: true }).then(async categories => {
@@ -264,7 +264,7 @@ module.exports = router;
 
 function RedirectRules(req, res, next) {
 	if (req.session.Team) res.redirect('Room');
-	else if (req.isAuthenticated()) res.redirect('ControlPanel');
+	else if (req.isAuthenticated()) res.redirect('home');
 	else next();
 }
 
