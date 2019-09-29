@@ -19,11 +19,9 @@ function roomsSocket(socket, io) {
 
 	socket.on('getRoomPlayers', function(roomTag) {
 		let users = {};
-		RoomPlayer.findAll({ where: { RoomTag: roomTag }, raw: true }).then(room => {
-			(async () => {
-				//.to(room[0].RoomTag)
-				io.emit('sendRoomPlayers', await findRoomPlayers(room, users));
-			})();
+		RoomPlayer.findAll({ where: { RoomTag: roomTag }, raw: true }).then(async room => {
+			//.to(room[0].RoomTag)
+			io.emit('sendRoomPlayers', await findRoomPlayers(room, users));
 		});
 	});
 
