@@ -14,7 +14,8 @@ let {
 	Category,
 	Question,
 	Answer,
-	User
+	User,
+	Room
 } = require('../config/routers-config');
 
 const db = require('../config/database');
@@ -50,11 +51,26 @@ router.get('/home', app.protect, function(req, res) {
 			});
 		}
 		res.render('home', { games: games });
-	});
+	})
+	.catch(err => console.log(err))
 });
 
 router.get('/room/:RoomTag', function(req, res) {
-	res.render('room', { RoomTag: req.params.RoomTag });
+	Room.findOne({where: {RoomTag: req.params.RoomTag}, raw: true})
+	.then(room => {
+		if (room)
+		{
+			if (req.session.passport.user == room.RoomCreatorID)
+				req.session.isCreator = true;
+			else
+				req.session.isCreator = false;
+			req.session.roomId = room.RoomID;
+			res.render('room', { RoomTag: room.RoomName })
+		}
+		else
+			res.end('There is no room with such name');
+	})
+	.catch(err => console.log(err))
 });
 
 router.get('/ConfirmNewUserAccount', function(req, res, next) {
@@ -171,6 +187,11 @@ router.get('/logout', function(req, res) {
 });
 
 function LogOut(req, res, reason = '') {
+	if (req.session.roomId)
+		delete req.session.roomId;
+	if (req.session.isCreator)
+		delete req.session.isCreator;
+		
 	if (req.session.Team) {
 		if (req.session.Game) {
 			if (req.session.Game.GameTeamId) {

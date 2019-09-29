@@ -20,12 +20,12 @@
     transition: 0.3s all;
 }
 
-.organizer-connection[connection="online"]
+.organizer-connection[connection="true"]
 {
     color: #28a745!important
 }
 
-.organizer-connection[connection="offline"]
+.organizer-connection[connection="false"]
 {
     color: #dc3545!important;
 }

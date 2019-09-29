@@ -10,6 +10,7 @@ const Category = require('../models/Category');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
 const User = require('../models/User');
+const Room = require('../models/Room');
 
 const app = require('../config/server-config')
 
@@ -34,5 +35,6 @@ module.exports = {
     Category,
     Question,
     Answer,
-    User
+    User,
+    Room
 }

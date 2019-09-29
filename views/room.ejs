@@ -5,7 +5,7 @@
 	<meta charset="utf-8">
 	<title>TeamPlay ControlPanel</title>
 	<link rel="stylesheet" href="/public/css/room.css">
-	<% include blocks/tittle %>
+	<% include blocks/title %>
 </head>
 
 <body>
@@ -13,7 +13,7 @@
 	<% include blocks/header %>
 	<section class="app-container">
 		<div class="organizer">
-			<span class="organizer-connection" connection="online">•</span>
+			<span class="organizer-connection" connection="false">•</span>
 			<img class="user_organizer" src="/public/user_organizer.png" alt="">
 		</div>
 		<div class="container">
@@ -32,6 +32,6 @@
 </body>
 <% include blocks/socket %>
 <script src="/public/js/animateCSS.js"></script>
-<script src="/public/js/home.js"></script>
+<script src="/public/js/room.js"></script>
 
 </html>

@@ -46,11 +46,14 @@ function roomsSocket(socket, io) {
 		});
 	});
 
-	socket.on('getCreatorStatus', function(roomTag) {
-		Room.findOne({ where: { RoomTag: roomTag }, raw: true }).then(room => {
-			//.to(roomTag)
-			io.emit('sendCreatorStatus', io.ClientsStore.userById(room.RoomCreatorID) ? true : false);
-		});
+	socket.on('getCreatorStatus', function() {
+		if (session.roomId)
+			Room.findOne({ where: { RoomId: session.roomId }, raw: true }).then(room => {
+				//.to(roomTag)
+				io.emit('RecieveCreatorStatus', io.ClientsStore.creatorById(room.RoomCreatorID) ? true : false);
+			});
+		else
+			console.log('There is no roomId in session');
 	});
 
 	socket.on('disconnect', () => {});

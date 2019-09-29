@@ -13,15 +13,15 @@ const Question = require('../../models/Question');
 const Answer = require('../../models/Answer');
 
 function ClientsStore () {
-	var Admins = [];
+	var Creators = [];
 	var Teams = [];
 	var Users = [];
 
-	this.pushAdmin = async function (Admin) {
-		for (const A in Admins) {
-			if (Admins[A].Id == Admin.Id) Admins.splice(A, 1);
+	this.pushCreator = async function (Creator) {
+		for (const C in Creators) {
+			if (Creators[C].Id == Creator.Id) Creators.splice(C, 1);
 		}
-		Admins.push(Admin);
+		Creators.push(Creator);
 	};
 
 	this.pushTeam = async function (Team) {
@@ -42,8 +42,8 @@ function ClientsStore () {
 		for (const T in Teams) {
 			if (Teams[T].SocketId == socketId) Teams.splice(T, 1);
 		}
-		for (const A in Admins) {
-			if (Admins[A].SocketId == socketId) Admins.splice(A, 1);
+		for (const C in Creators) {
+			if (Creators[C].SocketId == socketId) Creators.splice(C, 1);
 		}
 
 		for (const U in Users) {
@@ -52,11 +52,11 @@ function ClientsStore () {
 	};
 
 	this.clients = function () {
-		return { Admins, Teams, Users };
+		return { Creators, Teams, Users };
 	};
 
-	this.admins = function () {
-		return Admins;
+	this.creators = function () {
+		return Creators;
 	};
 
 	this.teams = function () {
@@ -74,9 +74,9 @@ function ClientsStore () {
 		return null;
 	};
 
-	this.adminById = function (adminId) {
-		for (const admin of Admins) {
-			if (admin.Id == adminId) return admin;
+	this.creatorById = function (creatorId) {
+		for (const creator of Creators) {
+			if (creator.Id == creatorId) return creator;
 		}
 		return null;
 	};
@@ -110,11 +110,11 @@ io.emitUser = function (userId, eventName, data) {
 	else return 'there is no such user';
 };
 
-io.emitAdmin = function (adminId, eventName, data) {
-	var admin = io.ClientsStore.adminById(adminId);
-	if (admin != null)
+io.emitCreator = function (creatorId, eventName, data) {
+	var creator = io.ClientsStore.creatorById(creatorId);
+	if (creator != null)
 		try {
-			if (io.sockets.connected[admin.SocketId]) io.sockets.connected[admin.SocketId].emit(eventName, data);
+			if (io.sockets.connected[creator.SocketId]) io.sockets.connected[creator.SocketId].emit(eventName, data);
 		} catch (err) {
 			console.log(err);
 		}
@@ -128,37 +128,26 @@ io.on('connection', function (socket) {
 	const session = socket.request.session; //Сессия пользователя
 
 	//Вход в ClientStore
-	if (socket.LoggedAdmin)
-		io.ClientsStore.pushAdmin({
-			Id:
-				socket.LoggedAdmin ? session.passport.user :
-				'',
+	if (session.isCreator)
+		io.ClientsStore.pushCreator({
+			Id: session.passport.user,
 			SocketId: socket.id
 		});
-	else if (session.Team)
-		if (session.Game)
-			io.ClientsStore.pushTeam({
-				Id:
-					session.Game.GameTeamId ? session.Game.GameTeamId :
-					'',
-				SocketId: socket.id
-			});
-
-	if (session.passport)
+	else if (session.passport)
 		if (session.passport.user)
 			io.ClientsStore.pushUser({
 				Id: session.passport.user,
 				SocketId: socket.id
 			});
 	//Подключение к комнате в зависимости от типа пользователя
-	if (session.Team) {
-		if (session.Game) socket.join('Teams' + session.Game.Id);
-		socket.join('Teams');
-	} else if (socket.LoggedAdmin) {
-		if (session.Game) socket.join('Admins' + session.Game.Id);
-		socket.join('Admins');
-	}
-
+	if (session.roomId) 
+		if (session.isCreator)
+		{
+			socket.join('RoomCreators' + session.roomId);
+			socket.to('RoomPlayers' + session.roomId).emit('RecieveCreatorStatus', true)
+		}
+		else
+			socket.join('RoomPlayers' + session.roomId);
 	if (session.Stream) {
 		socket.join('Stream' + session.Stream.GameId);
 	}
@@ -324,6 +313,8 @@ io.on('connection', function (socket) {
 	});
 
 	socket.on('disconnect', function (reason) {
+		if (session.isCreator)
+			socket.to('RoomPlayers' + session.roomId).emit('RecieveCreatorStatus', false)
 		io.ClientsStore.removeById(socket.id);
 	});
 
