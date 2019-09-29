@@ -87,6 +87,7 @@ function SignIn(User) {
 }
 
 function ShowTheDoors() {
+	clearInterval(window.WelcomeUrlTimer);
 	$('.door').removeClass('door-hidden');
 	LoadPage('home');
 	OpenTheDoors();
