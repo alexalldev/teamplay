@@ -1,9 +1,8 @@
 .players-list
 {
-    width: 15rem;
     border: solid 1.75px #eee;
     border-radius: 5px;
-    cursor: pointer;
+    padding: 1rem;
 }
 
 .user_organizer
@@ -28,4 +27,13 @@
 .organizer-connection[connection="false"]
 {
     color: #dc3545!important;
+}
+
+.Player
+{
+    border: solid 1.75px #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 0.67rem!important;
+    margin-right: 0.67rem!important;
 }

@@ -2,35 +2,79 @@
 <html lang="en" dir="ltr">
 
 <head>
-	<meta charset="utf-8">
-	<title>TeamPlay ControlPanel</title>
-	<link rel="stylesheet" href="/public/css/room.css">
-	<% include blocks/title %>
+  <meta charset="utf-8">
+  <title>TeamPlay ControlPanel</title>
+  <link rel="stylesheet" href="/public/css/room.css">
+  <% include blocks/title %>
 </head>
 
 <body>
-	<% include blocks/loader %>
-	<% include blocks/header %>
-	<section class="app-container">
-		<div class="organizer">
-			<span class="organizer-connection" connection="false">•</span>
-			<img class="user_organizer" src="/public/user_organizer.png" alt="">
-		</div>
-		<div class="container">
-			<div class="row">
-				<div class="col-md-12 text-center">
-					<h1 id="RoomName"><%= RoomTag %></h1>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12 players-list text-center">
-				</div>
-			</div>
-		</div>
-	</section>
-	<% include blocks/footer %>
+  <% include blocks/loader %>
+  <% include blocks/header %>
+  <section class="app-container">
+    <div class="organizer">
+      <span class="organizer-connection" connection="false">•</span>
+      <img class="user_organizer" src="/public/user_organizer.png" alt="">
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h1 id="RoomName"><%= RoomTag %></h1>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12 players-list text-center">
+          <div>
+            <div><span style="font-size:30px">Group 1</span></div>
+            <div style="border:dashed rgb(36, 102, 163);border-radius: 10px; border-width:3px;">
+
+              <div class="row Player mt-2 mb-2">
+                <div class="col-md-12 text-left">
+                  <img class="user_organizer" src="/public/user-icon.png" alt="">
+                  <span style="font-size: 30px; position:relative; top: 5%"> Копатыч П.В.</span>
+                  <span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>
+                </div>
+              </div>
+
+              <div class="row Player mt-2 mb-2">
+                <div class="col-md-12 text-left">
+                  <img class="user_organizer" src="/public/user-icon.png" alt="">
+                  <span style="font-size: 30px; position:relative; top: 5%">Каркарыч Н.В.</span>
+                </div>
+              </div>
+
+              <div class="row Player mt-2 mb-2">
+                <div class="col-md-12 text-left">
+                  <img class="user_organizer" src="/public/user-icon.png" alt="">
+                  <span style="font-size: 30px; position:relative; top: 5%">Крош И.В.</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div>
+            <div style="padding-top:4%"><span style="font-size:30px">Group 2</span></div>
+            <div style="border:dashed rgb(36, 102, 163);border-radius: 10px;border-width:3px;">
+
+              <div class="row Player mt-2 mb-2">
+                <div class="col-md-12 text-left">
+                  <img class="user_organizer" src="/public/user-icon.png" alt="">
+                  <span style="font-size: 30px; position:relative; top: 5%">Ежик-Ежик-Ежик Л.В.</span>
+                  <span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+  <% include blocks/footer %>
 </body>
-<% include blocks/socket %>
+<script src="/socket.io/socket.io.js"></script>
 <script src="/public/js/animateCSS.js"></script>
 <script src="/public/js/room.js"></script>
 
