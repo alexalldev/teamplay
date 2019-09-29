@@ -89,29 +89,19 @@ function SignIn(User) {
 function ShowTheDoors() {
 	clearInterval(window.WelcomeUrlTimer);
 	$('.door').removeClass('door-hidden');
-	LoadPage('home');
 	OpenTheDoors();
 }
 
 function OpenTheDoors() {
+	$('.content').html('');
 	$('.door-right').addClass('door-open-right');
 	$('.door-left').addClass('door-open-left');
-	$('.door').html('');
-	setTimeout(() => {
-		removeDoors();
-	}, 1000);
-}
-
-function removeDoors() {
-	$('.door').remove();
+	LoadPage('home');
 }
 
 function LoadPage(pageName) {
 	history.pushState({ page: pageName }, '', pageName);
-	$('.content').html('');
-	setTimeout(() => {
-		location.reload();
-	}, 2000);
+	location.reload();
 	//if (pageName)
 	// $.ajax({
 	//     type: "POST",
