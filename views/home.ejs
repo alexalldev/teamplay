@@ -14,71 +14,40 @@
     <section class="app-container">
         <div class="container">
             <div class="row">
-                <div class="col-md-2 navigation-area">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="ml-2 mt-2 main-menu">
-                                <button class="btn btn-info h4">Мои микторины</button>
-                                <button class="btn btn-info h4">Общий доступ</button>
-                                <button class="btn btn-info h4">Команды</button>
-                                <button class="btn btn-info h4">Игроки</button>
-                                <button class="btn btn-info h4">Организаторы</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <% include blocks/navigation-area %>
                 <div class="col-md-10 working-area">
+                    <table class="centred-table">
+                        <tr align="center">
+                            <td valign="center">
+                                <div class="container greetings">
+                                    <div class="row">
+                                        <div class="col-md-12 text-center">
+                                            <img src="/public/images/logo.svg" class="greetings-img" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="row mb-5">
+                                        <div class="col-md-12 text-center">
+                                            <h1>Проведите викторину удаленно в TeamPlay</h1>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 text-center">
+                                            <h2>Создайте викторину и добавьте в нее вопросы</h2>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 text-center">
+                                            <button class="btn btn-outline-success h1 btnCreateQuiz">Создать</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
                     <div class="container mt-2">
                         <% games.forEach(function(quiz){ %>
                         <%- include('blocks/quiz', {quiz: quiz}); %>
                         <% }); %>
-                    </div>
-                    <!--PanelTeams-->
-
-                    <div class="container">
-                        <div class="teams">
-                            <div class="row">
-                                <div class="quiz-col-40">
-                                    <div>
-                                        <span class="text-dark h5 font-weight-bold">Name Тeam</span>
-                                    </div>
-                                    <div>
-                                        <span><i class="fas fa-fire-alt text-danger p-1"></i>Новичок</span>
-                                    </div>
-                                    <div>
-                                        <span><i class="far fa-smile text-success pl-2"></i> 20000</span>
-                                    </div>
-                                    <div>
-                                        <span><i class="far fa-meh text-warning pl-2"></i> 10000</span>
-
-                                    </div>
-                                    <div>
-                                        <span><i class="far fa-frown text-danger pl-2 "></i> 10000</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <img style="position:relative; left: 18%" src="https://picsum.photos/110/110"
-                                        class="mt-1 ml-1 img-fluid rounded imgbord" alt="">
-                                </div>
-                            </div>
-                            <div class="row" style="position:relative; left: 50%">
-                                <div class="quiz-col-40">
-                                    <div class="row">
-                                        <div class="col-md-12 text-left">
-                                            <span><i class="fas fa-user-tie "></i> Иванов Иван </span>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12 text-left">
-                                            <span class="text-dark h5"><i class="fas fa-users"></i> 700</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <!--/PanelTeams-->
                     </div>
                 </div>
             </div>

@@ -156,16 +156,22 @@ io.on('connection', function (socket) {
 
 	//Запрос на добавление новой игры с указанным именем
 	socket.on('AddGame', function (data) {
-		if (socket.LoggedAdmin) {
+		if (session.passport.user) {
 			GameTag = data.GameName.replace(/[^a-zA-Zа-яА-Я ]/g, '').toLowerCase().replace(/\s/g, '-');
 			if (GameTag.charAt(GameTag.length - 1) == '-') {
 				GameTag = GameTag.substr(0, GameTag.length - 1);
 			}
-			Game.findOrCreate({ where: { GameName: data.GameName, GameTag: GameTag } })
+			Game.findOrCreate({ where: {GameTag: GameTag } })
 				.then(([ game, created
 				]) => {
 					if (created == true)
-						socket.emit('GameAdded', game.get()); //Вернуть добавленную в базу Game
+					{
+						game.update({GameName: data.GameName, QuizCreatorId: session.passport.user})
+						.then(() => {
+							socket.emit('GameAdded', game.get()); //Вернуть добавленную в базу Game
+						})
+						.catch(err => console.log(err));
+					}
 					else socket.emit('GameExists'); //Игра существует
 				})
 				.catch(err => console.log(err));

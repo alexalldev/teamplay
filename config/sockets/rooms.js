@@ -5,11 +5,13 @@ function roomsSocket(socket, io) {
 	const session = socket.request.session;
 	socket.on('createRoom', function(roomName, creatorID) {
 		gameTag = roomName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
-		Room.findOrCreate({ where: { RoomTag: gameTag, RoomName: roomName, RoomCreatorID: creatorID } })
-			.then(([ game, created
+		Room.findOrCreate({ where: { RoomTag: gameTag } })
+			.then(([ room, created
 			]) => {
 				if (created == true) {
-					io.emit('roomAdded', created);
+					room.update({RoomName: roomName, RoomCreatorID: creatorID})
+					.then(() => io.emit('roomAdded', created))
+					.catch(err => console.log(err));
 				} else {
 					io.emit('roomExists');
 				}

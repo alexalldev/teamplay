@@ -469,6 +469,7 @@ button.btn-signup:hover, button.btn-signin:hover {
 .rememberme
 {
   user-select: none;
+  display: none;
 }
 
 .welcome-left {
@@ -584,6 +585,11 @@ a.btn-forward:hover {
   cursor: pointer;
   fill: #1059FF;
   transform: rotate(180deg);
+}
+
+.forgot-pass
+{
+  cursor: pointer;
 }
 
 @media screen and (max-width: 430px) {

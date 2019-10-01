@@ -37,10 +37,7 @@ $(function() {
 				else if (data == 'incorrect_confirm_password') $('#Info').html('Неверный повтор пароля');
 				else if (data == 'incorrect_fio') $('#Info').html('Введите ФИО через пробел');
 				else if (data == 'true') {
-					$('.nav').toggleClass('nav-up');
-					$('.form-signup-left').toggleClass('form-signup-down');
-					$('.success').toggleClass('success-left');
-					$('.frame').toggleClass('frame-short');
+					AnimateMessage("Отлично, что вы с нами. Проверьте почту для подтверждения.")
 				}
 			},
 			error: function(xhr, str) {
@@ -49,6 +46,26 @@ $(function() {
 		});
 	});
 });
+
+$('.forgot-pass').click(function() {
+	var SignzinFormData = $('.form-signin').serialize();
+	$.ajax({
+		type: 'POST',
+		url: 'ForgotPassword',
+		data: SignzinFormData,
+		dataType: 'text',
+		success: function(data) {
+			console.log(data);
+			if (data == 'null_user') $('#Message').text('Похоже такого пользователя не существует');
+			else if (data == 'null_email') $('#Message').text('Введите email');
+			else if (data == 'Please Activate Your Account via Email') $('#Message').text('Активируйте учетную запись через почту.');
+			else if (data == 'true') AnimateMessage('Проверьте почту');
+		},
+		error: function(xhr, str) {
+			alert('Возникла ошибка: ' + xhr.responseCode);
+		}
+	});
+})
 
 $('.form-signin').submit(function(e) {
 	$('#Message').text('');
@@ -141,4 +158,13 @@ function WelcomeUrl(UserName) {
 		clearInterval(window.WelcomeUrlTimer);
 		window.WelcomeCounter = 0;
 	}
+}
+
+function AnimateMessage(message) {
+	$('.AnimateMessage').text(message);
+	$('.nav').toggleClass('nav-up');
+	$('.form-signup').toggleClass('form-signup-down');
+	$('.form-signin').toggleClass('form-signup-down');
+	$('.success').toggleClass('success-left');
+	$('.frame').toggleClass('frame-short');
 }

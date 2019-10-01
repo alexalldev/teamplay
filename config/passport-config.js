@@ -22,6 +22,7 @@ passport.use(
     User.findOne({ where: { UserEmail: username }, raw: true })
       .then(user => {
         if (!user) return done(null, false, { message: 'null_user' });
+        if (!user.UserIsActive) return done(null, false, { message: 'Please Activate Your Account via Email' });
         if (!Hash.verify(password, user.UserPassword)) return done(null, false, { message: 'pass' });
         return done(null, user);
       })
