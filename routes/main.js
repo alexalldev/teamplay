@@ -40,112 +40,121 @@ router.get('/rooms', function(req, res) {
 });
 
 router.get('/home', app.protect, function(req, res) {
-	Game.findAll({ where: { QuizCreatorId: req.session.passport.user }, raw: true }).then(async games => {
-		for await (const game of games) {
-			await Category.findAll({ where: { Game_Id: game.GameId }, raw: true }).then(async categories => {
-				for await (const category of categories) {
-					await Question.count({ where: { Category_Id: category.CategoryId } }).then(
-						questionCount => (game.questionCount = questionCount)
-					);
-				}
-			});
-		}
-		res.render('home', { games: games });
-	})
-	.catch(err => console.log(err))
+	Game.findAll({ where: { QuizCreatorId: req.session.passport.user }, raw: true })
+		.then(async games => {
+			for await (const game of games) {
+				await Category.findAll({ where: { Game_Id: game.GameId }, raw: true }).then(async categories => {
+					for await (const category of categories) {
+						await Question.findAll({ where: { Category_Id: category.CategoryId } }).then(questions => {
+							game.questionCount = questions.length;
+							game.averageAsnwerTime = (function() {
+								let questionsTime = 0;
+								for (const question of questions) {
+									questionsTime += question.AnswerTime;
+								}
+								console.log({
+									time: questionsTime / questions.length,
+									questionsTime: questionsTime,
+									questionsLength: questions.length
+								});
+								return Math.floor(questionsTime / (questions.length > 0 ? questions.length : 1));
+							})();
+						});
+					}
+				});
+			}
+			console.log({ games });
+			res.render('home', { games: games });
+		})
+		.catch(err => console.log(err));
 });
 
 router.get('/room/:RoomTag', function(req, res) {
-	Room.findOne({where: {RoomTag: req.params.RoomTag}, raw: true})
-	.then(room => {
-		if (room)
-		{
-			if (req.session.passport.user == room.RoomCreatorID)
-				req.session.isCreator = true;
-			else
-				req.session.isCreator = false;
-			req.session.roomId = room.RoomID;
-			res.render('room', { RoomTag: room.RoomName })
-		}
-		else
-			res.end('There is no room with such name');
-	})
-	.catch(err => console.log(err))
+	Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
+		.then(room => {
+			if (room) {
+				if (req.session.passport.user == room.RoomCreatorID) req.session.isCreator = true;
+				else req.session.isCreator = false;
+				req.session.roomId = room.RoomID;
+				res.render('room', { RoomTag: room.RoomName });
+			} else res.end('There is no room with such name');
+		})
+		.catch(err => console.log(err));
 });
 
-router.post('/RegisterNewUser', urlencodedParser, function (req, res) {
-    if (req.body.password === req.body.confirmpassword) {
-        if (req.body.password.length > 5) {
-            if (validateEmail(req.body.email)) {
-                let transporter = nodeMailer.createTransport({
-                    host: 'mail.alexall.dev',
-                    port: 465,
-                    secure: true,
-                    auth: {
-                        user: 'info@teamplay.space',
-                        pass: 'teamplayspace'
-                    }
-                });
+router.post('/RegisterNewUser', urlencodedParser, function(req, res) {
+	if (req.body.password === req.body.confirmpassword) {
+		if (req.body.password.length > 5) {
+			if (validateEmail(req.body.email)) {
+				let transporter = nodeMailer.createTransport({
+					host: 'mail.alexall.dev',
+					port: 465,
+					secure: true,
+					auth: {
+						user: 'info@teamplay.space',
+						pass: 'teamplayspace'
+					}
+				});
 
-                fs.readFile(__dirname + '/../html_mail/TeamPlayVerificationEmail.html', 'utf-8', function (err, data) {
-                    if (err) res.end(JSON.stringify(err));
-                    var html_mail_array = data.split('CONFIRM_NEW_USER_BUTTON');
-                    var confirmation_hash = crypto.randomBytes(Math.ceil(120 / 2))
-                        .toString('hex') // convert to hexadecimal format
-                        .slice(0, 120);
-                    var html_mail = html_mail_array[0] + req.protocol + '://' + req.hostname + '/ConfirmNewUserAccount?confirmation_type=email&security_code=' + confirmation_hash + html_mail_array[1];
+				fs.readFile(__dirname + '/../html_mail/TeamPlayVerificationEmail.html', 'utf-8', function(err, data) {
+					if (err) res.end(JSON.stringify(err));
+					var html_mail_array = data.split('CONFIRM_NEW_USER_BUTTON');
+					var confirmation_hash = crypto
+						.randomBytes(Math.ceil(120 / 2))
+						.toString('hex') // convert to hexadecimal format
+						.slice(0, 120);
+					var html_mail =
+						html_mail_array[0] +
+						req.protocol +
+						'://' +
+						req.hostname +
+						'/ConfirmNewUserAccount?confirmation_type=email&security_code=' +
+						confirmation_hash +
+						html_mail_array[1];
 
+					let mailOptions = {
+						from: '"Teamplay info" <info@teamplay.space>', // sender address
+						to: req.body.email,
+						subject: 'Подтвердите регистрацию Teamplay', // Subject line
+						html: html_mail
+					};
 
-                    let mailOptions = {
-                        from: '"Teamplay info" <info@teamplay.space>', // sender address
-                        to: req.body.email,
-                        subject: 'Подтвердите регистрацию Teamplay', // Subject line
-                        html: html_mail
-                    };
-
-                    var UserFio = req.body.fullname.split(' ');
-                    if (UserFio.length == 3 && UserFio[0] != '' && UserFio[1] != '' && UserFio[2] != '')
-                        User.findOrCreate({ where: { UserEmail: req.body.email.toLowerCase() } })
-                            .then(([user, created]) => {
-                                if (created == true) {
-
-                                    user.update({
-                                        UserName: UserFio[1].charAt(0).toUpperCase() + UserFio[1].substring(1).toLowerCase(),
-                                        UserFamily: UserFio[0].charAt(0).toUpperCase() + UserFio[0].substring(1).toLowerCase(),
-                                        UserLastName: UserFio[2].charAt(0).toUpperCase() + UserFio[2].substring(1).toLowerCase(),
-                                        UserPassword: Hash.generate(req.body.password),
-                                        UserRegistrationToken: confirmation_hash,
-                                        UserIsActive: false,
-                                        isCoach: false
-                                    })
-									.then(() => {
-										transporter.sendMail(mailOptions, (error, info) => {
-											if (error) {
-												return res.end(JSON.stringify(error));
-											}
-											//console.log('Message %s sent: %s', info.messageId, info.response);
-											res.end('true');
-										});
-									})
-									.catch(err => console.log(err));
-                                }
-                                else {
-                                    res.end('user_exists');
-                                }
-                            })
-                            .catch(err => console.log(err));
-                    else
-                        res.end('incorrect_fio');
-                });
-            }
-            else
-                res.end('incorrect_email');
-        }
-        else
-            res.end('poor_password');
-    }
-    else
-        res.end('incorrect_confirm_password');
+					var UserFio = req.body.fullname.split(' ');
+					if (UserFio.length == 3 && UserFio[0] != '' && UserFio[1] != '' && UserFio[2] != '')
+						User.findOrCreate({ where: { UserEmail: req.body.email.toLowerCase() } })
+							.then(([ user, created
+							]) => {
+								if (created == true) {
+									user
+										.update({
+											UserName: UserFio[1].charAt(0).toUpperCase() + UserFio[1].substring(1).toLowerCase(),
+											UserFamily: UserFio[0].charAt(0).toUpperCase() + UserFio[0].substring(1).toLowerCase(),
+											UserLastName: UserFio[2].charAt(0).toUpperCase() + UserFio[2].substring(1).toLowerCase(),
+											UserPassword: Hash.generate(req.body.password),
+											UserRegistrationToken: confirmation_hash,
+											UserIsActive: false,
+											isCoach: false
+										})
+										.then(() => {
+											transporter.sendMail(mailOptions, (error, info) => {
+												if (error) {
+													return res.end(JSON.stringify(error));
+												}
+												//console.log('Message %s sent: %s', info.messageId, info.response);
+												res.end('true');
+											});
+										})
+										.catch(err => console.log(err));
+								} else {
+									res.end('user_exists');
+								}
+							})
+							.catch(err => console.log(err));
+					else res.end('incorrect_fio');
+				});
+			} else res.end('incorrect_email');
+		} else res.end('poor_password');
+	} else res.end('incorrect_confirm_password');
 });
 
 router.get('/ConfirmNewUserAccount', function(req, res, next) {
@@ -258,14 +267,12 @@ router.get('/Room/:GameTag', function(req, res) {
 });
 
 router.post('/ForgotPassword', urlencodedParser, function(req, res) {
-	if (req.body.username)
-		{
-			if (validateEmail(req.body.username))
-				User.findOne({where: {UserEmail: req.body.username}})
+	if (req.body.username) {
+		if (validateEmail(req.body.username))
+			User.findOne({ where: { UserEmail: req.body.username } })
 				.then(user => {
 					if (user)
-						if (user.dataValues.UserIsActive)
-						{
+						if (user.dataValues.UserIsActive) {
 							let transporter = nodeMailer.createTransport({
 								host: 'mail.alexall.dev',
 								port: 465,
@@ -275,87 +282,83 @@ router.post('/ForgotPassword', urlencodedParser, function(req, res) {
 									pass: 'teamplayspace'
 								}
 							});
-							
-							fs.readFile(__dirname + '/../html_mail/TeamPlayForgotEmail.html', 'utf-8', function (err, data) {
+
+							fs.readFile(__dirname + '/../html_mail/TeamPlayForgotEmail.html', 'utf-8', function(err, data) {
 								if (err) res.end(JSON.stringify(err));
 								var html_mail_array = data.split('NEW_EMAILBUTTON');
-								var confirmation_hash = crypto.randomBytes(Math.ceil(120 / 2))
+								var confirmation_hash = crypto
+									.randomBytes(Math.ceil(120 / 2))
 									.toString('hex') // convert to hexadecimal format
 									.slice(0, 120);
-								var html_mail = html_mail_array[0] + req.protocol + '://' + req.hostname + '/ChangePassword?confirmation_type=email&security_code=' + confirmation_hash + html_mail_array[1];
-								
-			
+								var html_mail =
+									html_mail_array[0] +
+									req.protocol +
+									'://' +
+									req.hostname +
+									'/ChangePassword?confirmation_type=email&security_code=' +
+									confirmation_hash +
+									html_mail_array[1];
+
 								let mailOptions = {
 									from: '"Teamplay info" <info@teamplay.space>', // sender address
 									to: user.UserEmail,
 									subject: 'Восстановление пароля TeamPlay', // Subject line
 									html: html_mail
 								};
-								user.update({
-									UserRegistrationToken: confirmation_hash
-								})
-								.then(() => {
-									transporter.sendMail(mailOptions, (error, info) => {
-										if (error) {
-											return res.end(JSON.stringify(error));
-										}
-										//console.log('Message %s sent: %s', info.messageId, info.response);
-										res.end('true');
+								user
+									.update({
+										UserRegistrationToken: confirmation_hash
+									})
+									.then(() => {
+										transporter.sendMail(mailOptions, (error, info) => {
+											if (error) {
+												return res.end(JSON.stringify(error));
+											}
+											//console.log('Message %s sent: %s', info.messageId, info.response);
+											res.end('true');
+										});
 									});
-								})
 							});
-						}
-						else
-							res.end('Please Activate Your Account via Email');
-					else
-						res.end('null_user');
+						} else res.end('Please Activate Your Account via Email');
+					else res.end('null_user');
 				})
 				.catch(err => console.log(err));
-		}
-	else
-		res.end('null_email');
+	} else res.end('null_email');
 });
 
 router.get('/ChangePassword', function(req, res) {
 	if (req.query.security_code)
-		User.findOne({where: {UserRegistrationToken: req.query.security_code}})
-		.then(user => {
-			if (user)
-			{
-				req.session.security_code = req.query.security_code;
-				res.render('ChangePassword', {username: user.UserEmail});
-			}
-			else
-				res.redirect('/');
-		})
-		.catch(err => console.log(err));
-	else
-		res.end('false');
+		User.findOne({ where: { UserRegistrationToken: req.query.security_code } })
+			.then(user => {
+				if (user) {
+					req.session.security_code = req.query.security_code;
+					res.render('ChangePassword', { username: user.UserEmail });
+				} else res.redirect('/');
+			})
+			.catch(err => console.log(err));
+	else res.end('false');
 });
 
 router.post('/ChangePassword', urlencodedParser, function(req, res) {
 	if (req.session.security_code)
 		if (req.body.firstpass && req.body.secondpass)
 			if (req.body.firstpass.length > 5 && req.body.firstpass == req.body.secondpass)
-				User.findOne({where: {UserRegistrationToken: req.session.security_code}})
-				.then(user => {
-					if (user)
-						user.update({UserPassword: Hash.generate(req.body.firstpass), UserRegistrationToken: ''})
-						.then(() =>{
-							delete req.session.security_code;
-							res.end('true');
-						})
-						.catch(err => console.log(err));
-					else
-						res.end('Link is inactive');
-				})
-				.catch(err => console.log(err));
-			else
-				res.end('incorrect_pass');
-		else
-			res.end('null_data');
-	else
-		res.end('false');
+				User.findOne({ where: { UserRegistrationToken: req.session.security_code } })
+					.then(user => {
+						if (user)
+							user
+								.update({ UserPassword: Hash.generate(req.body.firstpass), UserRegistrationToken: '' })
+								.then(() => {
+									delete req.session.security_code;
+									res.end('true');
+								})
+								.catch(err => console.log(err));
+						else res.end('Link is inactive');
+					})
+					.catch(err => console.log(err));
+			else res.end('incorrect_pass');
+		else res.end('null_data');
+	else res.end('false');
 });
 
 router.get('/logout', function(req, res) {
@@ -363,11 +366,9 @@ router.get('/logout', function(req, res) {
 });
 
 function LogOut(req, res, reason = '') {
-	if (req.session.roomId)
-		delete req.session.roomId;
-	if (req.session.isCreator)
-		delete req.session.isCreator;
-		
+	if (req.session.roomId) delete req.session.roomId;
+	if (req.session.isCreator) delete req.session.isCreator;
+
 	if (req.session.Team) {
 		if (req.session.Game) {
 			if (req.session.Game.GameTeamId) {

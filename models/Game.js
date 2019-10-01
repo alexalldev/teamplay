@@ -16,9 +16,6 @@ const Game = db.define('game', {
 	SelectionTime: {
 		type: Sequelize.INTEGER
 	},
-	AnswerTime: {
-		type: Sequelize.INTEGER
-	},
 	QuizCreatorId: {
 		type: Sequelize.INTEGER
 	}
