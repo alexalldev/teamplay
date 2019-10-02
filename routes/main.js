@@ -35,11 +35,11 @@ router.get('/', RedirectRules, function(req, res) {
 	res.render('index', { Code: req.query.Code, User: req.query.User });
 });
 
-router.get('/rooms', function(req, res) {
+router.get('/rooms', app.protect, function(req, res) {
 	res.render('roomTest');
 });
 
-router.get('/user/:userId', function(req, res) {
+router.get('/user/:userId', app.protect, function(req, res) {
 	User.findOne({where: {UserId: req.params.userId}, raw: true})
 	.then(async user =>{
 		if (req.session.passport.user == user.UserId)
@@ -57,7 +57,7 @@ router.get('/user/:userId', function(req, res) {
 	})
 });
 
-router.get('/user', function(req, res) {
+router.get('/user', app.protect, function(req, res) {
 	if (req.session.passport.user)
 		res.redirect('/user/' + req.session.passport.user);
 });
@@ -86,7 +86,7 @@ router.get('/home', app.protect, function(req, res) {
 		.catch(err => console.log(err));
 });
 
-router.get('/room/:RoomTag', function(req, res) {
+router.get('/room/:RoomTag', app.protect, function(req, res) {
 	Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
 		.then(room => {
 			if (room) {
@@ -215,7 +215,7 @@ router.post('/SignIn', RedirectRules, function(req, res, next) {
 	})(req, res, next);
 });
 
-router.get('/Room/:GameTag', function(req, res) {
+router.get('/Room/:GameTag', app.protect, function(req, res) {
 	if (req.session.Team) {
 		Game.findOne({ where: { GameTag: req.params.GameTag } })
 			.then(game => {
@@ -405,7 +405,7 @@ router.post('/ChangePassword', urlencodedParser, function(req, res) {
 	else res.end('false');
 });
 
-router.get('/logout', function(req, res) {
+router.get('/logout', app.protect, function(req, res) {
 	req.query.reason ? LogOut(req, res, req.query.reason) : LogOut(req, res);
 });
 
@@ -457,7 +457,7 @@ router.get('/ControlPanel/:GameTag', app.protect, function(req, res) {
 		.catch(err => console.log(err));
 });
 
-router.post('/SetStreamBackground', urlencodedParser, function(req, res) {
+router.post('/SetStreamBackground', app.protect, urlencodedParser, function(req, res) {
 	if (req.session.passport) {
 		if (req.session.Game) {
 			var form = formidable.IncomingForm();
