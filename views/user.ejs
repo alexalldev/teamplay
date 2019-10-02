@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>TeamPlay Home</title>
+    <title><%= user ? user.UserFamily + ' ' + user.UserName + ' ' + user.UserLastName : 'No user' %></title>
     <link rel="stylesheet" href="/public/css/home.css">
     <% include blocks/title %>
 </head>
@@ -15,14 +15,8 @@
         <div class="container">
             <div class="row">
                 <% include blocks/navigation-area %>
-                <div class="col-md-10 working-area mt-2">
-                    <% if (games.length > 0) { %>
-                        <% games.forEach(function(quiz){ %>
-                            <%- include('blocks/quiz', {quiz: quiz}); %>
-                            <% }); %>
-                    <% } else { %>
-                        <% include blocks/greetings %>
-                    <% } %>
+                <div class="col-md-10 working-area">
+                    <%- user ? include('blocks/userView', {user: user}) : 'Такого пользователя не существует' %>
                 </div>
             </div>
     </section>

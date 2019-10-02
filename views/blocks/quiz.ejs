@@ -1,4 +1,4 @@
-<div class="quiz">
+<div class="quiz" gameTag="<%= quiz.GameTag %>">
     <div class="row">
         <div class="quiz-col-40">
             <img src="https://picsum.photos/100/100" class="mt-1 ml-1 img-fluid rounded" alt="">
@@ -11,20 +11,20 @@
         <div class="quiz-col-40">
             <div class="row">
                 <div class="col-md-12 text-left">
-                    <span><i class="fas fa-clock ml-1 quiz-i"></i><%= quiz.averageAsnwerTime%></span>
+                    <span><i class="fas fa-clock ml-1 quiz-i"></i> <%= quiz.averageAsnwerTime ? quiz.averageAsnwerTime : 0%></span>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-12 text-left">
                     <span class="text-dark h5"><i class="fas fa-question ml-1 quiz-i"></i>
-                        <%= quiz.questionCount%></span>
+                        <%= quiz.questionCount ? quiz.questionCount : 0%></span>
                 </div>
             </div>
         </div>
         <div class="quiz-col-55">
             <div class="row mt-3">
                 <div class="col-md-12 text-right">
-                    <span class="text-dark h5 mr-1"><%= quiz.Timestamp%></span>
+                    <span class="text-dark h5 mr-1"><%= new Date(quiz.Timestamp).getDay() + '.' + new Date(quiz.Timestamp).getMonth() + '.' + new Date(quiz.Timestamp).getFullYear() %></span>
                 </div>
             </div>
         </div>

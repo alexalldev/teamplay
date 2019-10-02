@@ -121,19 +121,50 @@ router.post('/CreateQuestion', urlencodedParser, function(req, res) {
     var form = formidable.IncomingForm();
     form.uploadDir = './IMAGES/QUESTIONS_IMAGES';
     form.parse(req, function(err, fields, files) {
-        let {QuestionText, QuestionCost, Category_Id} = fields;
-        if (files.QuestionImage)
-        {
-            if (files.QuestionImage.size < 20000000)
+        if (err)
+            return res.end(JSON.stringify(err));
+        let {QuestionText, QuestionCost, Category_Id, AnswerTime} = fields;
+        if (QuestionText && QuestionCost && Category_Id && AnswerTime)
+            if (files.QuestionImage)
             {
-                var QuestionImagePath = files.QuestionImage.path.split('QUESTIONS_IMAGES')[1].replace(/\\/g, '');
-                
-                if (files.QuestionImage.type == 'image/png' || files.QuestionImage.type == 'image/jpeg' || files.QuestionImage.type == 'image/gif' || files.QuestionImage.type == 'image/svg')
+                if (files.QuestionImage.size < 20000000)
+                {
+                    var QuestionImagePath = files.QuestionImage.path.split('QUESTIONS_IMAGES')[1].replace(/\\/g, '');
+                    
+                    if (files.QuestionImage.type == 'image/png' || files.QuestionImage.type == 'image/jpeg' || files.QuestionImage.type == 'image/gif' || files.QuestionImage.type == 'image/svg')
+                    {
+                        Question.create({
+                            QuestionText,
+                            QuestionCost,
+                            AnswerTime,
+                            QuestionImagePath: QuestionImagePath,
+                            Category_Id
+                        })
+                        .then((question) => {
+                            var returnData = question.get({
+                                plain: true
+                            });
+                            if (returnData)
+                                {
+                                    returnData.QuestionImage = req.protocol + '://' + req.hostname + '/QuestionImage?QuestionId=' + returnData.QuestionId;
+                                    res.end(JSON.stringify(returnData));
+                                }
+                            else
+                                res.end('null');
+                        })
+                        .catch(err => res.end(JSON.stringify(err)));
+                    }
+                    else
+                        res.end('incorrect_format');
+                }
+                else
+                    res.end('incorrect_size');
+            }
+            else
                 {
                     Question.create({
                         QuestionText,
                         QuestionCost,
-                        QuestionImagePath: QuestionImagePath,
                         Category_Id
                     })
                     .then((question) => {
@@ -142,7 +173,6 @@ router.post('/CreateQuestion', urlencodedParser, function(req, res) {
                         });
                         if (returnData)
                             {
-                                returnData.QuestionImage = req.protocol + '://' + req.hostname + '/QuestionImage?QuestionId=' + returnData.QuestionId;
                                 res.end(JSON.stringify(returnData));
                             }
                         else
@@ -150,32 +180,8 @@ router.post('/CreateQuestion', urlencodedParser, function(req, res) {
                     })
                     .catch(err => res.end(JSON.stringify(err)));
                 }
-                else
-                    res.end('incorrect_format');
-            }
-            else
-                res.end('incorrect_size');
-        }
         else
-            {
-                Question.create({
-                    QuestionText,
-                    QuestionCost,
-                    Category_Id
-                })
-                .then((question) => {
-                    var returnData = question.get({
-                        plain: true
-                    });
-                    if (returnData)
-                        {
-                            res.end(JSON.stringify(returnData));
-                        }
-                    else
-                        res.end('null');
-                })
-                .catch(err => res.end(JSON.stringify(err)));
-            }
+            res.end('false');
       });
 });
 

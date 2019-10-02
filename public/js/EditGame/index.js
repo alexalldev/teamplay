@@ -6,9 +6,6 @@ $(document).ready(function() {
     $("#SelectionTime").on('input', function() {
         SetGameTime(1, $(this).val());
     })
-    $("#AnswerTime").on('input', function() {
-        SetGameTime(2, $(this).val());
-    })
     $("#CreateCategoryForm").submit(function(e) {
         e.preventDefault();
         $.ajax({
@@ -38,6 +35,7 @@ $(document).ready(function() {
         data.append('Category_Id', dataArray[0].value);
         data.append('QuestionText', dataArray[1].value);
         data.append('QuestionCost', dataArray[2].value);
+        data.append('AnswerTime', dataArray[3].value);
         data.append('QuestionImage', $("#QuestionImage")[0].files[0]);
        
         $.ajax({
@@ -67,6 +65,7 @@ $(document).ready(function() {
                 }
                 $("#QuestionText").val('');
                 $("#QuestionCost").val('');
+                $("#AnswerTime").val('');
                 $("#QuestionImage").val('');
             },
             error: function(xhr, str) {

@@ -46,6 +46,7 @@ build/Release
 node_modules/
 jspm_packages/
 sessions/
+IMAGES/QUESTIONS_IMAGES
 
 # TypeScript v1 declaration files
 typings/

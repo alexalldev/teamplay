@@ -26,3 +26,75 @@ a:hover
     bottom: 0;
     width: 100%;
 }
+
+.nav-item
+{
+	cursor: pointer;
+}
+
+.notifications-menu
+{
+	display: none;
+    height: 50%;
+    width: 10rem;
+    border: solid 2px;
+    position: absolute;
+    right: 0;
+    border-radius: 10px;
+    z-index: 1;
+	background: #fff;
+	overflow: auto;
+}
+
+.notifications-menu::-webkit-scrollbar {
+    width: 2px;
+}
+
+.notifications-menu::-webkit-scrollbar-track  {
+    -webkit-box-shadow: inset 0 0 1px rgba(0,0,0,0.3); 
+    -webkit-border-radius: 1px;
+    border-radius: 1px;
+}
+
+.notifications-menu::-webkit-scrollbar-thumb  {
+    -webkit-border-radius: 1px;
+    border-radius: 1px;
+    background: #A8A8A8; 
+    -webkit-box-shadow: inset 0 0 1px rgba(0,0,0,0.5); 
+}
+
+.notifications-menu::-webkit-scrollbar-thumb:window-inactive {
+    background: #eee; 
+}
+
+.nav-notification
+{
+	min-width: 95%;
+	min-height: 25%;
+	border: solid;
+    border-radius: 10px;
+	margin: 5%;
+}
+
+.nav-col-50
+{
+	width: 50%;
+}
+
+.navbar-toggler
+{
+	display: none;
+}
+
+.btnChangePassword
+{
+	cursor: pointer;
+}
+
+@media screen and (max-width: 767px)
+{
+	.navbar-toggler
+	{
+		display: block;
+	}
+}

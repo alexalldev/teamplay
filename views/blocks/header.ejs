@@ -1,7 +1,44 @@
-<nav class="navbar navbar-light bg-light">
+<nav class="navbar bg-dark navbar-dark">
     <a class="navbar-brand" href="/">
         <img src="/public/images/logo.svg" width="30" height="30" class="d-inline-block align-top" alt="">
         <span>TeamPlay</span>
     </a>
-    <a href="/logout" class="btn btn-outline-info">Logout</a><i class="fas fa-bell"></i>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navigation-area">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div>
+        <span class="nav-item nav-notifications"><i class="fas fa-bell text-white"></i></span>
+        <a href="/user" class="nav-item"><i class="fas fa-user text-white ml-4"></i></a>
+        <a href="/logout" class="nav-item"><i class="fas fa-sign-out-alt text-white ml-2"></i></a>
+    </div>
 </nav>
+<div class="notifications-menu">
+    <div class="nav-notification">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <span class="h6 notification-header">Notification Header</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <span class="text-dark notification-mainText">It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="nav-col-50 text-center">
+                    <button class="btn btn-success text-white"><i class="fa fa-check"></i></button>
+                </div>
+                <div class="nav-col-50 text-center">
+                    <button class="btn btn-danger text-white"><i class="fa fa-times"></i></button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <button class="btn btn-info text-white"><i class="fa fa-check"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/public/js/nav.js"></script>

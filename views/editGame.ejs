@@ -16,7 +16,7 @@
     <div class="container mt-2">
       <div class="row">
         <div class="col-md-12 text-center">
-          <a href="/ControlPanel" class="h1 text-info">Панель управления</a>
+          <h1 class="h1 text-info"><%= game.GameName %></h1>
         </div>
       </div>
       <div class="row SettingsGroup mt-2">
@@ -32,11 +32,6 @@
               </td>
               <td valign="bottom">
                 <span>сек.</span>
-              </td>
-              <td>
-                <label class="h5">Ответ на вопрос</label>
-                <input type="number" min="0" step="1" class="form-control" id="AnswerTime"
-                  value="<%= game.AnswerTime %>">
               </td>
               <td valign="bottom">
                 <span>сек.</span>
@@ -113,6 +108,10 @@
               <div class="form-group">
                 <input type="number" class="form-control" name="QuestionCost" id="QuestionCost" min="0" step="10"
                   placeholder="Стоимость" required="">
+              </div>
+              <div class="form-group">
+                <input type="number" class="form-control" name="AnswerTime" id="AnswerTime" min="0" step="1"
+                  placeholder="Время на ответ в секундах" required="">
               </div>
               <div class="form-group">
                 <label>Изображение к вопросу</label>

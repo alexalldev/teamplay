@@ -39,6 +39,29 @@ router.get('/rooms', function(req, res) {
 	res.render('roomTest');
 });
 
+router.get('/user/:userId', function(req, res) {
+	User.findOne({where: {UserId: req.params.userId}, raw: true})
+	.then(async user =>{
+		if (req.session.passport.user == user.UserId)
+			user.canEdit = true;
+		if (user.Team_Id > 0)
+			await Team.findOne({where: {TeamId: user.Team_Id}, raw: true})
+			.then(async team => {
+				user.TeamName = team.TeamName;
+				await User.findAndCountAll({where: {Team_Id: team.TeamId}})
+				.then(result => {
+					user.teamPlayersCount = result.count;
+				})
+			})
+		await res.render('user', {user: user});
+	})
+});
+
+router.get('/user', function(req, res) {
+	if (req.session.passport.user)
+		res.redirect('/user/' + req.session.passport.user);
+});
+
 router.get('/home', app.protect, function(req, res) {
 	Game.findAll({ where: { QuizCreatorId: req.session.passport.user }, raw: true })
 		.then(async games => {
@@ -52,18 +75,12 @@ router.get('/home', app.protect, function(req, res) {
 								for (const question of questions) {
 									questionsTime += question.AnswerTime;
 								}
-								console.log({
-									time: questionsTime / questions.length,
-									questionsTime: questionsTime,
-									questionsLength: questions.length
-								});
 								return Math.floor(questionsTime / (questions.length > 0 ? questions.length : 1));
 							})();
 						});
 					}
 				});
 			}
-			console.log({ games });
 			res.render('home', { games: games });
 		})
 		.catch(err => console.log(err));
@@ -346,8 +363,7 @@ router.post('/ChangePassword', urlencodedParser, function(req, res) {
 				User.findOne({ where: { UserRegistrationToken: req.session.security_code } })
 					.then(user => {
 						if (user)
-							user
-								.update({ UserPassword: Hash.generate(req.body.firstpass), UserRegistrationToken: '' })
+							user.update({ UserPassword: Hash.generate(req.body.firstpass), UserRegistrationToken: '' })
 								.then(() => {
 									delete req.session.security_code;
 									res.end('true');
@@ -358,6 +374,34 @@ router.post('/ChangePassword', urlencodedParser, function(req, res) {
 					.catch(err => console.log(err));
 			else res.end('incorrect_pass');
 		else res.end('null_data');
+	else if (req.session.passport.user)
+	{
+		if (req.body.currentpass && req.body.newpass)
+			User.findOne({ where: { UserId: req.session.passport.user }})
+			.then(user => {
+				if (user)
+				{
+					if (Hash.verify(req.body.currentpass, user.dataValues.UserPassword))
+					{
+						if (req.body.newpass.length > 5)
+							user.update({ UserPassword: Hash.generate(req.body.newpass)})
+							.then(() => {
+								res.end('true');
+							})
+							.catch(err => console.log(err));
+						else
+							res.end('short_pass');
+					}
+					else
+						res.end('incorrect_pass');
+				}
+				else
+					res.end('false');
+			})
+			.catch(err => console.log(err));
+		else
+			res.end('need_pass');
+	}
 	else res.end('false');
 });
 

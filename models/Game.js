@@ -18,6 +18,9 @@ const Game = db.define('game', {
 	},
 	QuizCreatorId: {
 		type: Sequelize.INTEGER
+	},
+	Timestamp: {
+		type: Sequelize.TIME
 	}
 });
 
