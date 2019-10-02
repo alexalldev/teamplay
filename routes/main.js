@@ -66,6 +66,11 @@ router.get('/home', app.protect, function(req, res) {
 	Game.findAll({ where: { QuizCreatorId: req.session.passport.user }, raw: true })
 		.then(async games => {
 			for await (const game of games) {
+				console.log(game.Timestamp);
+				game.Timestamp = new Date(game.Timestamp).getDay() + '.' + new Date(game.Timestamp).getMonth() + 
+								'.' + new Date(game.Timestamp).getFullYear() + ' ' + 
+								new Date(game.Timestamp).getHours() + ':' + new Date(game.Timestamp).getMinutes();
+				console.log(game.Timestamp);
 				await Category.findAll({ where: { Game_Id: game.GameId }, raw: true }).then(async categories => {
 					for await (const category of categories) {
 						await Question.findAll({ where: { Category_Id: category.CategoryId } }).then(questions => {
