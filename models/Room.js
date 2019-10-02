@@ -16,6 +16,9 @@ const Room = db.define('room', {
 	RoomMaxTeamPlayers: {
 		type: Sequelize.INTEGER
 	},
+	Game_Id: {
+		type: Sequelize.INTEGER
+	},
 	RoomCreatorID: {
 		type: Sequelize.INTEGER
 	}

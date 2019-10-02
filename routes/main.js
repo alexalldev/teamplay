@@ -34,12 +34,10 @@ router.get('/', RedirectRules, function(req, res) {
 
 router.get('/rooms', function(req, res) {
 	Room.findAll({ limit: 10, raw: true }).then(async rooms => {
-		console.log({ rooms });
 		let roomModels = [];
 		let usersOnline = '';
 		let creatorFIO = '';
 		for await (const room of rooms) {
-			console.log({ room });
 			await RoomPlayers.findAll({ where: { RoomTag: room.RoomTag }, raw: true }).then(roomPlayers => {
 				usersOnline = roomPlayers.length;
 			});
@@ -49,13 +47,17 @@ router.get('/rooms', function(req, res) {
 			roomModels.push({
 				roomName: room.RoomName,
 				roomCreator: creatorFIO,
+				roomTag: room.RoomTag,
 				maxTeamPlayers: room.RoomMaxTeamPlayers,
 				usersOnline: usersOnline
 			});
 		}
-		console.log({ roomModels });
-		res.render('roomTest', { roomModels: roomModels });
-	});
+		Game.findAll({where: {QuizCreatorId: req.session.passport.user}, raw: true})
+		.then(games => {
+			res.render('rooms', { roomModels: roomModels, games: games });
+		})
+	})
+	.catch(err => console.log(err));
 });
 
 router.get('/user/:userId', function(req, res) {

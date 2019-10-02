@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>TeamPlay Home</title>
+    <link rel="stylesheet" href="/public/css/home.css">
+    <% include blocks/title %>
+</head>
+
+<body>
+    <% include blocks/loader %>
+    <% include blocks/header %>
+    <section class="app-container">
+        <div class="container">
+            <div class="row">
+                <% include blocks/navigation-area %>
+                <div class="col-md-10 working-area mt-2">
+                    <div class="row">
+                        <% if (roomModels.length > 0) { %>
+                        <% roomModels.forEach(function(room){ %>
+                        <%- include('blocks/roomsListTemplate', {room: room}); %>
+                        <% }); %>
+                        <button class="btn btn-outline-success ml-2 mt-2 h1 btnCreateRoom">Создать</button>
+                        <% } else { %>
+                            <%- include('blocks/greetings', {btnName: 'btnCreateRoom'}) %>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+    </section>
+    
+      <!-- The Modal -->
+      <div class="modal fade" id="createRoomModal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+          
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <h4 class="modal-title">Создать новую комнату</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            
+            <!-- Modal body -->
+            <div class="modal-body">
+              <form action="javascript:void(null)">
+                <select class="form-control mb-2" id="MyGamesSelect" name="GameId">
+                    <% if (games.length > 0) { %>
+                        <% games.forEach(function(quiz){ %>
+                            <option value="<%= quiz.GameId %>"><%= quiz.GameName %></option>
+                        <% }); %>
+                    <% } %>
+                </select>
+                <input type="text" class="form-control mb-2" name="RoomName" id="RoomName" placeholder="Название комнаты">
+                <input type="number" class="form-control mb-2" name="RoomMaxTeamPlayers" id="RoomMaxTeamPlayers" placeholder="Максимально игроков от одной команды" min="1" step="1">
+                <button class="btn btn-success">Создать</button>
+            </form>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    <% include blocks/footer %>
+</body>
+<% include blocks/socket %>
+<script src="/public/js/animateCSS.js"></script>
+<script src="/public/js/home.js"></script>

@@ -23,7 +23,7 @@
                         <% }); %>
                         <button class="btn btn-outline-success ml-2 mt-2 h1 btnCreateQuiz">Создать</button>
                         <% } else { %>
-                        <% include blocks/greetings %>
+                        <%- include('blocks/greetings', {btnName: 'btnCreateQuiz'}) %>
                         <% } %>
                     </div>
                 </div>

@@ -22,7 +22,7 @@ body
 
 }
 
-.quiz
+.quiz, .room
 {
     width: 15rem;
     border: solid 1.75px #eee;

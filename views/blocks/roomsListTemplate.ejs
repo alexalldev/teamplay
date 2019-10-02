@@ -1,4 +1,4 @@
-<div class="quiz col-md-4 ml-2 mt-2">
+<div class="room col-md-4 ml-2 mt-2" roomTag="<%= room.roomTag %>">
     <div class="row">
         <div class="quiz-col-40">
             <img src="https://picsum.photos/100/100" class="mt-1 ml-1 img-fluid rounded" alt="">
@@ -8,7 +8,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="quiz-col-40">
+        <div class="quiz-col-55">
             <div class="row">
                 <div class="col-md-12 text-left">
                     <span>Creator: <%= room.roomCreator %></span>
@@ -21,7 +21,7 @@
                 </div>
             </div>
         </div>
-        <div class="quiz-col-55">
+        <div class="quiz-col-40">
             <div class="row mt-3">
                 <div class="col-md-12 text-right">
                     <span class="text-dark h5 mr-1">Users online: <%= room.usersOnline %></span>

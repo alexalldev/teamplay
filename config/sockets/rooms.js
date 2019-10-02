@@ -3,13 +3,14 @@ const RoomPlayer = require('../../models/RoomPlayer');
 const User = require('../../models/User');
 function roomsSocket(socket, io) {
 	const session = socket.request.session;
-	socket.on('createRoom', function(roomName, creatorID) {
-		gameTag = roomName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
-		Room.findOrCreate({ where: { RoomTag: gameTag } })
+	socket.on('createRoom', function(roomName, gameId, roomMaxTeamPlayers) {
+		var creatorID = session.passport.user;
+		roomTag = roomName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
+		Room.findOrCreate({ where: { RoomTag: roomTag } })
 			.then(([ room, created
 			]) => {
 				if (created == true) {
-					room.update({RoomName: roomName, RoomCreatorID: creatorID})
+					room.update({RoomName: roomName, RoomCreatorID: creatorID, Game_Id: gameId, RoomMaxTeamPlayers: roomMaxTeamPlayers})
 					.then(() => io.emit('roomAdded', created))
 					.catch(err => console.log(err));
 				} else {

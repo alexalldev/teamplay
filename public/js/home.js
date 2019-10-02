@@ -6,8 +6,20 @@ $(document).ready(function() {
         })
     });
 
+    $('.btnCreateRoom').click(function() {
+        $("#createRoomModal").modal();
+    });
+
+    $('.MyGamesSelect').submit(function() {
+        socket.emit('createRoom', $('#RoomName').val(), $('#MyGamesSelect').val(), $('#RoomMaxTeamPlayers').val());
+    });
+
     $('.quiz').click(function() {
         location.href = '/EditGame/' + $(this).attr('gameTag')
+    });
+
+    $('.room').click(function() {
+        location.href = '/room/' + $(this).attr('roomTag')
     });
 })
 
@@ -17,6 +29,14 @@ socket.on('GameAdded', function(data) {
 
 socket.on('GameExists', function() {
     Swal("Игра", "с таким названием существует", "info");
+});
+
+socket.on('roomAdded', function () {
+    location.reload();
+});
+
+socket.on('roomExists', function () {
+    Swal.fire('Комната', 'с таким названием уже существует', 'warning');
 });
 
 $('.btnChangePassword').click(function() {
