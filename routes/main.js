@@ -18,48 +18,62 @@ let {
 	Room
 } = require('../config/routers-config');
 
-const db = require('../config/database');
-
-var formidable = require('formidable');
-
-var nodeMailer = require('nodemailer');
+const formidable = require('formidable');
+const nodeMailer = require('nodemailer');
 const Op = require('sequelize').Op;
-var fs = require('fs');
-var crypto = require('crypto');
+const fs = require('fs');
+const crypto = require('crypto');
 
 const GamePlay = require('../models/GamePlay');
-
-var Hash = require('password-hash');
+const Hash = require('password-hash');
+const RoomPlayers = require('../models/RoomPlayer');
 
 router.get('/', RedirectRules, function(req, res) {
 	res.render('index', { Code: req.query.Code, User: req.query.User });
 });
 
 router.get('/rooms', function(req, res) {
-	res.render('roomTest');
+	Room.findAll({ limit: 10, raw: true }).then(async rooms => {
+		console.log({ rooms });
+		let roomModels = [];
+		let usersOnline = '';
+		let creatorFIO = '';
+		for await (const room of rooms) {
+			console.log({ room });
+			await RoomPlayers.findAll({ where: { RoomTag: room.RoomTag }, raw: true }).then(roomPlayers => {
+				usersOnline = roomPlayers.length;
+			});
+			await User.findOne({ where: { UserId: room.RoomCreatorID }, raw: true }).then(creator => {
+				creatorFIO = `${creator.UserFamily} ${creator.UserName.slice(0, 1)}. ${creator.UserLastName.slice(0, 1)}.`;
+			});
+			roomModels.push({
+				roomName: room.RoomName,
+				roomCreator: creatorFIO,
+				maxTeamPlayers: room.RoomMaxTeamPlayers,
+				usersOnline: usersOnline
+			});
+		}
+		console.log({ roomModels });
+		res.render('roomTest', { roomModels: roomModels });
+	});
 });
 
 router.get('/user/:userId', function(req, res) {
-	User.findOne({where: {UserId: req.params.userId}, raw: true})
-	.then(async user =>{
-		if (req.session.passport.user == user.UserId)
-			user.canEdit = true;
+	User.findOne({ where: { UserId: req.params.userId }, raw: true }).then(async user => {
+		if (req.session.passport.user == user.UserId) user.canEdit = true;
 		if (user.Team_Id > 0)
-			await Team.findOne({where: {TeamId: user.Team_Id}, raw: true})
-			.then(async team => {
+			await Team.findOne({ where: { TeamId: user.Team_Id }, raw: true }).then(async team => {
 				user.TeamName = team.TeamName;
-				await User.findAndCountAll({where: {Team_Id: team.TeamId}})
-				.then(result => {
+				await User.findAndCountAll({ where: { Team_Id: team.TeamId } }).then(result => {
 					user.teamPlayersCount = result.count;
-				})
-			})
-		await res.render('user', {user: user});
-	})
+				});
+			});
+		await res.render('user', { user: user });
+	});
 });
 
 router.get('/user', function(req, res) {
-	if (req.session.passport.user)
-		res.redirect('/user/' + req.session.passport.user);
+	if (req.session.passport.user) res.redirect('/user/' + req.session.passport.user);
 });
 
 router.get('/home', app.protect, function(req, res) {
@@ -363,7 +377,8 @@ router.post('/ChangePassword', urlencodedParser, function(req, res) {
 				User.findOne({ where: { UserRegistrationToken: req.session.security_code } })
 					.then(user => {
 						if (user)
-							user.update({ UserPassword: Hash.generate(req.body.firstpass), UserRegistrationToken: '' })
+							user
+								.update({ UserPassword: Hash.generate(req.body.firstpass), UserRegistrationToken: '' })
 								.then(() => {
 									delete req.session.security_code;
 									res.end('true');
@@ -374,35 +389,26 @@ router.post('/ChangePassword', urlencodedParser, function(req, res) {
 					.catch(err => console.log(err));
 			else res.end('incorrect_pass');
 		else res.end('null_data');
-	else if (req.session.passport.user)
-	{
+	else if (req.session.passport.user) {
 		if (req.body.currentpass && req.body.newpass)
-			User.findOne({ where: { UserId: req.session.passport.user }})
-			.then(user => {
-				if (user)
-				{
-					if (Hash.verify(req.body.currentpass, user.dataValues.UserPassword))
-					{
-						if (req.body.newpass.length > 5)
-							user.update({ UserPassword: Hash.generate(req.body.newpass)})
-							.then(() => {
-								res.end('true');
-							})
-							.catch(err => console.log(err));
-						else
-							res.end('short_pass');
-					}
-					else
-						res.end('incorrect_pass');
-				}
-				else
-					res.end('false');
-			})
-			.catch(err => console.log(err));
-		else
-			res.end('need_pass');
-	}
-	else res.end('false');
+			User.findOne({ where: { UserId: req.session.passport.user } })
+				.then(user => {
+					if (user) {
+						if (Hash.verify(req.body.currentpass, user.dataValues.UserPassword)) {
+							if (req.body.newpass.length > 5)
+								user
+									.update({ UserPassword: Hash.generate(req.body.newpass) })
+									.then(() => {
+										res.end('true');
+									})
+									.catch(err => console.log(err));
+							else res.end('short_pass');
+						} else res.end('incorrect_pass');
+					} else res.end('false');
+				})
+				.catch(err => console.log(err));
+		else res.end('need_pass');
+	} else res.end('false');
 });
 
 router.get('/logout', function(req, res) {

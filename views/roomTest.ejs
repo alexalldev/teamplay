@@ -10,7 +10,13 @@
 </head>
 
 <body>
-    
+    <% if (roomModels.length > 0) { %>
+    <% roomModels.forEach(function(room){ %>
+    <%- include('blocks/roomsListTemplate', {room: room}); %>
+    <% }); %>
+    <% } else { %>
+    <% include blocks/greetings %>
+    <% } %>
     <form action="" id="roomform">
         <input type="text" id="roomName" placeholder="roomName">
         <input type="text" id="roomCreator" placeholder="roomCreator">
@@ -20,6 +26,7 @@
     </form>
 </body>
 <% include blocks/socket %>
+<script src=""></script>
 <script>
     //переменная для теста
     const roomTag = 'stas--logvin';
@@ -39,6 +46,9 @@
                 break;
             case 'leave room':
                 socket.emit('leave room', $('#userId').val(), roomTag);
+                break;
+            case 'RoomMaxTeamPlayers':
+                socket.emit('RoomMaxTeamPlayers', roomTag);
                 break;
 
             default:
