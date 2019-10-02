@@ -32,7 +32,7 @@ router.get('/', RedirectRules, function(req, res) {
 	res.render('index', { Code: req.query.Code, User: req.query.User });
 });
 
-router.get('/rooms', function(req, res) {
+router.get('/rooms', app.protect, function(req, res) {
 	Room.findAll({ limit: 10, raw: true }).then(async rooms => {
 		let roomModels = [];
 		let usersOnline = '';
@@ -60,7 +60,7 @@ router.get('/rooms', function(req, res) {
 	.catch(err => console.log(err));
 });
 
-router.get('/user/:userId', function(req, res) {
+router.get('/user/:userId', app.protect, function(req, res) {
 	User.findOne({ where: { UserId: req.params.userId }, raw: true }).then(async user => {
 		if (req.session.passport.user == user.UserId) user.canEdit = true;
 		if (user.Team_Id > 0)
@@ -74,7 +74,7 @@ router.get('/user/:userId', function(req, res) {
 	});
 });
 
-router.get('/user', function(req, res) {
+router.get('/user', app.protect, function(req, res) {
 	if (req.session.passport.user) res.redirect('/user/' + req.session.passport.user);
 });
 
@@ -82,6 +82,18 @@ router.get('/home', app.protect, function(req, res) {
 	Game.findAll({ where: { QuizCreatorId: req.session.passport.user }, raw: true })
 		.then(async games => {
 			for await (const game of games) {
+				console.log(game.Timestamp);
+				game.Timestamp =
+					new Date(game.Timestamp).getDay() +
+					'.' +
+					new Date(game.Timestamp).getMonth() +
+					'.' +
+					new Date(game.Timestamp).getFullYear() +
+					' ' +
+					new Date(game.Timestamp).getHours() +
+					':' +
+					new Date(game.Timestamp).getMinutes();
+				console.log(game.Timestamp);
 				await Category.findAll({ where: { Game_Id: game.GameId }, raw: true }).then(async categories => {
 					for await (const category of categories) {
 						await Question.findAll({ where: { Category_Id: category.CategoryId } }).then(questions => {
@@ -102,7 +114,7 @@ router.get('/home', app.protect, function(req, res) {
 		.catch(err => console.log(err));
 });
 
-router.get('/room/:RoomTag', function(req, res) {
+router.get('/room/:RoomTag', app.protect, function(req, res) {
 	Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
 		.then(room => {
 			if (room) {
@@ -231,7 +243,7 @@ router.post('/SignIn', RedirectRules, function(req, res, next) {
 	})(req, res, next);
 });
 
-router.get('/Room/:GameTag', function(req, res) {
+router.get('/Room/:GameTag', app.protect, function(req, res) {
 	if (req.session.Team) {
 		Game.findOne({ where: { GameTag: req.params.GameTag } })
 			.then(game => {
@@ -413,7 +425,7 @@ router.post('/ChangePassword', urlencodedParser, function(req, res) {
 	} else res.end('false');
 });
 
-router.get('/logout', function(req, res) {
+router.get('/logout', app.protect, function(req, res) {
 	req.query.reason ? LogOut(req, res, req.query.reason) : LogOut(req, res);
 });
 
@@ -465,7 +477,7 @@ router.get('/ControlPanel/:GameTag', app.protect, function(req, res) {
 		.catch(err => console.log(err));
 });
 
-router.post('/SetStreamBackground', urlencodedParser, function(req, res) {
+router.post('/SetStreamBackground', app.protect, urlencodedParser, function(req, res) {
 	if (req.session.passport) {
 		if (req.session.Game) {
 			var form = formidable.IncomingForm();
