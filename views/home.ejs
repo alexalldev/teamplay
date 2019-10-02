@@ -16,13 +16,16 @@
             <div class="row">
                 <% include blocks/navigation-area %>
                 <div class="col-md-10 working-area mt-2">
-                    <% if (games.length > 0) { %>
-                        <% games.forEach(function(quiz){ %>
-                            <%- include('blocks/quiz', {quiz: quiz}); %>
-                            <% }); %>
-                    <% } else { %>
-                        <% include blocks/greetings %>
-                    <% } %>
+                    <div class="row">
+                        <% if (games.length > 0) { %>
+                            <% games.forEach(function(quiz){ %>
+                                <%- include('blocks/quiz', {quiz: quiz}); %>
+                                <% }); %>
+                                <button class="btn btn-outline-success ml-2 mt-2 h1 btnCreateQuiz">Создать</button>
+                        <% } else { %>
+                            <% include blocks/greetings %>
+                        <% } %>
+                    </div>
                 </div>
             </div>
     </section>

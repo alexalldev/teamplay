@@ -157,7 +157,7 @@ io.on('connection', function (socket) {
 	//Запрос на добавление новой игры с указанным именем
 	socket.on('AddGame', function (data) {
 		if (session.passport.user) {
-			GameTag = data.GameName.replace(/[^a-zA-Zа-яА-Я ]/g, '').toLowerCase().replace(/\s/g, '-');
+			GameTag = data.GameName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
 			if (GameTag.charAt(GameTag.length - 1) == '-') {
 				GameTag = GameTag.substr(0, GameTag.length - 1);
 			}

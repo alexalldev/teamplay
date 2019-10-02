@@ -5,6 +5,7 @@ $(document).ready(function() {
                 socket.emit('AddGame', {GameName: text.value})
         })
     });
+
     $('.quiz').click(function() {
         location.href = '/EditGame/' + $(this).attr('gameTag')
     });
@@ -12,6 +13,10 @@ $(document).ready(function() {
 
 socket.on('GameAdded', function(data) {
     location.reload();
+});
+
+socket.on('GameExists', function() {
+    Swal("Игра", "с таким названием существует", "info");
 });
 
 $('.btnChangePassword').click(function() {
