@@ -10,7 +10,7 @@ $(document).ready(function() {
         $("#createRoomModal").modal();
     });
 
-    $('.MyGamesSelect').submit(function() {
+    $("#createRoomModal").submit(function() {
         socket.emit('createRoom', $('#RoomName').val(), $('#MyGamesSelect').val(), $('#RoomMaxTeamPlayers').val());
     });
 

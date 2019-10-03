@@ -19,7 +19,9 @@
     <div class="container">
       <div class="row">
         <div class="col-md-12 text-center">
-          <h1 id="RoomName"><%= RoomTag %></h1>
+          <h1 id="RoomName"><%= room.RoomTag %></h1>
+          <label class="h5">Удалить комнату</label>
+          <button class="btn btn-danger btnRemoveRoom" roomId="<%= room.RoomID %>"><i class="fa fa-trash text-white"></i></button>
         </div>
       </div>
       <div class="row">
@@ -74,8 +76,7 @@
   </section>
   <% include blocks/footer %>
 </body>
-<script src="/socket.io/socket.io.js"></script>
+<% include blocks/socket %>
 <script src="/public/js/animateCSS.js"></script>
 <script src="/public/js/room.js"></script>
-
 </html>

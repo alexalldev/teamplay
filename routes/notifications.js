@@ -2,7 +2,7 @@ const { router, urlencodedParser, Team } = require('../config/routers-config');
 
 const userModel = require('../models/User');
 
-const notification = require('../modules/teamplay-norifications');
+const notification = require('../modules/teamplay-notifications');
 const io = require('../config/sockets/index');
 const notificationModel = require('../models/Notification');
 // const userModel = require("../models/User");

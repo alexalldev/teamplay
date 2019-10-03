@@ -120,8 +120,46 @@ router.get('/room/:RoomTag', app.protect, function(req, res) {
 			if (room) {
 				if (req.session.passport.user == room.RoomCreatorID) req.session.isCreator = true;
 				else req.session.isCreator = false;
-				req.session.roomId = room.RoomID;
-				res.render('room', { RoomTag: room.RoomName });
+				User.findOne({where: {UserId: req.session.passport.user}, raw: true})
+				.then(user => {
+					if (user)
+					{
+						RoomPlayers.findOne({where: {User_Id: req.session.passport.user}, raw: true})
+						.then((roomPlayer) => {
+							if (roomPlayer == null)
+							{
+								RoomPlayers.findAll({where: {Team_Id: user.Team_Id}})
+								.then(roomPlayers => {
+									if (roomPlayers.length < room.RoomMaxTeamPlayers)
+									{
+										RoomPlayers.create({
+											Room_Id: room.RoomID,
+											User_Id: req.session.passport.user,
+											Team_Id: user.Team_Id,
+											isRoomCreator: req.session.isCreator,
+											isGroupCoach: req.session.isCreator ? false : (roomPlayers.length == 0 ? true : false)
+										})
+										.then(() => {
+											req.session.roomId = room.RoomID;
+											io.to('RoomUsers' + room.RoomID).emit('AddUserToRoom', );
+											res.render('room', {room: room});
+										})
+										.catch(err => console.log(err));
+									}
+									else
+										return res.render('info', { message: 'Достигнуто максимально число игроков от вашей команды' });
+								})
+								.catch(err => console.log(err));
+							}
+							else
+								res.render('room', {room: room});
+						})
+						.catch(err => console.log(err));
+					}
+					else
+						return res.render('info', { message: 'null_user' });
+				})
+				.catch(err => console.log(err));
 			} else res.end('There is no room with such name');
 		})
 		.catch(err => console.log(err));

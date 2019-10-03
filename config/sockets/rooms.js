@@ -6,11 +6,11 @@ function roomsSocket(socket, io) {
 	socket.on('createRoom', function(roomName, gameId, roomMaxTeamPlayers) {
 		var creatorID = session.passport.user;
 		roomTag = roomName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
-		Room.findOrCreate({ where: { RoomTag: roomTag } })
+		Room.findOrCreate({ where: { RoomTag: roomTag, RoomCreatorID: creatorID } })
 			.then(([ room, created
 			]) => {
 				if (created == true) {
-					room.update({RoomName: roomName, RoomCreatorID: creatorID, Game_Id: gameId, RoomMaxTeamPlayers: roomMaxTeamPlayers})
+					room.update({RoomName: roomName, Game_Id: gameId, RoomMaxTeamPlayers: roomMaxTeamPlayers})
 					.then(() => io.emit('roomAdded', created))
 					.catch(err => console.log(err));
 				} else {
@@ -54,7 +54,25 @@ function roomsSocket(socket, io) {
 			Room.findOne({ where: { RoomId: session.roomId }, raw: true }).then(room => {
 				//.to(roomTag)
 				io.emit('RecieveCreatorStatus', io.ClientsStore.creatorById(room.RoomCreatorID) ? true : false);
-			});
+			})
+			.catch(err => console.log(err));
+		else
+			console.log('There is no roomId in session');
+	});
+
+	socket.on('deleteRoom', function(roomId) {
+		if (session.passport.user)
+			RoomPlayer.destroy({where: {Room_Id: roomId}})
+			.then(() => {
+				Room.destroy({ where: { RoomCreatorID: session.passport.user, RoomID: roomId }}).then(room => {
+					if (room)
+						socket.emit('roomDeleted', true);
+					else
+						socket.emit('roomDeleted', 'You cant delete this room');
+				})
+				.catch(err => console.log(err));
+			})
+			.catch(err => console.log(err));
 		else
 			console.log('There is no roomId in session');
 	});

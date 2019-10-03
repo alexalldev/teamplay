@@ -2,16 +2,25 @@ const Sequelize = require('sequelize');
 const db = require('../config/database');
 
 const RoomPlayer = db.define('room_player', {
-    RoomPlayers_ID: {
+    RoomPlayers_Id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true
     },
-    RoomTag: {
+    Room_Id: {
         type: Sequelize.STRING
     },
-    UserID: {
+    User_Id: {
         type: Sequelize.INTEGER
+    },
+    Team_Id: {
+        type: Sequelize.INTEGER
+    },
+    isRoomCreator: {
+        type: Sequelize.BOOLEAN
+    },
+    isGroupCoach: {
+        type: Sequelize.BOOLEAN
     }
 });
 

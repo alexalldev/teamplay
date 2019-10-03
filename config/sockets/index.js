@@ -144,7 +144,7 @@ io.on('connection', function (socket) {
 		if (session.isCreator)
 		{
 			socket.join('RoomCreators' + session.roomId);
-			socket.to('RoomPlayers' + session.roomId).emit('RecieveCreatorStatus', true)
+			socket.to('RoomUsers' + session.roomId).emit('RecieveCreatorStatus', true)
 		}
 		else
 			socket.join('RoomPlayers' + session.roomId);

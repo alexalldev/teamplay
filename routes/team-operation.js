@@ -1,6 +1,6 @@
 let { router, passport, Team, User, urlencodedParser } = require('../config/routers-config');
 
-const notification = require('../modules/teamplay-norifications');
+const notification = require('../modules/teamplay-notifications');
 
 router.get('/team-operation', function (req, res) {
 	res.render('team-operation');
