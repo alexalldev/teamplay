@@ -6,8 +6,8 @@ const FileStore = require('session-file-store')(session)
 const passport = require('passport')
 
 const Question = require('./models/Question');
-
 const GamePlay = require('./models/GamePlay');
+const Room = require('./models/Room');
 
 const fs = require("fs");
 
@@ -49,7 +49,18 @@ db.authenticate().then(() => {
 app.use(function(req, res, next) {
   if (req.session.roomId)
   {
-    console.log(req.path);
+    if (!(req.path).toLowerCase().includes('room'))
+      Room.findOne({where: {RoomId: req.session.roomId}})
+      .then(room => {
+        if (room)
+          return res.render('info', { message: 'LEAVE_ROOM' });
+        else
+        {
+          delete req.session.roomId;
+          return res.render('info', { message: 'Комната удалена'});
+        }
+      })
+      .catch(err => console.log(err))
   }
   next();
 })
