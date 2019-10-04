@@ -38,7 +38,7 @@ router.get('/rooms', app.protect, function(req, res) {
 		let usersOnline = '';
 		let creatorFIO = '';
 		for await (const room of rooms) {
-			await RoomPlayers.findAll({ where: { RoomTag: room.RoomTag }, raw: true }).then(roomPlayers => {
+			await RoomPlayers.findAll({ where: { Room_Id: room.RoomID }, raw: true }).then(roomPlayers => {
 				usersOnline = roomPlayers.length;
 			});
 			await User.findOne({ where: { UserId: room.RoomCreatorID }, raw: true }).then(creator => {
@@ -82,7 +82,6 @@ router.get('/home', app.protect, function(req, res) {
 	Game.findAll({ where: { QuizCreatorId: req.session.passport.user }, raw: true })
 		.then(async games => {
 			for await (const game of games) {
-				console.log(game.Timestamp);
 				game.Timestamp =
 					new Date(game.Timestamp).getDay() +
 					'.' +
@@ -93,7 +92,6 @@ router.get('/home', app.protect, function(req, res) {
 					new Date(game.Timestamp).getHours() +
 					':' +
 					new Date(game.Timestamp).getMinutes();
-				console.log(game.Timestamp);
 				await Category.findAll({ where: { Game_Id: game.GameId }, raw: true }).then(async categories => {
 					for await (const category of categories) {
 						await Question.findAll({ where: { Category_Id: category.CategoryId } }).then(questions => {
@@ -152,7 +150,17 @@ router.get('/room/:RoomTag', app.protect, function(req, res) {
 								.catch(err => console.log(err));
 							}
 							else
-								res.render('room', {room: room});
+							{
+								Room.findOne({where: {roomID: roomPlayer.Room_Id}, raw: true})
+								.then(findedRoom => {
+									if (findedRoom)
+										res.render('room', {room: findedRoom})
+									else
+										res.redirect('/room/' + req.params.roomTag);
+								})
+								.catch(err => console.log(err));
+								
+							}
 						})
 						.catch(err => console.log(err));
 					}

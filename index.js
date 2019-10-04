@@ -46,7 +46,13 @@ db.authenticate().then(() => {
   console.error('Unable to connect to the database:', err);
 });
 
-
+app.use(function(req, res, next) {
+  if (req.session.roomId)
+  {
+    console.log(req.path);
+  }
+  next();
+})
 
 const io = require('./config/sockets');
 
