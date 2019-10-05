@@ -34,12 +34,10 @@ router.get('/', RedirectRules, function(req, res) {
 
 router.get('/rooms', app.protect, function(req, res) {
 	Room.findAll({ limit: 10, raw: true }).then(async rooms => {
-		console.log({ rooms });
 		let roomModels = [];
 		let usersOnline = '';
 		let creatorFIO = '';
 		for await (const room of rooms) {
-			console.log({ room });
 			await RoomPlayers.findAll({ where: { RoomTag: room.RoomTag }, raw: true }).then(roomPlayers => {
 				usersOnline = roomPlayers.length;
 			});
@@ -53,7 +51,6 @@ router.get('/rooms', app.protect, function(req, res) {
 				usersOnline: usersOnline
 			});
 		}
-		console.log({ roomModels });
 		res.render('roomTest', { roomModels: roomModels });
 	});
 });
