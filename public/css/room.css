@@ -1,7 +1,5 @@
 .players-list
 {
-    border: solid 1.75px #eee;
-    border-radius: 5px;
     padding: 1rem;
 }
 
@@ -17,6 +15,13 @@
     left: 2.4rem;
     font-size: 4rem;
     transition: 0.3s all;
+}
+
+.div-group
+{
+    border: dashed rgb(36, 102, 163);
+    border-radius: 10px;
+    border-width:3px;
 }
 
 .organizer-connection[connection="true"]

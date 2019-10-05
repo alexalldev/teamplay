@@ -27,6 +27,7 @@ const crypto = require('crypto');
 const GamePlay = require('../models/GamePlay');
 const Hash = require('password-hash');
 const RoomPlayers = require('../models/RoomPlayer');
+const RoomTeam = require('../models/RoomTeam');
 
 router.get('/', RedirectRules, function(req, res) {
 	res.render('index', { Code: req.query.Code, User: req.query.User });
@@ -45,6 +46,7 @@ router.get('/rooms', app.protect, function(req, res) {
 				creatorFIO = `${creator.UserFamily} ${creator.UserName.slice(0, 1)}. ${creator.UserLastName.slice(0, 1)}.`;
 			});
 			roomModels.push({
+				roomId: room.RoomID,
 				roomName: room.RoomName,
 				roomCreator: creatorFIO,
 				roomTag: room.RoomTag,
@@ -133,14 +135,35 @@ router.get('/room/:RoomTag', app.protect, function(req, res) {
 										RoomPlayers.create({
 											Room_Id: room.RoomID,
 											User_Id: req.session.passport.user,
-											Team_Id: user.Team_Id,
+											Team_Id: req.session.isCreator ? -1 : user.Team_Id,
 											isRoomCreator: req.session.isCreator,
 											isGroupCoach: req.session.isCreator ? false : (roomPlayers.length == 0 ? true : false)
 										})
-										.then(() => {
+										.then(async (createdRoomPlayer) => {
 											req.session.roomId = room.RoomID;
-											io.to('RoomUsers' + room.RoomID).emit('AddUserToRoom', );
-											res.render('room', {room: room});
+											req.session.TeamId = createdRoomPlayer.Team_Id;
+											var player = {
+												UserName: user.UserName,
+												UserFamily: user.UserFamily,
+												UserLastName: user.UserLastName,
+												Room_Id: createdRoomPlayer.Room_Id,
+												Team_Id: createdRoomPlayer.Team_Id,
+												isRoomCreator: createdRoomPlayer.dataValues.isRoomCreator,
+												isGroupCoach: createdRoomPlayer.dataValues.isGroupCoach
+											}
+											if (createdRoomPlayer.dataValues.isGroupCoach)
+												await RoomTeam.findOrCreate({where: {Team_Id: createdRoomPlayer.dataValues.Team_Id, Room_Id: createdRoomPlayer.dataValues.Room_Id}, raw: true})
+												.then(([ roomTeam, created]) => {
+													if (created)
+														req.session.roomTeamId = roomTeam.dataValues.RoomTeamId;
+													else
+														req.session.roomTeamId = roomTeam.RoomTeamId;
+												})
+												.catch(err => console.log(err));
+											await io.to('RoomUsers' + room.RoomID).emit('AddUserToRoom', player);
+
+											await io.emit('RoomOnline', {roomId: room.RoomID, online: roomPlayers.length + 1});
+											await res.render('room', {room: room, roomPlayer: createdRoomPlayer.dataValues});
 										})
 										.catch(err => console.log(err));
 									}
@@ -154,7 +177,7 @@ router.get('/room/:RoomTag', app.protect, function(req, res) {
 								Room.findOne({where: {roomID: roomPlayer.Room_Id}, raw: true})
 								.then(findedRoom => {
 									if (findedRoom)
-										res.render('room', {room: findedRoom})
+										res.render('room', {room: findedRoom, roomPlayer: roomPlayer})
 									else
 										res.redirect('/room/' + req.params.roomTag);
 								})
@@ -173,21 +196,41 @@ router.get('/room/:RoomTag', app.protect, function(req, res) {
 		.catch(err => console.log(err));
 });
 
-router.get('/leaveRoom/:RoomTag', app.protect, function(req, res) {
-	Room.findOne({where: {RoomTag: req.params.RoomTag}, raw: true})
-	.then(room => {
-		if (room)
-			RoomPlayers.destroy({where: {Room_Id: room.RoomID}})
-			.then(() => {
+router.get('/leaveRoom', app.protect, function(req, res) {
+	if (req.session.roomId)
+		Room.findOne({where: {RoomID: req.session.roomId}, raw: true})
+		.then(room => {
+			if (room)
+				RoomPlayers.destroy({where: {Room_Id: room.RoomID, User_Id: req.session.passport.user}})
+				.then(() => {
+					RoomPlayers.findAndCountAll({where: {Room_Id: room.RoomID, Team_Id: req.session.TeamId}, raw: true})
+					.then(async result => {
+						if (result.count == 0 && req.session.roomTeamId)
+							await RoomTeam.destroy({where: {RoomTeamId: req.session.roomTeamId}})
+							.then(async () => {
+								delete req.session.roomTeamId;
+							})
+							.catch(err => console.log(err));
+						delete req.session.roomId;
+						delete req.session.isCreator;
+						await io.emit('RoomOnline', {roomId: room.RoomID, online: result.count});
+						await res.redirect('/');
+					})
+					.catch(err => console.log(err));
+				})
+				.catch(err => console.log(err));
+			else
+			{
+				//Creator deleted the room
 				delete req.session.roomId;
 				if (req.session.isCreator)
 					delete req.session.isCreator;
 				res.redirect('/');
-			})
-			.catch(err => console.log(err));
-		else
-			res.end('There is no room with such name');
-	})
+			}
+		})
+		.catch(err => console.log(err));
+	else
+		res.redirect('/');
 });
 
 router.post('/RegisterNewUser', urlencodedParser, function(req, res) {
@@ -230,8 +273,7 @@ router.post('/RegisterNewUser', urlencodedParser, function(req, res) {
 					var UserFio = req.body.fullname.split(' ');
 					if (UserFio.length == 3 && UserFio[0] != '' && UserFio[1] != '' && UserFio[2] != '')
 						User.findOrCreate({ where: { UserEmail: req.body.email.toLowerCase() } })
-							.then(([ user, created
-							]) => {
+							.then(([ user, created]) => {
 								if (created == true) {
 									user
 										.update({
@@ -495,6 +537,8 @@ router.get('/logout', app.protect, function(req, res) {
 function LogOut(req, res, reason = '') {
 	if (req.session.roomId) delete req.session.roomId;
 	if (req.session.isCreator) delete req.session.isCreator;
+	if (req.session.roomTeamId) delete req.session.roomTeamId;
+	if (req.session.TeamId) delete req.session.TeamId;
 
 	if (req.session.Team) {
 		if (req.session.Game) {

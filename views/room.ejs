@@ -15,61 +15,28 @@
     <div class="organizer">
       <span class="organizer-connection" connection="false">•</span>
       <img class="user_organizer" src="/public/user_organizer.png" alt="">
+      <span class="organizer_name"></span>
     </div>
     <div class="container">
       <div class="row">
         <div class="col-md-12 text-center">
           <h1 id="RoomName"><%= room.RoomTag %></h1>
+          <% if(roomPlayer.isRoomCreator == true) {%>
           <label class="h5">Удалить комнату</label>
           <button class="btn btn-danger btnRemoveRoom" roomId="<%= room.RoomID %>"><i class="fa fa-trash text-white"></i></button>
+          <%} %>
         </div>
       </div>
-      <div class="row">
-        <div class="col-md-12 players-list text-center">
-          <div>
-            <div><span style="font-size:30px">Group 1</span></div>
-            <div style="border:dashed rgb(36, 102, 163);border-radius: 10px; border-width:3px;">
-
-              <div class="row Player mt-2 mb-2">
-                <div class="col-md-12 text-left">
-                  <img class="user_organizer" src="/public/user-icon.png" alt="">
-                  <span style="font-size: 30px; position:relative; top: 5%"> Копатыч П.В.</span>
-                  <span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>
-                </div>
-              </div>
-
-              <div class="row Player mt-2 mb-2">
-                <div class="col-md-12 text-left">
-                  <img class="user_organizer" src="/public/user-icon.png" alt="">
-                  <span style="font-size: 30px; position:relative; top: 5%">Каркарыч Н.В.</span>
-                </div>
-              </div>
-
-              <div class="row Player mt-2 mb-2">
-                <div class="col-md-12 text-left">
-                  <img class="user_organizer" src="/public/user-icon.png" alt="">
-                  <span style="font-size: 30px; position:relative; top: 5%">Крош И.В.</span>
-                </div>
-              </div>
-
+      <div class="row players-list text-center">
+        <div class="div-group col-md-4">
+          <span class="h4">Group 1</span>
+          <div class="row Player mt-2 mb-2">
+            <div class="col-md-12 text-left">
+              <img class="user_organizer" src="/public/user-icon.png" alt="">
+              <span style="font-size: 30px; position:relative; top: 5%"> Копатыч П.В.</span>
+              <span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>
             </div>
           </div>
-
-          <div>
-            <div style="padding-top:4%"><span style="font-size:30px">Group 2</span></div>
-            <div style="border:dashed rgb(36, 102, 163);border-radius: 10px;border-width:3px;">
-
-              <div class="row Player mt-2 mb-2">
-                <div class="col-md-12 text-left">
-                  <img class="user_organizer" src="/public/user-icon.png" alt="">
-                  <span style="font-size: 30px; position:relative; top: 5%">Ежик-Ежик-Ежик Л.В.</span>
-                  <span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ const passport = require('passport')
 const Question = require('./models/Question');
 const GamePlay = require('./models/GamePlay');
 const Room = require('./models/Room');
+const RoomPlayer = require('./models/RoomPlayer');
 
 const fs = require("fs");
 
@@ -49,20 +50,34 @@ db.authenticate().then(() => {
 app.use(function(req, res, next) {
   if (req.session.roomId)
   {
-    if (!(req.path).toLowerCase().includes('room'))
-      Room.findOne({where: {RoomId: req.session.roomId}})
-      .then(room => {
-        if (room)
-          return res.render('info', { message: 'LEAVE_ROOM', room: room });
-        else
-        {
-          delete req.session.roomId;
-          return res.render('info', { message: 'Комната удалена'});
-        }
-      })
-      .catch(err => console.log(err))
+    if ((req.path).toLowerCase().includes('leaveroom'))
+      return next();
+    else
+      if (!(req.path).toLowerCase().includes('room/'))
+      {
+        Room.findOne({where: {RoomId: req.session.roomId}})
+        .then(room => {
+          if (room)
+          RoomPlayer.findOne({where: {Room_Id: room.RoomID}, raw: true})
+          .then(roomPlayer => {
+            if (roomPlayer)
+              return res.render('info', { message: 'LEAVE_ROOM', room: room });
+            else
+              return next();
+          })
+          else
+          {
+            delete req.session.roomId;
+            return res.render('info', { message: 'Комната удалена'});
+          }
+        })
+        .catch(err => console.log(err))
+      }
+      else
+        return next();
   }
-  next();
+  else
+    return next();
 })
 
 const io = require('./config/sockets');

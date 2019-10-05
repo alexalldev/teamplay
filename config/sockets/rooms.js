@@ -11,10 +11,10 @@ function roomsSocket(socket, io) {
 			]) => {
 				if (created == true) {
 					room.update({RoomName: roomName, Game_Id: gameId, RoomMaxTeamPlayers: roomMaxTeamPlayers})
-					.then(() => io.emit('roomAdded', created))
+					.then(() => socket.emit('roomAdded', created))
 					.catch(err => console.log(err));
 				} else {
-					io.emit('roomExists');
+					socket.emit('roomExists');
 				}
 			})
 			.catch(err => console.log(err));
@@ -24,13 +24,13 @@ function roomsSocket(socket, io) {
 		let users = {};
 		RoomPlayer.findAll({ where: { RoomTag: roomTag }, raw: true }).then(async room => {
 			//.to(room[0].RoomTag)
-			io.emit('sendRoomPlayers', await findRoomPlayers(room, users));
+			socket.emit('sendRoomPlayers', await findRoomPlayers(room, users));
 		});
 	});
 
 	socket.on('enter room', function(userId, roomTag) {
 		socket.join(roomTag);
-		RoomPlayer.create({ RoomTag: roomTag, UserID: userId }).then(roomPlayer => {
+		RoomPlayer.create({ RoomTag: roomTag, UserId: userId }).then(roomPlayer => {
 			User.findOne({ where: { UserId: userId }, raw: true }).then(user => {
 				//.to(roomTag)
 				if (user) socket.emit('entered room', setUserFIOproperty(user));
@@ -52,12 +52,24 @@ function roomsSocket(socket, io) {
 	socket.on('getCreatorStatus', function() {
 		if (session.roomId)
 			Room.findOne({ where: { RoomId: session.roomId }, raw: true }).then(room => {
-				//.to(roomTag)
-				io.emit('RecieveCreatorStatus', io.ClientsStore.creatorById(room.RoomCreatorID) ? true : false);
+				RoomPlayer.findOne({where: {Room_Id: session.roomId}, raw: true})
+				.then(roomPlayer => {
+					if (roomPlayer)
+						User.findOne({where: {UserId: roomPlayer.User_Id}, raw: true})
+						.then(user => {
+							if (user)
+								socket.emit('RecieveCreatorStatus', io.ClientsStore.creatorById(room.RoomCreatorID) ? true : false);
+							else
+								console.log('rooms.js: There is no user');
+						})
+						.catch(err => console.log(err));
+					else
+						console.log('rooms.js: There is no room creator');
+				})
 			})
 			.catch(err => console.log(err));
 		else
-			console.log('There is no roomId in session');
+			console.log('rooms.js: There is no roomId in session');
 	});
 
 	socket.on('deleteRoom', function(roomId) {
@@ -66,7 +78,7 @@ function roomsSocket(socket, io) {
 			.then(() => {
 				Room.destroy({ where: { RoomCreatorID: session.passport.user, RoomID: roomId }}).then(room => {
 					if (room)
-						socket.emit('roomDeleted', true);
+						io.to('RoomUsers' + session.roomId).emit('roomDeleted', true);
 					else
 						socket.emit('roomDeleted', 'You cant delete this room');
 				})
@@ -83,7 +95,7 @@ function roomsSocket(socket, io) {
 		let roomPlayersArray = [];
 		let counter = 0;
 		for await (const player of room) {
-			await User.findOne({ where: { UserId: player.UserID }, raw: true }).then(user => {
+			await User.findOne({ where: { UserId: player.UserId }, raw: true }).then(user => {
 				roomPlayersArray[counter] = user;
 				counter++;
 			});
