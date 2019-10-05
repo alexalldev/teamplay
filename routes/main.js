@@ -173,6 +173,23 @@ router.get('/room/:RoomTag', app.protect, function(req, res) {
 		.catch(err => console.log(err));
 });
 
+router.get('/leaveRoom/:RoomTag', app.protect, function(req, res) {
+	Room.findOne({where: {RoomTag: req.params.RoomTag}, raw: true})
+	.then(room => {
+		if (room)
+			RoomPlayers.destroy({where: {Room_Id: room.RoomID}})
+			.then(() => {
+				delete req.session.roomId;
+				if (req.session.isCreator)
+					delete req.session.isCreator;
+				res.redirect('/');
+			})
+			.catch(err => console.log(err));
+		else
+			res.end('There is no room with such name');
+	})
+});
+
 router.post('/RegisterNewUser', urlencodedParser, function(req, res) {
 	if (req.body.password === req.body.confirmpassword) {
 		if (req.body.password.length > 5) {

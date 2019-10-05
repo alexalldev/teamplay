@@ -15,13 +15,13 @@
     <table style="height: 98vh; width: 100%;">
       <tr align="center">
         <td valign="center">
-          <span class="h1"><%= message == 'ADMIN_KICK' ? 'Ваша команда исключена Администратором' : message == 'LEAVE_ROOM' ? 'Вы хотите покинуть комнату' + roomName + '?' : message %></span>
+          <span class="h1"><%= message == 'ADMIN_KICK' ? 'Ваша команда исключена Администратором' : message == 'LEAVE_ROOM' ? 'Вы хотите покинуть комнату ' + room.RoomName + '?' : message %></span>
         </td>
       </tr>
       <tr align="center">
         <td valign="center">
             <% if (message == 'LEAVE_ROOM') {%>
-              <button class="btn btn-success btnLeaveRoom mr-2"><i class="fa fa-check"></i></button> <a class="btn btn-info" href="/room/<%= roomTag %>"><i class="fa fa-times"></i></a>
+              <a class="btn btn-success mr-2" href="/leaveRoom/<%= room.RoomTag %>"><i class="fa fa-check"></i></a> <a class="btn btn-info" href="/room/<%= room.RoomTag %>"><i class="fa fa-times"></i></a>
               <%}%>
         </td>
       </tr>

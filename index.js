@@ -53,7 +53,7 @@ app.use(function(req, res, next) {
       Room.findOne({where: {RoomId: req.session.roomId}})
       .then(room => {
         if (room)
-          return res.render('info', { message: 'LEAVE_ROOM' });
+          return res.render('info', { message: 'LEAVE_ROOM', room: room });
         else
         {
           delete req.session.roomId;
