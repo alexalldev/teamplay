@@ -9,14 +9,14 @@ $(document).ready(function() {
 				$('#nav-ring').replaceWith('<i id="nav-ring" class="far fa-bell text-white">');
 				$.ajax({
 					type: 'POST',
-					url: '/teamOperation/getCurrUserId',
+					url: '/getCurrUserId',
 					success: function(session) {
 						$.ajax({
 							type: 'POST',
 							url: '/teamOperation/invite',
 							dataType: 'text',
 							data: {
-								receiverId: session.receiverId,
+								receiverId: session.userId,
 								shouldCreate: 'false'
 							},
 							success: function(data) {},

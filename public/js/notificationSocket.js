@@ -45,17 +45,17 @@ socket.on('sendAnswer', serverAnswer => {
 	let text;
 	let answer = getAnswer(serverAnswer.InvitationType, serverAnswer.answer);
 	if (serverAnswer.InvitationType) {
-		if (serverAnswer.TeamId == 0)
-			switch (serverAnswer.InvitationType) {
-				case 'inviteTeam':
-					text = `Уважаемый ${serverAnswer.senderFullName.join(' ')}, пользователь ${serverAnswer.receiverFullName.join(' ')} 
-			${answer} ваше приглашение.`;
-					break;
-				case 'joinTeam':
-					text = `Ваша заявка на вступление в команду была ${answer} пользователем ${serverAnswer.senderFullName.join(' ')}`;
-					break;
-			}
-		else text = 'Вы уже находитесь в команде';
+		switch (serverAnswer.InvitationType) {
+			case 'inviteTeam':
+				text = `Уважаемый ${serverAnswer.senderFullName.join(' ')}, пользователь ${serverAnswer.receiverFullName.join(' ')} 
+				${answer} ваше приглашение.`;
+				type = 'success';
+				break;
+			case 'joinTeam':
+				text = `Ваша заявка на вступление в команду была ${answer} пользователем ${serverAnswer.senderFullName.join(' ')}`;
+				type = 'error';
+				break;
+		}
 		Swal.fire('', text, 'info');
 	} else {
 		//для теста

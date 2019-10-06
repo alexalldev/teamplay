@@ -22,6 +22,7 @@ module.exports = function(notificationData, req, callback) {
 	let { receiverId, shouldCreate, senderId, header, mainText, isInfoNotification, invitationType } = notificationData;
 	let created;
 	let notification;
+	console.log({ notificationData });
 	User.findOne({ where: { UserId: receiverId }, raw: true })
 		.then(async user => {
 			let invitationHash = isInfoNotification == 'false' ? crypto.randomBytes(Math.ceil(120 / 2)).toString('hex').slice(0, 120) : '';
@@ -43,6 +44,7 @@ module.exports = function(notificationData, req, callback) {
 							]) => {
 								created = wasCreated;
 								notification = notificationObj.get();
+								console.log({ findOrCreate: notification, created: created });
 								await User.findOne({ where: { UserId: senderId }, raw: true })
 									.then(async userSender => {
 										notification.senderFIO = `${userSender.UserFamily} ${userSender.UserName.slice(
@@ -62,28 +64,24 @@ module.exports = function(notificationData, req, callback) {
 									});
 								if (wasCreated) {
 									//Если это заявка, то отправляем на почту
-									if (isInfoNotification == 'false')
-										fs.readFile(__dirname + '/../html_mail/TeamPlayNotificationEmail.html', 'utf-8', function(
-											err,
-											data
-										) {
-											if (err) callback(err);
-											let html_mail_array = data.split('INVITATION_ACTION');
-											let html_mail_text = html_mail_array[0].split('NOTIFICATION_TEXT');
-											let html_mail = `
+									fs.readFile(__dirname + '/../html_mail/TeamPlayNotificationEmail.html', 'utf-8', function(err, data) {
+										if (err) callback(err);
+										let html_mail_array = data.split('INVITATION_ACTION');
+										let html_mail_text = html_mail_array[0].split('NOTIFICATION_TEXT');
+										let html_mail = `
 												${html_mail_text[0]} От ${notification.userTeam && notification.userTeam != 0
-												? `[${notification.userTeam}]`
-												: ``} ${notification.senderFIO.slice(0, -1)}: <br>
+											? `[${notification.userTeam}]`
+											: ``} ${notification.senderFIO.slice(0, -1)}: <br>
 												${notification.mainText}${html_mail_text[1]}${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=accept
 												${html_mail_array[1]}${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=reject
 												${html_mail_array[2]}`;
-											transporter.sendMail({
-												from: 'info@teamplay.space', // sender address
-												to: user.UserEmail, // list of receivers
-												subject: header, // Subject line
-												html: html_mail
-											});
+										transporter.sendMail({
+											from: 'info@teamplay.space', // sender address
+											to: user.UserEmail, // list of receivers
+											subject: header, // Subject line
+											html: html_mail
 										});
+									});
 								}
 							})
 							.catch(err => {
@@ -117,7 +115,6 @@ module.exports = function(notificationData, req, callback) {
 									});
 							});
 					}
-					console.log({ notification });
 					io.emitUser(receiverId, 'receiveNotification', {
 						createdNotification: {
 							notification: notification,

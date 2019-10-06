@@ -65,12 +65,65 @@ router.get('/user/:userId', app.protect, function(req, res) {
 					user.teamPlayersCount = result.count;
 				});
 			});
-		await res.render('user', { user: user });
+		res.render('user', { user: user });
 	});
+});
+
+router.get('/teams', app.protect, function(req, res) {
+	Team.findAll({ raw: true })
+		.then(async teams => {
+			for await (const team of teams) {
+				await User.findOne({ where: { isCoach: 1, Team_Id: team.TeamId }, raw: true })
+					.then(coach => {
+						team.coachId = coach.UserId;
+						team.teamCoachFIO = `${coach.UserFamily} ${coach.UserName.slice(0, 1)}. ${coach.UserLastName.slice(0, 1)}.`;
+					})
+					.catch(err => {
+						console.log({ file: __filename, func: 'router.get("/teams"), User.findOne', err: err });
+					});
+				await User.count({ where: { Team_Id: team.TeamId } })
+					.then(membersNum => {
+						team.membersNum = membersNum;
+					})
+					.catch(err => {
+						console.log({ file: __filename, func: 'router.get("/teams"), User.count', err: err });
+					});
+			}
+			res.render('teamsList', { teams: teams });
+		})
+		.catch(err => {
+			console.log({ file: __filename, func: 'router.get("/teams"), Team.findAll', err: err });
+		});
+});
+
+router.get('/users', app.protect, function(req, res) {
+	User.findAll({ raw: true })
+		.then(async users => {
+			for await (const user of users) {
+				user.userFIO = `${user.UserFamily} ${user.UserName.slice(0, 1)}. ${user.UserLastName.slice(0, 1)}.`;
+				if (user.Team_Id)
+					await Team.findOne({ where: { TeamId: user.Team_Id } })
+						.then(team => {
+							user.userTeam = team.TeamName;
+						})
+						.catch(err => {
+							console.log({ file: __filename, func: 'router.get("/users"), Team.findOne', err: err });
+						});
+				else user.userTeam = 0;
+			}
+			res.render('usersList', { users: users });
+		})
+		.catch(err => {
+			console.log({ file: __filename, func: 'router.get("/users"), User.FindAll', err: err });
+		});
 });
 
 router.get('/user', app.protect, function(req, res) {
 	if (req.session.passport.user) res.redirect('/user/' + req.session.passport.user);
+});
+
+router.post('/getCurrUserId', urlencodedParser, function(req, res) {
+	res.json({ userId: req.session.passport.user });
 });
 
 router.get('/home', app.protect, function(req, res) {

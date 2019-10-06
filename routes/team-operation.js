@@ -53,16 +53,17 @@ router.post('/invite', urlencodedParser, async function(req, res) {
 			reciever_user = userReceiver;
 		})
 		.catch(err => console.log(`${__filename}: User.findOne receiver ${err}`));
-	//если любое поле, кроме receiverId и shouldCreate != undefined как при запросе на получение уведомлений из базы
-	if (req.body.senderId)
+	if (req.body.shouldCreate == 'true')
 		await User.findOne({ where: { UserId: req.body.senderId }, raw: true })
 			.then(sender_user => {
-				if (
-					req.body.isInfoNotification == 'false' &&
-					((!sender_user.isCoach || reciever_user.Team_Id != 0) && (sender_user.Team_Id != 0 || !reciever_user.isCoach))
-				)
-					canSend = false;
-				else if (req.body.isInfoNotification == 'false') invitationType = sender_user.isCoach ? 'inviteTeam' : 'joinTeam';
+				console.log(sender_user);
+				if (req.body.isInfoNotification)
+					if (
+						req.body.isInfoNotification == 'false' &&
+						((!sender_user.isCoach || reciever_user.Team_Id != 0) && (sender_user.Team_Id != 0 || !reciever_user.isCoach))
+					)
+						canSend = false;
+					else invitationType = sender_user.isCoach ? 'inviteTeam' : 'joinTeam';
 			})
 			.catch(err => console.log(err));
 
@@ -133,10 +134,6 @@ router.post('/changeCoach', urlencodedParser, function(req, res) {
 		.catch(err => {
 			console.log(err);
 		});
-});
-
-router.post('/getCurrUserId', urlencodedParser, function(req, res) {
-	res.json({ receiverId: req.session.passport.user });
 });
 
 module.exports = router;
