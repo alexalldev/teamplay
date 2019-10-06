@@ -54,7 +54,7 @@ router.post('/invite', urlencodedParser, async function(req, res) {
 		})
 		.catch(err => console.log(`${__filename}: User.findOne receiver ${err}`));
 	//если любое поле, кроме receiverId и shouldCreate != undefined как при запросе на получение уведомлений из базы
-	if (req.body.isInfoNotification)
+	if (req.body.senderId)
 		await User.findOne({ where: { UserId: req.body.senderId }, raw: true })
 			.then(sender_user => {
 				if (

@@ -15,9 +15,8 @@ router.get('/notificationAction', function(req, res) {
 	notificationModel
 		.findOne({ where: { InvitationHash: req.query.InvitationHash } })
 		.then(notification => {
-			console.log(req.query.InvitationHash);
-			if (!notification.get().isRead) {
-				notification.update({ isRead: 1, isViewed: 1 });
+			if (!notification.get().isAnswered) {
+				notification.update({ isAnswered: 1, isViewed: 1 });
 				if (!notification.isInfoNotification) {
 					if (notification.InvitationType == 'joinTeam') {
 						setUserId = notification.senderId;
@@ -30,10 +29,10 @@ router.get('/notificationAction', function(req, res) {
 						.findOne({ where: { UserId: findUserId }, raw: true })
 						.then(userSender => {
 							Team.findOne({ where: { TeamId: userSender.Team_Id }, raw: true }).then(team => {
-								if (!team) console.log('team not found');
-								else {
+								if (team) {
 									userModel.findOne({ where: { UserId: setUserId } }).then(userReceiver => {
-										if (req.query.action == 'accept') userReceiver.update({ Team_Id: team.TeamId });
+										if (req.query.action == 'accept' && userReceiver.TeamId == 0)
+											userReceiver.update({ Team_Id: team.TeamId });
 										io.emitUser(notification.senderId, 'sendAnswer', {
 											//sender full name при join team в notificationSocket
 											senderFullName: [
@@ -47,7 +46,8 @@ router.get('/notificationAction', function(req, res) {
 												userReceiver.UserLastName
 											],
 											answer: req.query.action,
-											InvitationType: notification.InvitationType
+											InvitationType: notification.InvitationType,
+											TeamId: userReceiver.TeamId
 										});
 									});
 								}
