@@ -2,7 +2,7 @@ const Sequelize = require('sequelize');
 const db = require('../config/database');
 
 const RoomPlayer = db.define('room_player', {
-    RoomPlayers_Id: {
+    RoomPlayersId: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true

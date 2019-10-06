@@ -1,12 +1,13 @@
 const Room = require('../../models/Room');
 const RoomPlayer = require('../../models/RoomPlayer');
 const User = require('../../models/User');
+const Team = require('../../models/Team');
 function roomsSocket(socket, io) {
 	const session = socket.request.session;
 	socket.on('createRoom', function(roomName, gameId, roomMaxTeamPlayers) {
-		var creatorID = session.passport.user;
+		var creatorId = session.passport.user;
 		roomTag = roomName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
-		Room.findOrCreate({ where: { RoomTag: roomTag, RoomCreatorID: creatorID } })
+		Room.findOrCreate({ where: { RoomTag: roomTag, RoomCreatorId: creatorId } })
 			.then(([ room, created
 			]) => {
 				if (created == true) {
@@ -20,11 +21,10 @@ function roomsSocket(socket, io) {
 			.catch(err => console.log(err));
 	});
 
-	socket.on('getRoomPlayers', function(roomTag) {
+	socket.on('getRoomPlayers', function() {
 		let users = {};
-		RoomPlayer.findAll({ where: { RoomTag: roomTag }, raw: true }).then(async room => {
-			//.to(room[0].RoomTag)
-			socket.emit('sendRoomPlayers', await findRoomPlayers(room, users));
+		RoomPlayer.findAll({ where: { Room_Id: session.roomId }, raw: true }).then(async room => {
+			socket.emit('recieveRoomPlayers', await findRoomPlayers(room, users));
 		});
 	});
 
@@ -58,7 +58,7 @@ function roomsSocket(socket, io) {
 						User.findOne({where: {UserId: roomPlayer.User_Id}, raw: true})
 						.then(user => {
 							if (user)
-								socket.emit('RecieveCreatorStatus', io.ClientsStore.creatorById(room.RoomCreatorID) ? true : false);
+								socket.emit('RecieveCreatorStatus', io.ClientsStore.creatorById(room.RoomCreatorId) ? true : false);
 							else
 								console.log('rooms.js: There is no user');
 						})
@@ -76,7 +76,7 @@ function roomsSocket(socket, io) {
 		if (session.passport.user)
 			RoomPlayer.destroy({where: {Room_Id: roomId}})
 			.then(() => {
-				Room.destroy({ where: { RoomCreatorID: session.passport.user, RoomID: roomId }}).then(room => {
+				Room.destroy({ where: { RoomCreatorId: session.passport.user, RoomId: roomId }}).then(room => {
 					if (room)
 						io.to('RoomUsers' + session.roomId).emit('roomDeleted', true);
 					else
@@ -95,13 +95,26 @@ function roomsSocket(socket, io) {
 		let roomPlayersArray = [];
 		let counter = 0;
 		for await (const player of room) {
-			await User.findOne({ where: { UserId: player.UserId }, raw: true }).then(user => {
-				roomPlayersArray[counter] = user;
-				counter++;
-			});
+			if (!player.isRoomCreator)
+				await User.findOne({ where: { UserId: player.User_Id }, raw: true }).then(async user => {
+					await Team.findOne({where: {TeamId: user.Team_Id}, raw: true})
+					.then(team => {
+						roomPlayersArray[counter] = {
+							RoomPlayersId: player.RoomPlayersId,
+							UserName: user.UserName,
+							UserFamily: user.UserFamily,
+							UserLastName: user.UserLastName,
+							RoomId: player.Room_Id,
+							TeamId: player.Team_Id,
+							TeamName: player.isRoomCreator ? '' : team.TeamName,
+							isRoomCreator: player.isRoomCreator,
+							isGroupCoach: player.isGroupCoach
+						}
+						counter++;
+					})
+				});
 		}
-		users.result = roomPlayersArray;
-		return users;
+		return roomPlayersArray;
 	}
 
 	function setUserFIOproperty(user) {

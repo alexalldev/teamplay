@@ -1,4 +1,4 @@
-.players-list
+.groups-list
 {
     padding: 1rem;
 }
@@ -17,7 +17,7 @@
     transition: 0.3s all;
 }
 
-.div-group
+.group
 {
     border: dashed rgb(36, 102, 163);
     border-radius: 10px;

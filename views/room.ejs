@@ -23,21 +23,12 @@
           <h1 id="RoomName"><%= room.RoomTag %></h1>
           <% if(roomPlayer.isRoomCreator == true) {%>
           <label class="h5">Удалить комнату</label>
-          <button class="btn btn-danger btnRemoveRoom" roomId="<%= room.RoomID %>"><i class="fa fa-trash text-white"></i></button>
+          <button class="btn btn-danger btnRemoveRoom" roomId="<%= room.RoomId %>"><i class="fa fa-trash text-white"></i></button>
           <%} %>
         </div>
       </div>
-      <div class="row players-list text-center">
-        <div class="div-group col-md-4">
-          <span class="h4">Group 1</span>
-          <div class="row Player mt-2 mb-2">
-            <div class="col-md-12 text-left">
-              <img class="user_organizer" src="/public/user-icon.png" alt="">
-              <span style="font-size: 30px; position:relative; top: 5%"> Копатыч П.В.</span>
-              <span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>
-            </div>
-          </div>
-        </div>
+      <div class="row group-list text-center">
+        
       </div>
     </div>
   </section>

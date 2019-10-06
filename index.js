@@ -58,7 +58,7 @@ app.use(function(req, res, next) {
         Room.findOne({where: {RoomId: req.session.roomId}})
         .then(room => {
           if (room)
-          RoomPlayer.findOne({where: {Room_Id: room.RoomID}, raw: true})
+          RoomPlayer.findOne({where: {Room_Id: room.RoomId}, raw: true})
           .then(roomPlayer => {
             if (roomPlayer)
               return res.render('info', { message: 'LEAVE_ROOM', room: room });

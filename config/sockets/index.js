@@ -128,7 +128,7 @@ io.on('connection', function (socket) {
 	const session = socket.request.session; //Сессия пользователя
 
 	//Вход в ClientStore
-	if (session.isCreator)
+	if (session.isRoomCreator)
 		io.ClientsStore.pushCreator({
 			Id: session.passport.user,
 			SocketId: socket.id
@@ -143,7 +143,7 @@ io.on('connection', function (socket) {
 	if (session.roomId)
 	{
 		socket.join('RoomUsers' + session.roomId);
-		if (session.isCreator)
+		if (session.isRoomCreator)
 		{
 			socket.join('RoomCreators' + session.roomId);
 			io.to('RoomUsers' + session.roomId).emit('RecieveCreatorStatus', true)
@@ -322,7 +322,7 @@ io.on('connection', function (socket) {
 	});
 
 	socket.on('disconnect', function (reason) {
-		if (session.isCreator)
+		if (session.isRoomCreator)
 			io.to('RoomUsers' + session.roomId).emit('RecieveCreatorStatus', false)
 		io.ClientsStore.removeById(socket.id);
 	});
