@@ -20,7 +20,7 @@
     <div class="container">
       <div class="row">
         <div class="col-md-12 text-center">
-          <h1 id="RoomName"><%= room.RoomTag %></h1>
+          <h1 id="RoomName"><%= room.RoomName %></h1>
           <% if(roomPlayer.isRoomCreator == true) {%>
           <label class="h5">Удалить комнату</label>
           <button class="btn btn-danger btnRemoveRoom" roomId="<%= room.RoomId %>"><i class="fa fa-trash text-white"></i></button>

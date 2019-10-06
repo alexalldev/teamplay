@@ -328,7 +328,10 @@ io.on('connection', function (socket) {
 	});
 
 	/********************GamePlay******************/
-	require('./GamePlaySockets')(socket, io);
+	//require('./GamePlaySockets')(socket, io);
+
+	/********************NewGamePlayGeneration******************/
+	require('./NewGamePlayGeneration')(socket, io);
 
 	/********************Stream******************/
 	require('./rooms')(socket, io);
