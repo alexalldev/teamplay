@@ -24,14 +24,13 @@ module.exports = function(notificationData, req, callback) {
 	let notification;
 	User.findOne({ where: { UserId: receiverId }, raw: true })
 		.then(async user => {
-			let invitationHash = isInfoNotification ? crypto.randomBytes(Math.ceil(120 / 2)).toString('hex').slice(0, 120) : '';
+			let invitationHash = isInfoNotification == 'false' ? crypto.randomBytes(Math.ceil(120 / 2)).toString('hex').slice(0, 120) : '';
 			if (user) {
 				if (shouldCreate == 'true') {
-					//TODO: isRead -> isAnswered
 					if (isInfoNotification == 'false')
 						await notificationModel
 							.findOrCreate({
-								where: { senderId: senderId, receiverId: receiverId, InvitationType: invitationType, isRead: false },
+								where: { senderId: senderId, receiverId: receiverId, InvitationType: invitationType, isAnswered: false },
 								defaults: {
 									header: header,
 									mainText: mainText,
@@ -96,7 +95,7 @@ module.exports = function(notificationData, req, callback) {
 								senderId: senderId,
 								receiverId: receiverId,
 								InvitationType: invitationType,
-								isRead: false,
+								isAnswered: false,
 								header: header,
 								mainText: mainText,
 								isInfoNotification: isInfoNotification,

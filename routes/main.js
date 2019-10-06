@@ -41,7 +41,7 @@ router.get('/rooms', app.protect, function(req, res) {
 			await RoomPlayers.findAll({ where: { RoomTag: room.RoomTag }, raw: true }).then(roomPlayers => {
 				usersOnline = roomPlayers.length;
 			});
-			await User.findOne({ where: { UserId: room.RoomCreatorID }, raw: true }).then(creator => {
+			await User.findOne({ where: { UserId: room.RoomCreatorId }, raw: true }).then(creator => {
 				creatorFIO = `${creator.UserFamily} ${creator.UserName.slice(0, 1)}. ${creator.UserLastName.slice(0, 1)}.`;
 			});
 			roomModels.push({
@@ -113,9 +113,9 @@ router.get('/room/:RoomTag', app.protect, function(req, res) {
 	Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
 		.then(room => {
 			if (room) {
-				if (req.session.passport.user == room.RoomCreatorID) req.session.isCreator = true;
+				if (req.session.passport.user == room.RoomCreatorId) req.session.isCreator = true;
 				else req.session.isCreator = false;
-				req.session.roomId = room.RoomID;
+				req.session.roomId = room.RoomId;
 				res.render('room', { RoomTag: room.RoomName });
 			} else res.end('There is no room with such name');
 		})

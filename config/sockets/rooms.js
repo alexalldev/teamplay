@@ -3,15 +3,16 @@ const RoomPlayer = require('../../models/RoomPlayer');
 const User = require('../../models/User');
 function roomsSocket(socket, io) {
 	const session = socket.request.session;
-	socket.on('createRoom', function(roomName, creatorID) {
+	socket.on('createRoom', function(roomName, creatorId) {
 		gameTag = roomName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
 		Room.findOrCreate({ where: { RoomTag: gameTag } })
 			.then(([ room, created
 			]) => {
 				if (created == true) {
-					room.update({RoomName: roomName, RoomCreatorID: creatorID})
-					.then(() => io.emit('roomAdded', created))
-					.catch(err => console.log(err));
+					room
+						.update({ RoomName: roomName, RoomCreatorId: creatorId })
+						.then(() => io.emit('roomAdded', created))
+						.catch(err => console.log(err));
 				} else {
 					io.emit('roomExists');
 				}
@@ -29,7 +30,7 @@ function roomsSocket(socket, io) {
 
 	socket.on('enter room', function(userId, roomTag) {
 		socket.join(roomTag);
-		RoomPlayer.create({ RoomTag: roomTag, UserID: userId }).then(roomPlayer => {
+		RoomPlayer.create({ RoomTag: roomTag, UserId: userId }).then(roomPlayer => {
 			User.findOne({ where: { UserId: userId }, raw: true }).then(user => {
 				//.to(roomTag)
 				if (user) socket.emit('entered room', setUserFIOproperty(user));
@@ -52,10 +53,9 @@ function roomsSocket(socket, io) {
 		if (session.roomId)
 			Room.findOne({ where: { RoomId: session.roomId }, raw: true }).then(room => {
 				//.to(roomTag)
-				io.emit('RecieveCreatorStatus', io.ClientsStore.creatorById(room.RoomCreatorID) ? true : false);
+				io.emit('RecieveCreatorStatus', io.ClientsStore.creatorById(room.RoomCreatorId) ? true : false);
 			});
-		else
-			console.log('There is no roomId in session');
+		else console.log('There is no roomId in session');
 	});
 
 	socket.on('disconnect', () => {});
@@ -64,7 +64,7 @@ function roomsSocket(socket, io) {
 		let roomPlayersArray = [];
 		let counter = 0;
 		for await (const player of room) {
-			await User.findOne({ where: { UserId: player.UserID }, raw: true }).then(user => {
+			await User.findOne({ where: { UserId: player.UserId }, raw: true }).then(user => {
 				roomPlayersArray[counter] = user;
 				counter++;
 			});
