@@ -34,26 +34,34 @@ router.get('/', RedirectRules, function(req, res) {
 });
 
 router.get('/rooms', app.protect, function(req, res) {
-	Room.findAll({ limit: 10, raw: true })
+	Room.findAll({ raw: true })
 		.then(async rooms => {
 			let roomModels = [];
-			let usersOnline = '';
-			let creatorFIO = '';
 			for await (const room of rooms) {
-				await RoomPlayers.findAll({ where: { Room_Id: room.RoomId }, raw: true }).then(roomPlayers => {
-					usersOnline = roomPlayers.length;
-				});
-				await User.findOne({ where: { UserId: room.RoomCreatorId }, raw: true }).then(creator => {
-					creatorFIO = `${creator.UserFamily} ${creator.UserName.slice(0, 1)}. ${creator.UserLastName.slice(0, 1)}.`;
-				});
-				roomModels.push({
-					roomId: room.RoomId,
-					roomName: room.RoomName,
-					roomCreator: creatorFIO,
-					roomTag: room.RoomTag,
-					maxTeamPlayers: room.RoomMaxTeamPlayers,
-					usersOnline: usersOnline
-				});
+				await RoomPlayers.findAll({ where: { Room_Id: room.RoomId }, raw: true })
+					.then(async roomPlayers => {
+						await User.findOne({ where: { UserId: room.RoomCreatorId }, raw: true })
+							.then(creator => {
+								roomModels.push({
+									roomId: room.RoomId,
+									roomName: room.RoomName,
+									roomCreator: `${creator.UserFamily} ${creator.UserName.slice(0, 1)}. ${creator.UserLastName.slice(
+										0,
+										1
+									)}.`,
+									roomCreatorId: creator.UserId,
+									roomTag: room.RoomTag,
+									maxTeamPlayers: room.RoomMaxTeamPlayers,
+									usersOnline: roomPlayers.length
+								});
+							})
+							.catch(err => {
+								console.log({ file: __filename, func: 'router.get("/rooms"), User.findOne', err: err });
+							});
+					})
+					.catch(err => {
+						console.log({ file: __filename, func: 'router.get("/rooms"), RoomPlayers.findAll', err: err });
+					});
 			}
 			Game.findAll({ where: { QuizCreatorId: req.session.passport.user }, raw: true }).then(games => {
 				res.render('rooms', { roomModels: roomModels, games: games });
@@ -62,18 +70,50 @@ router.get('/rooms', app.protect, function(req, res) {
 		.catch(err => console.log(err));
 });
 
-router.get('/user/:userId', app.protect, function(req, res) {
-	User.findOne({ where: { UserId: req.params.userId }, raw: true }).then(async user => {
-		if (req.session.passport.user == user.UserId) user.canEdit = true;
-		if (user.Team_Id > 0)
-			await Team.findOne({ where: { TeamId: user.Team_Id }, raw: true }).then(async team => {
-				user.TeamName = team.TeamName;
-				await User.findAndCountAll({ where: { Team_Id: team.TeamId } }).then(result => {
-					user.teamPlayersCount = result.count;
+router.get('/team/:teamId', app.protect, async (req, res) => {
+	let users = [];
+	await User.findAll({ where: { Team_Id: req.params.teamId }, raw: true })
+		.then(async members => {
+			for await (const member of members) {
+				users.push({
+					isCoach: member.isCoach,
+					isActive: member.UserIsActive,
+					userId: member.UserId,
+					teamId: member.Team_Id,
+					memberFIO: `${member.UserFamily} ${member.UserName} ${member.UserLastName}.`
 				});
-			});
-		res.render('user', { user: user });
-	});
+			}
+		})
+		.catch(err => {
+			console.log({ file: __filename, func: 'router.get("/team/:teamId"), User.findAll', err: err });
+		});
+	res.render('teamPage', { users: users });
+});
+
+router.get('/user/:userId', app.protect, function(req, res) {
+	User.findOne({ where: { UserId: req.params.userId }, raw: true })
+		.then(async user => {
+			if (req.session.passport.user == user.UserId) user.canEdit = true;
+			if (user.Team_Id > 0)
+				await Team.findOne({ where: { TeamId: user.Team_Id }, raw: true })
+					.then(async team => {
+						user.TeamName = team.TeamName;
+						await User.findAndCountAll({ where: { Team_Id: team.TeamId } })
+							.then(result => {
+								user.teamPlayersCount = result.count;
+							})
+							.catch(err => {
+								console.log({ file: __filename, func: 'router.get("/user/:userId"), User.findAndCountAll', err: err });
+							});
+					})
+					.catch(err => {
+						console.log({ file: __filename, func: 'router.get("/user/:userId"), User.findOne TeamId', err: err });
+					});
+			res.render('user', { user: user });
+		})
+		.catch(err => {
+			console.log({ file: __filename, func: 'router.get("/user/:userId"), User.findOne UserId', err: err });
+		});
 });
 
 router.get('/teams', app.protect, function(req, res) {
@@ -96,6 +136,9 @@ router.get('/teams', app.protect, function(req, res) {
 						console.log({ file: __filename, func: 'router.get("/teams"), User.count', err: err });
 					});
 			}
+			await User.findOne({ where: { UserId: req.session.passport.user } }).then(user => {
+				teams.userTeamId = user.Team_Id;
+			});
 			res.render('teamsList', { teams: teams });
 		})
 		.catch(err => {
@@ -112,12 +155,18 @@ router.get('/users', app.protect, function(req, res) {
 					await Team.findOne({ where: { TeamId: user.Team_Id } })
 						.then(team => {
 							user.userTeam = team.TeamName;
+							user.userTeamId = team.TeamId;
 						})
 						.catch(err => {
 							console.log({ file: __filename, func: 'router.get("/users"), Team.findOne', err: err });
 						});
-				else user.userTeam = 0;
+				else user.userTeam = '';
 			}
+
+			await User.findOne({ where: { UserId: req.session.passport.user } }).then(user => {
+				users.userIsCoach = user.isCoach;
+			});
+
 			res.render('usersList', { users: users });
 		})
 		.catch(err => {

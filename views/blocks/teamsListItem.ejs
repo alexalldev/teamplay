@@ -4,15 +4,19 @@
             <img src="https://picsum.photos/100/100" class="mt-1 ml-1 img-fluid rounded" alt="">
         </div>
         <div class="text-center mt-1 quiz-col-55">
-            <span class="text-dark h5"><%= team.TeamName %></span>
-            <button class="btn btn-outline-success ml-2 mt-2 h1" onclick="teamInvite  ('<%= team.coachId %>')"><i class="fas fa-user-plus"></i> Вступить</button>
+            <a href='/team/<%=team.userTeamId%>'><span class="text-dark h5"><%= team.TeamName %></span></a>
+            <% if (team.userTeamId == 0) { %>
+            <button class="btn btn-outline-success ml-2 mt-2 h1" onclick="teamInvite  ('<%= team.coachId %>')"><i
+                    class="fas fa-user-plus"></i> Вступить</button>
+            <% } %>
         </div>
     </div>
     <div class="row">
         <div class="quiz-col-40">
             <div class="row">
                 <div class="col-md-12 text-left">
-                    <span><i class="fas fa-star"></i> <%= team.teamCoachFIO %></span>
+                    <a href='/user/<%=team.coachId%>'><span><i
+                                class="fas fa-star"></i><%= team.teamCoachFIO %></span></a>
                 </div>
             </div>
             <div class="row">
@@ -24,4 +28,3 @@
         </div>
     </div>
 </div>
-<script src="/public/js/listItemAction.js"></script>

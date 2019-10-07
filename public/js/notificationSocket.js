@@ -4,10 +4,10 @@ socket.on('receiveNotification', function(result) {
 		let submitBtns;
 		let actionUrl = result.actionUrl;
 		if (notification.isInfoNotification) {
-			submitBtns = `<button class='btn btn-info text-white' onclick='action("${actionUrl}read")'><i class='fa fa-check'></i></button>`;
+			submitBtns = `<div class="row"><div class="col-md-12 text-center"><button class='btn btn-info text-white' onclick='action("${actionUrl}read")'><i class='fa fa-check'></i></button></div></div>`;
 		} else {
-			submitBtns = `<button class='btn btn-success text-white' onclick='action("${actionUrl}accept")'><i class='fa fa-check'></i></button>
-			<button class='btn btn-danger text-white' onclick='action("${actionUrl}reject")'><i class='fa fa-times'></i></button>`;
+			submitBtns = `<div class="row"><div class="col-md-12 text-center"><button class='btn btn-success text-white' onclick='action("${actionUrl}accept")'><i class='fa fa-check'></i></button>
+			<button class='btn btn-danger text-white' onclick='action("${actionUrl}reject")'><i class='fa fa-times'></i></button></div></div>`;
 		}
 		let notificationBlock = `<span class='h6 notification-from-to'>
 	От: ${notification.userTeam && notification.userTeam != 0

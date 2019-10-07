@@ -20,7 +20,6 @@ function teamInvite(userId) {
 				type: 'POST',
 				url: '/getCurrUserId',
 				success: function(session) {
-					console.log({ sender: userId, receiver: session.userId });
 					$.ajax({
 						type: 'POST',
 						url: '/teamOperation/invite',

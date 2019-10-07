@@ -5,21 +5,21 @@
         </div>
         <div class="text-center mt-1 quiz-col-55">
             <a href='/user/<%=user.UserId%>'><span class="text-dark h5"><%= user.userFIO %></span></a>
-            <% if (!user.userTeam && user.userIsCoach) { %>
+            <!-- <% if (!user.userTeam && user.userIsCoach) { %> -->
             <button class=" btn btn-outline-success ml-2 mt-2 h1" onclick="teamInvite('<%= user.UserId %>')"><i
                     class="fas fa-user-plus"></i> Пригласить</button>
-            <% } %>
+            <!-- <% } %> -->
         </div>
     </div>
-    <% if (user.userTeam) { %>
+    <!-- <% if (user.userTeam) { %> -->
     <div class="row">
         <div class="quiz-col-40">
             <div class="row">
                 <div class="col-md-12 text-left">
-                    <a href='/team/<%=user.userTeamId%>'><i class="fas fa-users"></i><%=user.userTeam%></a>
+                    <!-- <a href='/team/<%=user.userTeamId%>'><i class="fas fa-users"></i><%=user.userTeam%></a> -->
                 </div>
             </div>
         </div>
     </div>
-    <% } %>
+    <!-- <% } %> -->
 </div>

@@ -14,17 +14,12 @@
     <section class="app-container">
         <div class="container">
             <div class="row">
-                <%- include('blocks/navigation-area', {page:"users"}) %>
+                <%- include('blocks/navigation-area', {page:"teams"}) %>
                 <div class="col-md-10 working-area mt-2">
                     <div class="row">
-                        <% if (users.length > 0) { %>
                         <% users.forEach(function(user){ %>
-                        <% user.userIsCoach = users.userIsCoach%>
-                        <%- include('blocks/usersListItem', {user: user}); %>
+                        <%- include('blocks/teamPageUser', {user: user}); %>
                         <% }); %>
-                        <% } else { %>
-                        <% include blocks/greetings %>
-                        <% } %>
                     </div>
                 </div>
             </div>
@@ -34,4 +29,5 @@
 <% include blocks/socket %>
 <script src="/public/js/animateCSS.js"></script>
 <script src="/public/js/listItemAction.js"></script>
+
 </html>

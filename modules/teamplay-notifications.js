@@ -22,7 +22,6 @@ module.exports = function(notificationData, req, callback) {
 	let { receiverId, shouldCreate, senderId, header, mainText, isInfoNotification, invitationType } = notificationData;
 	let created;
 	let notification;
-	console.log({ notificationData });
 	User.findOne({ where: { UserId: receiverId }, raw: true })
 		.then(async user => {
 			let invitationHash = isInfoNotification == 'false' ? crypto.randomBytes(Math.ceil(120 / 2)).toString('hex').slice(0, 120) : '';
@@ -44,7 +43,6 @@ module.exports = function(notificationData, req, callback) {
 							]) => {
 								created = wasCreated;
 								notification = notificationObj.get();
-								console.log({ findOrCreate: notification, created: created });
 								await User.findOne({ where: { UserId: senderId }, raw: true })
 									.then(async userSender => {
 										notification.senderFIO = `${userSender.UserFamily} ${userSender.UserName.slice(

@@ -19,6 +19,7 @@
                     <div class="row">
                         <% if (teams.length > 0) { %>
                         <% teams.forEach(function(team){ %>
+                        <% team.userTeamId = teams.userTeamId%>
                         <%- include('blocks/teamsListItem', {team: team}); %>
                         <% }); %>
                         <% } else { %>
@@ -32,4 +33,5 @@
 </body>
 <% include blocks/socket %>
 <script src="/public/js/animateCSS.js"></script>
+<script src="/public/js/listItemAction.js"></script>
 </html>

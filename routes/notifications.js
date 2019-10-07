@@ -31,7 +31,7 @@ router.get('/notificationAction', function(req, res) {
 							Team.findOne({ where: { TeamId: userSender.Team_Id }, raw: true }).then(team => {
 								if (team) {
 									userModel.findOne({ where: { UserId: setUserId } }).then(userReceiver => {
-										if (req.query.action == 'accept' && userReceiver.TeamId == 0)
+										if (req.query.action == 'accept' && userReceiver.Team_Id == 0)
 											userReceiver.update({ Team_Id: team.TeamId });
 										io.emitUser(notification.senderId, 'sendAnswer', {
 											//sender full name при join team в notificationSocket
