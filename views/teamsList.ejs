@@ -14,7 +14,7 @@
     <section class="app-container">
         <div class="container">
             <div class="row">
-                <% include blocks/navigation-area %>
+                <%- include('blocks/navigation-area', {page:"teams"}) %>
                 <div class="col-md-10 working-area mt-2">
                     <div class="row">
                         <% if (teams.length > 0) { %>
