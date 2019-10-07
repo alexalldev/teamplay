@@ -2,11 +2,11 @@ let { router, passport, Team, User, urlencodedParser } = require('../config/rout
 
 const notification = require('../modules/teamplay-notifications');
 
-router.get('/team-operation', function (req, res) {
+router.get('/team-operation', function(req, res) {
 	res.render('team-operation');
 });
 
-router.post('/createTeam', urlencodedParser, function (req, res) {
+router.post('/createTeam', urlencodedParser, function(req, res) {
 	Team.findOne({ where: { TeamName: req.body.teamName } })
 		.then(team => {
 			if (team) {
@@ -25,7 +25,7 @@ router.post('/createTeam', urlencodedParser, function (req, res) {
 		});
 });
 
-router.post('/deleteTeam', urlencodedParser, function (req, res) {
+router.post('/deleteTeam', urlencodedParser, function(req, res) {
 	Team.findOne({ where: { TeamName: req.body.teamName } })
 		.then(team => {
 			if (!team) {
@@ -44,42 +44,51 @@ router.post('/deleteTeam', urlencodedParser, function (req, res) {
 		});
 });
 
-router.post('/invite', urlencodedParser, function (req, res) {
-	let invitationType = '';
+router.post('/invite', urlencodedParser, async function(req, res) {
+	let invitationType = 'info';
 	let canSend = true;
-	User.findOne({ where: { UserId: req.body.senderId }, raw: true })
-		.then(sender_user => {
-			User.findOne({ where: { UserId: req.body.receiverId }, raw: true })
-				.then(reciever_user => {
-					if (!req.body.isInfoNotification)
-						if ((sender_user.isCoach && reciever_user.Team_Id == 0) || (sender_user.Team_Id == 0 && reciever_user.isCoach)) {
-							invitationType = sender_user.isCoach ? 'inviteTeam' : 'joinTeam';
-							canSend = true;
-						} else canSend = false;
-					console.log(canSend);
-
-					if (canSend)
-						notification(
-							req.body.senderId,
-							req.body.receiverId,
-							req.body.header,
-							req.body.mainText,
-							req.body.isInfoNotification,
-							invitationType,
-							function (err) {
-								if (err) res.end(JSON.stringify(err));
-								else res.end('true');
-							},
-							req
-						);
-					else res.end("You can't send invitation to this player");
-				})
-				.catch(err => console.log(err));
+	let reciever_user;
+	await User.findOne({ where: { UserId: req.body.receiverId }, raw: true })
+		.then(userReceiver => {
+			reciever_user = userReceiver;
 		})
-		.catch(err => console.log(err));
+		.catch(err => console.log(`${__filename}: User.findOne receiver ${err}`));
+	if (req.body.shouldCreate == 'true')
+		await User.findOne({ where: { UserId: req.body.senderId }, raw: true })
+			.then(sender_user => {
+				console.log(sender_user);
+				if (req.body.isInfoNotification)
+					if (
+						req.body.isInfoNotification == 'false' &&
+						((!sender_user.isCoach || reciever_user.Team_Id != 0) && (sender_user.Team_Id != 0 || !reciever_user.isCoach))
+					)
+						canSend = false;
+					else invitationType = sender_user.isCoach ? 'inviteTeam' : 'joinTeam';
+			})
+			.catch(err => console.log(err));
+
+	if ((req.body.shouldCreate == 'true' && canSend) || req.body.shouldCreate == 'false') {
+		notification(
+			{
+				receiverId: req.body.receiverId,
+				shouldCreate: req.body.shouldCreate,
+				senderId: req.body.senderId,
+				header: req.body.header,
+				mainText: req.body.mainText,
+				isInfoNotification: req.body.isInfoNotification,
+				invitationType: invitationType
+			},
+			req,
+			function(err) {
+				if (err) res.end(JSON.stringify(err));
+				else res.end('true');
+			}
+		);
+	}
+	res.end('notification sent');
 });
 
-router.post('/changeTeamName', urlencodedParser, function (req, res) {
+router.post('/changeTeamName', urlencodedParser, function(req, res) {
 	Team.findOne({ where: { TeamName: req.body.oldName } })
 		.then(team => {
 			if (!team) {
@@ -101,7 +110,7 @@ router.post('/changeTeamName', urlencodedParser, function (req, res) {
 		});
 });
 
-router.post('/changeCoach', urlencodedParser, function (req, res) {
+router.post('/changeCoach', urlencodedParser, function(req, res) {
 	User.findOne({ where: { UserId: req.body.oldCoachId, Team_Id: req.body.teamId } })
 		.then(old => {
 			if (!old) {

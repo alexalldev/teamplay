@@ -1,0 +1,21 @@
+<div class="quiz col-md-4 ml-2 mt-2">
+    <div class="row">
+        <div class="quiz-col-40">
+            <img src="https://picsum.photos/100/100" class="mt-1 ml-1 img-fluid rounded" alt="">
+        </div>
+        <div class="text-center mt-1 quiz-col-55">
+            <span class="text-dark h5"><%= user.userFIO %></span>
+             <button class="btn btn-outline-success ml-2 mt-2 h1" onclick="teamInvite('<%= user.UserId %>')"><i class="fas fa-user-plus"></i> Пригласить</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="quiz-col-40">
+            <div class="row">
+                <div class="col-md-12 text-left">
+                    <span><i class="fas fa-users"></i> <%= user.userTeam %></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/public/js/listItemAction.js"></script>
+</div>

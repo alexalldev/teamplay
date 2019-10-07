@@ -11,9 +11,10 @@ function roomsSocket(socket, io) {
 			.then(([ room, created
 			]) => {
 				if (created == true) {
-					room.update({RoomName: roomName, Game_Id: gameId, RoomMaxTeamPlayers: roomMaxTeamPlayers})
-					.then(() => socket.emit('roomAdded', created))
-					.catch(err => console.log(err));
+					room
+						.update({ RoomName: roomName, Game_Id: gameId, RoomMaxTeamPlayers: roomMaxTeamPlayers })
+						.then(() => socket.emit('roomAdded', created))
+						.catch(err => console.log(err));
 				} else {
 					socket.emit('roomExists');
 				}
@@ -51,42 +52,37 @@ function roomsSocket(socket, io) {
 
 	socket.on('getCreatorStatus', function() {
 		if (session.roomId)
-			Room.findOne({ where: { RoomId: session.roomId }, raw: true }).then(room => {
-				RoomPlayer.findOne({where: {Room_Id: session.roomId}, raw: true})
-				.then(roomPlayer => {
-					if (roomPlayer)
-						User.findOne({where: {UserId: roomPlayer.User_Id}, raw: true})
-						.then(user => {
-							if (user)
-								socket.emit('RecieveCreatorStatus', io.ClientsStore.creatorById(room.RoomCreatorId) ? true : false);
-							else
-								console.log('rooms.js: There is no user');
-						})
-						.catch(err => console.log(err));
-					else
-						console.log('rooms.js: There is no room creator');
+			Room.findOne({ where: { RoomId: session.roomId }, raw: true })
+				.then(room => {
+					RoomPlayer.findOne({ where: { Room_Id: session.roomId }, raw: true }).then(roomPlayer => {
+						if (roomPlayer)
+							User.findOne({ where: { UserId: roomPlayer.User_Id }, raw: true })
+								.then(user => {
+									if (user)
+										socket.emit('RecieveCreatorStatus', io.ClientsStore.creatorById(room.RoomCreatorId) ? true : false);
+									else console.log('rooms.js: There is no user');
+								})
+								.catch(err => console.log(err));
+						else console.log('rooms.js: There is no room creator');
+					});
 				})
-			})
-			.catch(err => console.log(err));
-		else
-			console.log('rooms.js: There is no roomId in session');
+				.catch(err => console.log(err));
+		else console.log('rooms.js: There is no roomId in session');
 	});
 
 	socket.on('deleteRoom', function(roomId) {
 		if (session.passport.user)
-			RoomPlayer.destroy({where: {Room_Id: roomId}})
-			.then(() => {
-				Room.destroy({ where: { RoomCreatorId: session.passport.user, RoomId: roomId }}).then(room => {
-					if (room)
-						io.to('RoomUsers' + session.roomId).emit('roomDeleted', true);
-					else
-						socket.emit('roomDeleted', 'You cant delete this room');
+			RoomPlayer.destroy({ where: { Room_Id: roomId } })
+				.then(() => {
+					Room.destroy({ where: { RoomCreatorId: session.passport.user, RoomId: roomId } })
+						.then(room => {
+							if (room) io.to('RoomUsers' + session.roomId).emit('roomDeleted', true);
+							else socket.emit('roomDeleted', 'You cant delete this room');
+						})
+						.catch(err => console.log(err));
 				})
 				.catch(err => console.log(err));
-			})
-			.catch(err => console.log(err));
-		else
-			console.log('There is no roomId in session');
+		else console.log('There is no roomId in session');
 	});
 
 	socket.on('disconnect', () => {});
@@ -97,8 +93,7 @@ function roomsSocket(socket, io) {
 		for await (const player of room) {
 			if (!player.isRoomCreator)
 				await User.findOne({ where: { UserId: player.User_Id }, raw: true }).then(async user => {
-					await Team.findOne({where: {TeamId: user.Team_Id}, raw: true})
-					.then(team => {
+					await Team.findOne({ where: { TeamId: user.Team_Id }, raw: true }).then(team => {
 						roomPlayersArray[counter] = {
 							RoomPlayersId: player.RoomPlayersId,
 							UserName: user.UserName,
@@ -109,9 +104,9 @@ function roomsSocket(socket, io) {
 							TeamName: player.isRoomCreator ? '' : team.TeamName,
 							isRoomCreator: player.isRoomCreator,
 							isGroupCoach: player.isGroupCoach
-						}
+						};
 						counter++;
-					})
+					});
 				});
 		}
 		return roomPlayersArray;

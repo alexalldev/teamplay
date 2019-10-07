@@ -18,6 +18,7 @@
         <input type="text" id="header" placeholder="header">
         <input type="text" id="mainText" placeholder="mainText">
         <input type="text" id="isInfoNotification" placeholder="isInfoNotification">
+        <input type="text" id="shouldCreate" placeholder="shouldCreate">
         <input type="submit" value="post" id="submit-btn">
     </form>
 </body>
@@ -31,11 +32,11 @@
                 senderId: $('#senderId').val(),
                 header: $('#header').val(),
                 mainText: $('#mainText').val(),
-                isInfoNotification: $('#isInfoNotification').val()
+                isInfoNotification: $('#isInfoNotification').val(),
+                shouldCreate: $('#shouldCreate').val()
             },
             dataType: 'text',
             success: function (data) {
-                console.log(data);
             },
             error: function (xhr, str) {
                 alert('Возникла ошибка: ' + xhr.responseCode);
