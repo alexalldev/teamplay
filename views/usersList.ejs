@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>TeamPlay Home</title>
+    <link rel="stylesheet" href="/public/css/home.css">
+    <% include blocks/title %>
+</head>
+
+<body>
+    <% include blocks/loader %>
+    <% include blocks/header %>
+    <section class="app-container">
+        <div class="container">
+            <div class="row">
+                <%- include('blocks/navigation-area', {page:"users"}) %>
+                <div class="col-md-10 working-area mt-2">
+                    <div class="row">
+                        <% if (users.length > 0) { %>
+                        <% users.forEach(function(user){ %>
+                        <%- include('blocks/usersListItem', {user: user}); %>
+                        <% }); %>
+                        <% } else { %>
+                        <% include blocks/greetings %>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+    </section>
+    <% include blocks/footer %>
+</body>
+<% include blocks/socket %>
+<script src="/public/js/animateCSS.js"></script>
+</html>
