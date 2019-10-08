@@ -4,22 +4,11 @@
             <img src="https://picsum.photos/100/100" class="mt-1 ml-1 img-fluid rounded" alt="">
         </div>
         <div class="text-center mt-1 quiz-col-55">
-            <a href='/user/<%=user.UserId%>'><span class="text-dark h5"><%= user.userFIO %></span></a>
-            <!-- <% if (!user.userTeam && user.userIsCoach) { %> -->
-            <button class=" btn btn-outline-success ml-2 mt-2 h1" onclick="teamInvite('<%= user.UserId %>')"><i
-                    class="fas fa-user-plus"></i> Пригласить</button>
-            <!-- <% } %> -->
+            <a href='/user/<%=user.userId%>'>
+                <%if (user.isCoach) { %>
+                <i class="fas fa-star"></i>
+                <% } %>
+                <span class="text-dark h5"><%= user.memberFIO %></span></a>
         </div>
     </div>
-    <!-- <% if (user.userTeam) { %> -->
-    <div class="row">
-        <div class="quiz-col-40">
-            <div class="row">
-                <div class="col-md-12 text-left">
-                    <!-- <a href='/team/<%=user.userTeamId%>'><i class="fas fa-users"></i><%=user.userTeam%></a> -->
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- <% } %> -->
 </div>

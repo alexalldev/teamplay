@@ -72,17 +72,29 @@ router.get('/rooms', app.protect, function(req, res) {
 
 router.get('/team/:teamId', app.protect, async (req, res) => {
 	let users = [];
+	let counter = 0;
 	await User.findAll({ where: { Team_Id: req.params.teamId }, raw: true })
 		.then(async members => {
-			for await (const member of members) {
-				users.push({
-					isCoach: member.isCoach,
-					isActive: member.UserIsActive,
-					userId: member.UserId,
-					teamId: member.Team_Id,
-					memberFIO: `${member.UserFamily} ${member.UserName} ${member.UserLastName}.`
-				});
-			}
+			await Team.findOne({ where: { TeamId: members[0].Team_Id } }).then(async team => {
+				for (const member of members) {
+					if (member.isCoach) members.coachInd = counter;
+					users.push({
+						isActive: member.UserIsActive,
+						userId: member.UserId,
+						memberFIO: `${member.UserFamily} ${member.UserName} ${member.UserLastName}`
+					});
+					counter++;
+				}
+				users.teamName = team.TeamName;
+				[
+					users[members.coachInd],
+					users[0]
+				] = [
+					users[0],
+					users[members.coachInd]
+				];
+				console.log(users);
+			});
 		})
 		.catch(err => {
 			console.log({ file: __filename, func: 'router.get("/team/:teamId"), User.findAll', err: err });
