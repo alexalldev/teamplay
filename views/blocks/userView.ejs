@@ -4,40 +4,44 @@
             <img src="https://picsum.photos/400/400" class="mt-1 ml-1 img-fluid rounded" alt="">
         </div>
         <div class="col-md-8">
-            <h1><%= user.UserFamily %> <%= user.UserName %> <%= user.UserLastName %> </h1> <% if(user.canEdit) {%> <span class="btnChangePassword text-info">Изменить пароль от аккаунта</span> <%}%>
+            <h1><%= user.UserFamily %> <%= user.UserName %> <%= user.UserLastName %> </h1> <% if(user.canEdit) {%> <span
+                class="btnChangePassword text-info">Изменить пароль от аккаунта</span> <%}%>
             <div class="row mb-2">
                 <div class="col-md-12 text-right">
                     <% if(user.TeamName) {%>
-                        <h3>Моя команда</h3>
-                        <% if(user.isCoach) {%>
-                            <h2 id="TeamName"><i class="fas fa-star text-warning"></i><%= user.TeamName %> <i class="fas fa-users"></i> <%= user.teamPlayersCount %></h2>
-                        <%} else {%>
-                            <h2 id="TeamName"><i class="fas fa-user"></i><%= user.TeamName %> <i class="fas fa-users"></i> <%= user.teamPlayersCount %></h2>
-                        <%}%>
+            <h3>Моя команда</h3>
+            <% if(user.isCoach) {%>
+            <h2 id="TeamName"><i class="fas fa-star text-warning"></i><a
+                    href="/team/<%= user.TeamTag %>"><%= user.TeamName %></a> <i class="fas fa-users"></i>
+                <%= user.teamPlayersCount %></h2>
+            <%} else {%>
+            <h2 id="TeamName"><i class="fas fa-user"></i><%= user.TeamName %> <i class="fas fa-users"></i>
+                <%= user.teamPlayersCount %></h2>
+            <%}%>
                     <%}%>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 text-center">
-            <h2>Статистика игр</h2>
-            <div style="width: 100%; height: 100%;">
-                <canvas id="myChart"></canvas>
-            </div>
         </div>
     </div>
 </div>
+</div>
+<div class="row">
+    <div class="col-md-12 text-center">
+        <h2>Статистика игр</h2>
+        <div style="width: 100%; height: 100%;">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+</div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 <script>
-        var Color1 = RandomColor(255, 255, 255, 0.5);
-        var Color2 = RandomColor(255, 255, 255, 0.5);
-        var Color3= RandomColor(255, 255, 255, 0.5);
-        var ctx = document.getElementById('myChart').getContext('2d');
+    var Color1 = RandomColor(255, 255, 255, 0.5);
+    var Color2 = RandomColor(255, 255, 255, 0.5);
+    var Color3 = RandomColor(255, 255, 255, 0.5);
+    var ctx = document.getElementById('myChart').getContext('2d');
     var chart = new Chart(ctx, {
         // The type of chart we want to create
         type: 'bar',
-    
+
         // The data for our dataset
         data: {
             labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange", "Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
@@ -63,7 +67,7 @@
                 borderWidth: 2
             }]
         },
-        options: 
+        options:
         {
             legend:
             {
@@ -72,36 +76,33 @@
                 {
                     fontColor: 'rgb(255, 99, 132)'
                 },
-                onClick: function(e, p)
-                {
+                onClick: function (e, p) {
                     alert(p.text);
                 }
             }
         }
-    
+
     });
-    
-    function RandomColor(rmax, gmax, bmax, opacity)
-    {
-      return 'rgb('+ Math.round(Math.random() * rmax + 1) +', '+ Math.round(Math.random() * gmax + 1) +', '+ Math.round(Math.random() * bmax + 1) +', '+ opacity +')';
+
+    function RandomColor(rmax, gmax, bmax, opacity) {
+        return 'rgb(' + Math.round(Math.random() * rmax + 1) + ', ' + Math.round(Math.random() * gmax + 1) + ', ' + Math.round(Math.random() * bmax + 1) + ', ' + opacity + ')';
     }
-    
-    function ChangeColorProportionally(RgbColor, Percents)
-    {
+
+    function ChangeColorProportionally(RgbColor, Percents) {
         var colors = String(String(RgbColor.split('(')[1]).split(')')).split(',');
-    
+
         var opacity = colors[3];
-    
+
         var R = Math.round((colors[0] * Percents) / 100) >= 0 && Math.round((colors[0] * Percents) / 100) <= 255
-        ? Math.round((colors[0] * Percents) / 100) : colors[0];
-    
+            ? Math.round((colors[0] * Percents) / 100) : colors[0];
+
         var G = Math.round((colors[1] * Percents) / 100) >= 0 && Math.round((colors[1] * Percents) / 100) <= 255
-        ? Math.round((colors[1] * Percents) / 100) : colors[1];
-    
+            ? Math.round((colors[1] * Percents) / 100) : colors[1];
+
         var B = Math.round((colors[2] * Percents) / 100) >= 0 && Math.round((colors[2] * Percents) / 100) <= 255
-        ? Math.round((colors[2] * Percents) / 100) : colors[2];
-    
-        return 'rgb('+ R +', '+ G +', '+ B +', '+ opacity +')';
+            ? Math.round((colors[2] * Percents) / 100) : colors[2];
+
+        return 'rgb(' + R + ', ' + G + ', ' + B + ', ' + opacity + ')';
     }
-    
-    </script>
+
+</script>

@@ -70,31 +70,34 @@ router.get('/rooms', app.protect, function(req, res) {
 		.catch(err => console.log(err));
 });
 
-router.get('/team/:teamId', app.protect, async (req, res) => {
+router.get('/team/:TeamTag', app.protect, async (req, res) => {
 	let users = [];
 	let counter = 0;
-	await User.findAll({ where: { Team_Id: req.params.teamId }, raw: true })
-		.then(async members => {
-			await Team.findOne({ where: { TeamId: members[0].Team_Id } }).then(async team => {
-				for (const member of members) {
-					if (member.isCoach) members.coachInd = counter;
-					users.push({
-						isActive: member.UserIsActive,
-						userId: member.UserId,
-						memberFIO: `${member.UserFamily} ${member.UserName} ${member.UserLastName}`
-					});
-					counter++;
-				}
-				users.teamName = team.TeamName;
-				[
-					users[members.coachInd],
-					users[0]
-				] = [
-					users[0],
-					users[members.coachInd]
-				];
-				console.log(users);
-			});
+	await Team.findOne({ where: { TeamTag: req.params.TeamTag } })
+		.then(async team => {
+			await User.findAll({ where: { Team_Id: team.TeamId }, raw: true })
+				.then(async members => {
+					for (const member of members) {
+						if (member.isCoach) members.coachInd = counter;
+						users.push({
+							isActive: member.UserIsActive,
+							userId: member.UserId,
+							FIO: `${member.UserFamily} ${member.UserName} ${member.UserLastName}`
+						});
+						counter++;
+					}
+					users.teamName = team.TeamName;
+					[
+						users[members.coachInd],
+						users[0]
+					] = [
+						users[0],
+						users[members.coachInd]
+					];
+				})
+				.catch(err => {
+					console.log({ file: __filename, func: 'router.get("/team/:teamId"), User.findAll', err: err });
+				});
 		})
 		.catch(err => {
 			console.log({ file: __filename, func: 'router.get("/team/:teamId"), User.findAll', err: err });
@@ -110,6 +113,7 @@ router.get('/user/:userId', app.protect, function(req, res) {
 				await Team.findOne({ where: { TeamId: user.Team_Id }, raw: true })
 					.then(async team => {
 						user.TeamName = team.TeamName;
+						user.TeamTag = team.TeamTag;
 						await User.findAndCountAll({ where: { Team_Id: team.TeamId } })
 							.then(result => {
 								user.teamPlayersCount = result.count;
@@ -151,6 +155,7 @@ router.get('/teams', app.protect, function(req, res) {
 			await User.findOne({ where: { UserId: req.session.passport.user } }).then(user => {
 				teams.userTeamId = user.Team_Id;
 			});
+			console.log(teams);
 			res.render('teamsList', { teams: teams });
 		})
 		.catch(err => {

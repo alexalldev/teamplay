@@ -18,10 +18,12 @@
                 <div class="col-md-10 working-area mt-2">
                     <span class='h1'><%=users.teamName%></span>
                     <div class="row">
-                        <% for(let i = 0; i < users.length; i++){ %>
-                        <% if (i === 0) users[i].isCoach = true; %>
-                        <%- include('blocks/teamPageUser', {user: users[i]}); %>
-                        <% }; %>
+                        <div class="col-md-12 text-center">
+                            <% for(let i = 0; i < users.length; i++){ %>
+                            <% if (i === 0) users[i].isCoach = true; %>
+                            <%- include('blocks/teamPageUser', {user: users[i]}); %>
+                            <% }; %>
+                        </div>
                     </div>
                 </div>
             </div>

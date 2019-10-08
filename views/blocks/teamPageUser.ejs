@@ -1,14 +1,9 @@
-<div class="quiz col-md-4 ml-2 mt-2">
-    <div class="row">
-        <div class="quiz-col-40">
-            <img src="https://picsum.photos/100/100" class="mt-1 ml-1 img-fluid rounded" alt="">
-        </div>
-        <div class="text-center mt-1 quiz-col-55">
-            <a href='/user/<%=user.userId%>'>
-                <%if (user.isCoach) { %>
-                <i class="fas fa-star"></i>
-                <% } %>
-                <span class="text-dark h5"><%= user.memberFIO %></span></a>
-        </div>
+<div class="row Player Player-<%= user.userId %> mt-2 mb-2">
+    <div class="col-md-12 text-left">
+        <img class="user_organizer" src="/public/user-icon.png" alt="">
+        <a href="/user/<%= user.userId %>" style="font-size: 30px; position:relative; top: 5%"><%= user.FIO %></a>
+        <%if (user.isCoach) { %>
+        <span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>
+        <% } %>
     </div>
 </div>
