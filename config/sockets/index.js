@@ -11,6 +11,8 @@ const GameTeam = require('../../models/GameTeam');
 const Category = require('../../models/Category');
 const Question = require('../../models/Question');
 const Answer = require('../../models/Answer');
+const Room = require('../../models/Room');
+const User = require('../../models/User');
 
 function ClientsStore() {
 	var Creators = [];
@@ -162,21 +164,56 @@ io.on('connection', function(socket) {
 			if (GameTag.charAt(GameTag.length - 1) == '-') {
 				GameTag = GameTag.substr(0, GameTag.length - 1);
 			}
-			Game.findOrCreate({ where: { GameTag: GameTag } })
+			Game.findOrCreate({ where: { GameTag: GameTag, QuizCreatorId: session.passport.user } })
 				.then(([ game, created
 				]) => {
 					if (created == true) {
 						game
-							.update({ GameName: data.GameName, QuizCreatorId: session.passport.user })
+							.update({ GameName: data.GameName })
 							.then(() => {
 								socket.emit('GameAdded', game.get()); //Вернуть добавленную в базу Game
 							})
 							.catch(err => console.log(err));
-					} else socket.emit('GameExists'); //Игра существует
+					} else socket.emit('Info', 'У вас уже есть игра с таким названием');
 				})
 				.catch(err => console.log(err));
 		}
 	});
+
+	//Запрос на создание новой команды с указанным именем
+	socket.on('CreateTeam', function(TeamName) {
+		if (session.passport.user) {
+			if (TeamName)
+			{
+				if (TeamName.charAt(TeamName.length - 1) == ' ')
+					TeamName = TeamName.substr(0, TeamName.length - 1);
+				TeamTag = TeamName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
+
+				User.findOne({where: {UserId: session.passport.user}})
+				.then(user => {
+					if (user)
+						if (user.dataValues.Team_Id  == 0)
+							Team.findOrCreate({ where: { TeamTag: TeamTag } })
+							.then(([ team, created
+							]) => {
+								if (created == true) {
+									team
+										.update({ TeamName: TeamName })
+										.then(() => {
+											user.update({isCoach: true, Team_Id: team.dataValues.TeamId})
+											.then(() => socket.emit('TeamCreated'));
+										})
+										.catch(err => console.log(err));
+								} else socket.emit('Info', 'Выберите другое название');
+							})
+							.catch(err => console.log(err));
+						else
+							socket.emit('Info', 'Покиньте текущую команду, чтобы создать свою');
+				})
+			}
+		}
+	});
+
 	//запрос на получение всех игр
 	socket.on('LoadGames', function() {
 		Game.findAll({ raw: true })
@@ -188,46 +225,57 @@ io.on('connection', function(socket) {
 
 	//запрос на удаление игры
 	socket.on('RemoveGame', function(GameId) {
-		if (socket.LoggedAdmin) {
-			var categoriesIds = [];
-			Category.findAll({ raw: true, where: { Game_Id: GameId } })
-				.then(categories => {
-					for (var category of categories) {
-						categoriesIds.push(category.CategoryId);
-					}
+		if (session.passport.user) {
+			Game.findOne({where: {GameId: GameId, QuizCreatorId: session.passport.user}, raw: true})
+			.then(game => {
+				if (game)
+				{
+					var categoriesIds = [];
+					Room.destroy({where: {Game_Id: GameId}})
+					.catch(err => console.log(err));
 
-					for (let c = 0; c < categoriesIds.length; c++) {
-						Question.findAll({ raw: true, where: { Category_Id: categoriesIds[c] } })
-							.then(async questions => {
-								for (var question of questions) {
-									await Question.RemoveQuestionImage(question.QuestionId, function(result) {});
-									await Answer.destroy({ where: { Question_Id: question.QuestionId } })
-										.then()
-										.catch(err => console.log(err));
-								}
+					Category.findAll({ raw: true, where: { Game_Id: GameId } })
+						.then(categories => {
+							for (var category of categories) {
+								categoriesIds.push(category.CategoryId);
+							}
 
-								Question.destroy({ where: { Category_Id: categoriesIds[c] } })
-									.then(questionRemoved => {})
+							for (let c = 0; c < categoriesIds.length; c++) {
+								Question.findAll({ raw: true, where: { Category_Id: categoriesIds[c] } })
+									.then(async questions => {
+										for (var question of questions) {
+											await Question.RemoveQuestionImage(question.QuestionId, function(result) {});
+											await Answer.destroy({ where: { Question_Id: question.QuestionId } })
+												.then()
+												.catch(err => console.log(err));
+										}
+
+										Question.destroy({ where: { Category_Id: categoriesIds[c] } })
+											.then(questionRemoved => {
+
+											})
+											.catch(err => console.log(err));
+									})
 									.catch(err => console.log(err));
-							})
-							.catch(err => console.log(err));
-					}
+							}
 
-					Category.destroy({ where: { Game_Id: GameId } })
-						.then(categoryRemoved => {
-							GameTeam.destroy({ where: { Game_Id: GameId } })
-								.then(gameTeamRemoved => {
-									Game.destroy({ where: { GameId: GameId } })
-										.then(gameRemoved => {
-											socket.emit('GameRemoved', GameId); //Игра удалена
+							Category.destroy({ where: { Game_Id: GameId } })
+								.then(categoryRemoved => {
+									GameTeam.destroy({ where: { Game_Id: GameId } })
+										.then(gameTeamRemoved => {
+											Game.destroy({ where: { GameId: GameId } })
+												.then(gameRemoved => {
+													socket.emit('GameRemoved', GameId); //Игра удалена
+												})
+												.catch(err => console.log(err));
 										})
 										.catch(err => console.log(err));
 								})
 								.catch(err => console.log(err));
 						})
 						.catch(err => console.log(err));
-				})
-				.catch(err => console.log(err));
+				}
+			})
 		}
 	});
 

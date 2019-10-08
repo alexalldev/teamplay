@@ -5,23 +5,26 @@ const Team = require('../../models/Team');
 function roomsSocket(socket, io) {
 	const session = socket.request.session;
 	socket.on('createRoom', function(roomName, gameId, roomMaxTeamPlayers) {
-		var creatorId = session.passport.user;
-		if (roomName.charAt(roomName.length - 1) == ' ')
-				roomName = roomName.substr(0, roomName.length - 1);
-		roomTag = roomName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
-		Room.findOrCreate({ where: { RoomTag: roomTag, RoomCreatorId: creatorId } })
-			.then(([ room, created
-			]) => {
-				if (created == true) {
-					room
-						.update({ RoomName: roomName, Game_Id: gameId, RoomMaxTeamPlayers: roomMaxTeamPlayers })
-						.then(() => socket.emit('roomAdded', created))
-						.catch(err => console.log(err));
-				} else {
-					socket.emit('roomExists');
-				}
-			})
-			.catch(err => console.log(err));
+		if (roomName && gameId && roomMaxTeamPlayers)
+		{
+			var creatorId = session.passport.user;
+			if (roomName.charAt(roomName.length - 1) == ' ')
+					roomName = roomName.substr(0, roomName.length - 1);
+			roomTag = roomName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
+			Room.findOrCreate({ where: { RoomTag: roomTag } })
+				.then(([ room, created
+				]) => {
+					if (created == true) {
+						room
+							.update({ RoomName: roomName, Game_Id: gameId, RoomMaxTeamPlayers: roomMaxTeamPlayers, RoomCreatorId: creatorId })
+							.then(() => socket.emit('roomAdded', created))
+							.catch(err => console.log(err));
+					} else {
+						socket.emit('Info', 'Комната с таким названием существует');
+					}
+				})
+				.catch(err => console.log(err));
+		}
 	});
 
 	socket.on('getRoomPlayers', function() {

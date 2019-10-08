@@ -26,9 +26,10 @@ $(document).ready(function() {
 			title: 'Название команды',
 			text:
 				'Вы создаёте новую команду, которая сможет участвовать в викторинах. Вы автоматически станете коучем этой команды и сможете приглашать в нее других игроков',
-			input: 'text'
+			input: 'text',
+			confirmButtonText: 'Создать',
 		}).then(text => {
-			if (text.value) socket.emit('CreateTeam', { TeamName: text.value });
+			if (text.value) socket.emit('CreateTeam', text.value);
 		});
 	});
 });
@@ -37,8 +38,12 @@ socket.on('GameAdded', function(data) {
 	location.reload();
 });
 
-socket.on('GameExists', function() {
-	Swal('Игра', 'с таким названием существует', 'info');
+socket.on('TeamCreated', function(data) {
+	location.reload();
+});
+
+socket.on('Info', function(message) {
+	Swal('Info', message, 'info');
 });
 
 socket.on('roomAdded', function() {

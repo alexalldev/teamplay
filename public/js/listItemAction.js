@@ -5,7 +5,8 @@ function teamInvite(userId) {
 			html: `<label for="swal-input1">Заголовок</label>
             <input id="swal-input1" class="swal2-input">
             <label for="swal-input2">Основной текст</label>
-            <input id="swal-input2" class="swal2-input">`,
+			<input id="swal-input2" class="swal2-input">`,
+			confirmButtonText: 'Пригласить',
 			focusConfirm: false,
 			preConfirm: () => {
 				return [
@@ -14,7 +15,6 @@ function teamInvite(userId) {
 				];
 			}
 		});
-		console.log(text);
 		if (text) {
 			$.ajax({
 				type: 'POST',

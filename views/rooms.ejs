@@ -17,11 +17,11 @@
                 <%- include('blocks/navigation-area', {page:"rooms"}) %>
                 <div class="col-md-10 working-area mt-2">
                     <div class="row">
+                        <button class="btn btn-outline-success ml-2 mt-2 h1 btnCreateRoom">Создать</button>
                         <% if (roomModels.length > 0) { %>
                         <% roomModels.forEach(function(room){ %>
                         <%- include('blocks/roomsListTemplate', {room: room}); %>
                         <% }); %>
-                        <button class="btn btn-outline-success ml-2 mt-2 h1 btnCreateRoom">Создать</button>
                         <% } else { %>
                             <%- include('blocks/greetings', {btnName: 'btnCreateRoom'}) %>
                         <% } %>

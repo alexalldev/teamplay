@@ -19,7 +19,7 @@ let {
 var formidable = require('formidable');
 
 router.get('/EditGame/:GameTag', app.protect, function(req, res) {
-    Game.findOne({where: {GameTag: req.params.GameTag}})
+    Game.findOne({where: {GameTag: req.params.GameTag, QuizCreatorId: req.session.passport.user}})
     .then(game => {
         if (game != null)
         {
