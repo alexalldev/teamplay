@@ -32,6 +32,18 @@ $(document).ready(function() {
 			if (text.value) socket.emit('CreateTeam', text.value);
 		});
 	});
+
+	$('.btnLeaveTeamModal').click(function() {
+		$('#leaveTeamModal').modal();
+	});
+
+	$('.btnLeaveTeam').click(function() {
+		socket.emit('LeaveTeam');
+	});
+
+	$('#createRoomModal').submit(function() {
+		socket.emit('createRoom', $('#RoomName').val(), $('#MyGamesSelect').val(), $('#RoomMaxTeamPlayers').val());
+	});
 });
 
 socket.on('GameAdded', function(data) {

@@ -19,6 +19,7 @@
                     <span class='h1'><%=users.teamName%></span>
                     <div class="row">
                         <div class="col-md-12 text-center">
+                            <button class="btn btn-outline-danger ml-2 mt-2 h1 btnLeaveTeamModal">Покинуть команду</button>
                             <% for(let i = 0; i < users.length; i++){ %>
                             <% if (i === 0) users[i].isCoach = true; %>
                             <%- include('blocks/teamPageUser', {user: users[i]}); %>
@@ -27,11 +28,54 @@
                     </div>
                 </div>
             </div>
+        <!-- The Modal -->
+      <div class="modal fade" id="leaveTeamModal">
+            <div class="modal-dialog">
+              <div class="modal-content">
+              
+                <!-- Modal Header -->
+                <div class="modal-header">
+                        <% if (users.length > 1) { %>
+                            <h4 class="modal-title">Выберите преемника, который станет новым коучем команды</h4>
+                        <% } else { %>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h4 class="modal-title">Команда будет удалена, потому что вы являетесь единственным игроком</h4>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <span class="h5"><a href="/users">Пригласите</a> игроков и оставьте приемника перед уходом из команды</span>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } %>
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                
+                <!-- Modal body -->
+                <div class="modal-body">
+                  <form action="javascript:void(null)">
+                        <% if (users.length > 1) { %>
+                            <select class="form-control mb-2" id="SuccessorId" name="SuccessorId">
+                                <% users.forEach(function(user){ %>
+                                    <option value="<%= user.UserId %>"><%= user.FIO %></option>
+                                <% }) %>
+                            </select>
+                        <% } %>
+                    <button class="btn btn-danger btnLeaveTeam">Покинуть команду</button>
+                </form>
+                </div>
+                
+              </div>
+            </div>
+          </div>
     </section>
     <% include blocks/footer %>
 </body>
 <% include blocks/socket %>
 <script src="/public/js/animateCSS.js"></script>
 <script src="/public/js/listItemAction.js"></script>
-
+<script src="/public/js/home.js"></script>
 </html>

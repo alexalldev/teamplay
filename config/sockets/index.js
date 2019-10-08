@@ -208,7 +208,7 @@ io.on('connection', function(socket) {
 							})
 							.catch(err => console.log(err));
 						else
-							socket.emit('Info', 'Покиньте текущую команду, чтобы создать свою');
+							socket.emit('Info', 'Покиньте текущую команду, чтобы создать новую');
 				})
 			}
 		}
