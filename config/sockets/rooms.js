@@ -6,6 +6,8 @@ function roomsSocket(socket, io) {
 	const session = socket.request.session;
 	socket.on('createRoom', function(roomName, gameId, roomMaxTeamPlayers) {
 		var creatorId = session.passport.user;
+		if (roomName.charAt(roomName.length - 1) == ' ')
+				roomName = roomName.substr(0, roomName.length - 1);
 		roomTag = roomName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '').toLowerCase().replace(/\s/g, '-');
 		Room.findOrCreate({ where: { RoomTag: roomTag, RoomCreatorId: creatorId } })
 			.then(([ room, created

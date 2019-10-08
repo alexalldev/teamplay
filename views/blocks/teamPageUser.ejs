@@ -1,9 +1,10 @@
 <div class="row Player Player-<%= user.userId %> mt-2 mb-2">
     <div class="col-md-12 text-left">
-        <img class="user_organizer" src="/public/user-icon.png" alt="">
-        <a href="/user/<%= user.userId %>" style="font-size: 30px; position:relative; top: 5%"><%= user.FIO %></a>
         <%if (user.isCoach) { %>
-        <span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>
+            <span class="h2" title="Коуч команды"><i class="fas fa-star text-warning"></i></span>
+        <% } else { %>
+            <img class="user_organizer" title="Игрок команды" src="/public/user-icon.png" alt="">
         <% } %>
+        <a href="/user/<%= user.userId %>" style="font-size: 30px; position:relative; top: 5%"><%= user.FIO %></a>
     </div>
 </div>
