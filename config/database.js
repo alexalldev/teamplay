@@ -18,4 +18,4 @@ module.exports = new Sequelize('teamplay', 'root', '', {
     acquire: 30000,
     idle: 10000
   }
-});
+})

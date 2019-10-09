@@ -38,7 +38,7 @@ $(document).ready(function() {
 	});
 
 	$('.btnLeaveTeam').click(function() {
-		socket.emit('LeaveTeam');
+		socket.emit('LeaveTeam', $("#SuccessorId").val());
 	});
 
 	$('#createRoomModal').submit(function() {
@@ -50,11 +50,15 @@ socket.on('GameAdded', function(data) {
 	location.reload();
 });
 
-socket.on('TeamCreated', function(data) {
-	location.reload();
+socket.on('TeamCreated', function(teamTag) {
+	location.href = '/team/' + teamTag;
 });
 
 socket.on('roomAdded', function() {
+	location.reload();
+});
+
+socket.on('TeamLeaved', function() {
 	location.reload();
 });
 

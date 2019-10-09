@@ -74,34 +74,46 @@ router.get('/team/:TeamTag', app.protect, async (req, res) => {
     let users = [];
 	let counter = 0;
 	await Team.findOne({ where: { TeamTag: req.params.TeamTag} }).then(async team => {
-		await User.findAll({ where: { Team_Id: team.TeamId }, raw: true })
-        .then(async members => {
-			for (const member of members) {
-				if (member.isCoach) members.coachInd = counter;
-				users.push({
-					isActive: member.UserIsActive,
-					userId: member.UserId,
-					FIO: `${member.UserFamily} ${member.UserName} ${member.UserLastName}`
-				});
-				counter++;
-			}
-			users.teamName = team.TeamName;
-			[
-				users[members.coachInd],
-				users[0]
-			] = [
-				users[0],
-				users[members.coachInd]
-			];
-        })
-        .catch(err => {
-            console.log({ file: __filename, func: 'router.get("/team/:TeamTag"), User.findAll', err: err });
-		});
+        if (team)
+        {
+            await User.findOne({where: {UserId: req.session.passport.user}, raw: true})
+            .then(user => {
+                if (user)
+                isMyTeam = user.Team_Id == team.dataValues.TeamId ? true : false;
+                isCoach = user.isCoach;
+            })
+            
+            await User.findAll({ where: { Team_Id: team.TeamId }, raw: true })
+            .then(async members => {
+                for (const member of members) {
+                    if (member.isCoach) members.coachInd = counter;
+                    users.push({
+                        isActive: member.UserIsActive,
+                        userId: member.UserId,
+                        FIO: `${member.UserFamily} ${member.UserName} ${member.UserLastName}`
+                    });
+                    counter++;
+                }
+                users.teamName = team.TeamName;
+                [
+                    users[members.coachInd],
+                    users[0]
+                ] = [
+                    users[0],
+                    users[members.coachInd]
+                ];
+            })
+            .catch(err => {
+                console.log({ file: __filename, func: 'router.get("/team/:TeamTag"), User.findAll', err: err });
+            });
+            res.render('teamPage', { users: users, isMyTeam: isMyTeam, isCoach: isCoach });
+        }
+        else
+            return res.redirect('/');
 	})
 	.catch(err => {
 		console.log({ file: __filename, func: 'router.get("/team/:TeamTag"), User.findAll', err: err });
-	});
-    res.render('teamPage', { users: users });
+    });
 });
  
 router.get('/user/:userId', app.protect, function(req, res) {
@@ -160,7 +172,7 @@ router.get('/teams', app.protect, function(req, res) {
             console.log({ file: __filename, func: 'router.get("/teams"), Team.findAll', err: err });
         });
 });
- 
+
 router.get('/users', app.protect, function(req, res) {
     User.findAll({ raw: true })
         .then(async users => {
@@ -171,6 +183,7 @@ router.get('/users', app.protect, function(req, res) {
                         .then(team => {
                             user.userTeam = team.TeamName;
                             user.userTeamId = team.TeamId;
+                            user.userTeamTag = team.TeamTag;
                         })
                         .catch(err => {
                             console.log({ file: __filename, func: 'router.get("/users"), Team.findOne', err: err });
