@@ -80,6 +80,7 @@ router.get('/team/:TeamTag', app.protect, async (req, res) => {
             .then(user => {
                 if (user)
                 isMyTeam = user.Team_Id == team.dataValues.TeamId ? true : false;
+                isCoach = user.isCoach;
             })
             
             await User.findAll({ where: { Team_Id: team.TeamId }, raw: true })
@@ -105,14 +106,14 @@ router.get('/team/:TeamTag', app.protect, async (req, res) => {
             .catch(err => {
                 console.log({ file: __filename, func: 'router.get("/team/:TeamTag"), User.findAll', err: err });
             });
+            res.render('teamPage', { users: users, isMyTeam: isMyTeam, isCoach: isCoach });
         }
         else
-            res.end('false');
+            return res.redirect('/');
 	})
 	.catch(err => {
 		console.log({ file: __filename, func: 'router.get("/team/:TeamTag"), User.findAll', err: err });
     });
-    res.render('teamPage', { users: users, isMyTeam: isMyTeam });
 });
  
 router.get('/user/:userId', app.protect, function(req, res) {

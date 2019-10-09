@@ -13,6 +13,7 @@ const Question = require('../../models/Question');
 const Answer = require('../../models/Answer');
 const Room = require('../../models/Room');
 const User = require('../../models/User');
+const notifications = require('../../modules/teamplay-notifications');
 
 function ClientsStore() {
 	var Creators = [];
@@ -201,7 +202,7 @@ io.on('connection', function(socket) {
 										.update({ TeamName: TeamName })
 										.then(() => {
 											user.update({isCoach: true, Team_Id: team.dataValues.TeamId})
-											.then(() => socket.emit('TeamCreated'));
+											.then(() => socket.emit('TeamCreated', team.dataValues.TeamTag));
 										})
 										.catch(err => console.log(err));
 								} else socket.emit('Info', 'Выберите другое название');
@@ -216,7 +217,36 @@ io.on('connection', function(socket) {
 	
 	socket.on('LeaveTeam', function(SuccessorId) {
 		if (session.passport.user) {
-			console.log(SuccessorId);
+			User.findOne({where: {UserId: session.passport.user}})
+			.then(Me => {
+				if (Me)
+					Team.findOne({where: {TeamId: Me.dataValues.Team_Id}})
+					.then(team => {
+						if (team)
+						{
+							if (Me.dataValues.isCoach)
+								User.findAndCountAll({where: {Team_Id: team.TeamId}, raw: true})
+								.then(result => {
+									if (result.count == 1)
+									{
+										Team.destroy({where: {TeamId: team.TeamId}})
+										.then(() => {
+											Me.update({Team_Id: 0, isCoach: false})
+											.then(() => {
+												socket.emit('TeamLeaved');
+											})
+										})
+									}
+								})
+							else
+								Me.update({Team_Id: 0, isCoach: false})
+								.then(() => {
+									/* Send info notification to team coach that his player has leaved team */
+									socket.emit('TeamLeaved');
+								})
+						}
+					})
+			})
 		}
 	});
 

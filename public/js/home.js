@@ -50,8 +50,8 @@ socket.on('GameAdded', function(data) {
 	location.reload();
 });
 
-socket.on('TeamCreated', function(data) {
-	location.reload();
+socket.on('TeamCreated', function(teamTag) {
+	location.href = '/team/' + teamTag;
 });
 
 socket.on('Info', function(message) {
@@ -59,6 +59,10 @@ socket.on('Info', function(message) {
 });
 
 socket.on('roomAdded', function() {
+	location.reload();
+});
+
+socket.on('TeamLeaved', function() {
 	location.reload();
 });
 
