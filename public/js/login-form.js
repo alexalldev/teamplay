@@ -1,4 +1,4 @@
-$(function() {
+rs$(function() {
 	$('.btn').click(function() {
 		ToggleBtn();
 	});
@@ -33,11 +33,13 @@ $(function() {
 				else if (data == 'poor_password')
 					$('#Info').html('Позаботьтесь о своей безопасности, придумав пароль длинной от шести символов.');
 				else if (data == 'user_exists')
-					$('#Info').html('Такой email зарегистрирован, хотите <u class="u-enter-toggle" onclick="ToggleBtn(true)">войти<u>?');
+					$('#Info').html(
+						'Такой email зарегистрирован, хотите <u class="u-enter-toggle" onclick="ToggleBtn(true)">войти<u>?'
+					);
 				else if (data == 'incorrect_confirm_password') $('#Info').html('Неверный повтор пароля');
 				else if (data == 'incorrect_fio') $('#Info').html('Введите ФИО через пробел');
 				else if (data == 'true') {
-					AnimateMessage("Отлично, что вы с нами. Проверьте почту для подтверждения.")
+					AnimateMessage('Отлично, что вы с нами. Проверьте почту для подтверждения.');
 				}
 			},
 			error: function(xhr, str) {
@@ -58,14 +60,15 @@ $('.forgot-pass').click(function() {
 			console.log(data);
 			if (data == 'null_user') $('#Message').text('Похоже такого пользователя не существует');
 			else if (data == 'null_email') $('#Message').text('Введите email');
-			else if (data == 'Please Activate Your Account via Email') $('#Message').text('Активируйте учетную запись через почту.');
+			else if (data == 'Please Activate Your Account via Email')
+				$('#Message').text('Активируйте учетную запись через почту.');
 			else if (data == 'true') AnimateMessage('Проверьте почту');
 		},
 		error: function(xhr, str) {
 			alert('Возникла ошибка: ' + xhr.responseCode);
 		}
 	});
-})
+});
 
 $('.form-signin').submit(function(e) {
 	$('#Message').text('');
@@ -80,7 +83,8 @@ $('.form-signin').submit(function(e) {
 			if (data == 'pass') $('#password').addClass('incorrect-input');
 			else if (data == 'null_user') $('#Message').text('Похоже такого пользователя не существует');
 			else if (data == 'Messing credentials') $('#Message').text('Заполните все поля');
-			else if (data == 'Please Activate Your Account via Email') $('#Message').text('Активируйте учетную запись через почту.');
+			else if (data == 'Please Activate Your Account via Email')
+				$('#Message').text('Активируйте учетную запись через почту.');
 			else if (JSON.parse(data).result) SignIn(JSON.parse(data));
 		},
 		error: function(xhr, str) {

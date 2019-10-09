@@ -23,14 +23,22 @@ module.exports = function(notificationData, req, callback) {
 	let created;
 	let notification;
 	User.findOne({ where: { UserId: receiverId }, raw: true })
-		.then(async user => {
-			let invitationHash = isInfoNotification == 'false' ? crypto.randomBytes(Math.ceil(120 / 2)).toString('hex').slice(0, 120) : '';
+		.then(async (user) => {
+			let invitationHash =
+				isInfoNotification == 'false'
+					? crypto.randomBytes(Math.ceil(120 / 2)).toString('hex').slice(0, 120)
+					: '';
 			if (user) {
 				if (shouldCreate == 'true') {
 					if (isInfoNotification == 'false')
 						await notificationModel
 							.findOrCreate({
-								where: { senderId: senderId, receiverId: receiverId, InvitationType: invitationType, isAnswered: false },
+								where: {
+									senderId: senderId,
+									receiverId: receiverId,
+									InvitationType: invitationType,
+									isAnswered: false
+								},
 								defaults: {
 									header: header,
 									mainText: mainText,
@@ -39,50 +47,53 @@ module.exports = function(notificationData, req, callback) {
 									InvitationHash: invitationHash
 								}
 							})
-							.then(async ([ notificationObj, wasCreated
-							]) => {
+							.then(async ([ notificationObj, wasCreated ]) => {
 								created = wasCreated;
 								notification = notificationObj.get();
 								await User.findOne({ where: { UserId: senderId }, raw: true })
-									.then(async userSender => {
+									.then(async (userSender) => {
 										notification.senderFIO = `${userSender.UserFamily} ${userSender.UserName.slice(
 											0,
 											1
 										)}. ${userSender.UserLastName.slice(0, 1)}.`;
 										await Team.findOne({ where: { TeamId: userSender.Team_Id } })
-											.then(team => {
+											.then((team) => {
 												notification.userTeam = team ? team.TeamName : 0;
 											})
-											.catch(err => {
+											.catch((err) => {
 												console.log(`${__filename} Team.FindOne ${err}`);
 											});
 									})
-									.catch(err => {
+									.catch((err) => {
 										console.log(`${__filename} notificationModel.create ${err}`);
 									});
 								if (wasCreated) {
 									//Если это заявка, то отправляем на почту
-									fs.readFile(__dirname + '/../html_mail/TeamPlayNotificationEmail.html', 'utf-8', function(err, data) {
-										if (err) callback(err);
-										let html_mail_array = data.split('INVITATION_ACTION');
-										let html_mail_text = html_mail_array[0].split('NOTIFICATION_TEXT');
-										let html_mail = `
+									fs.readFile(
+										__dirname + '/../html_mail/TeamPlayNotificationEmail.html',
+										'utf-8',
+										function(err, data) {
+											if (err) callback(err);
+											let html_mail_array = data.split('INVITATION_ACTION');
+											let html_mail_text = html_mail_array[0].split('NOTIFICATION_TEXT');
+											let html_mail = `
 												${html_mail_text[0]} От ${notification.userTeam && notification.userTeam != 0
-											? `[${notification.userTeam}]`
-											: ``} ${notification.senderFIO.slice(0, -1)}: <br>
+												? `[${notification.userTeam}]`
+												: ``} ${notification.senderFIO.slice(0, -1)}: <br>
 												${notification.mainText}${html_mail_text[1]}${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=accept
 												${html_mail_array[1]}${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=reject
 												${html_mail_array[2]}`;
-										transporter.sendMail({
-											from: 'info@teamplay.space', // sender address
-											to: user.UserEmail, // list of receivers
-											subject: header, // Subject line
-											html: html_mail
-										});
-									});
+											transporter.sendMail({
+												from: 'info@teamplay.space', // sender address
+												to: user.UserEmail, // list of receivers
+												subject: header, // Subject line
+												html: html_mail
+											});
+										}
+									);
 								}
 							})
-							.catch(err => {
+							.catch((err) => {
 								console.log(`teamplay-notifications.js, findOrCreate: ${err}`);
 							});
 					else {
@@ -98,17 +109,17 @@ module.exports = function(notificationData, req, callback) {
 								isViewed: false,
 								InvitationHash: invitationHash
 							})
-							.then(async notificationObj => {
+							.then(async (notificationObj) => {
 								notification = notificationObj.get();
 								created = true;
 								await User.findOne({ where: { UserId: senderId }, raw: true })
-									.then(userSender => {
+									.then((userSender) => {
 										notification.senderFIO = `${userSender.UserFamily} ${userSender.UserName.slice(
 											0,
 											1
 										)}. ${userSender.UserLastName.slice(0, 1)}.`;
 									})
-									.catch(err => {
+									.catch((err) => {
 										console.log(`${__filename} notificationModel.create ${err}`);
 									});
 							});
@@ -127,23 +138,18 @@ module.exports = function(notificationData, req, callback) {
 							where: {
 								receiverId: receiverId
 							},
-							order: [
-								[
-									'notificationId',
-									'DESC'
-								]
-							],
+							order: [ [ 'notificationId', 'DESC' ] ],
 							raw: true
 						})
-						.then(async notifications => {
+						.then(async (notifications) => {
 							for await (const notification of notifications) {
 								await User.findOne({ where: { UserId: notification.senderId }, raw: true })
-									.then(async userSender => {
+									.then(async (userSender) => {
 										await Team.findOne({ where: { TeamId: userSender.Team_Id } })
-											.then(team => {
+											.then((team) => {
 												notification.userTeam = team ? team.TeamName : 0;
 											})
-											.catch(err => {
+											.catch((err) => {
 												console.log(`${__filename} Team.FindOne in loop	 ${err}`);
 											});
 										notification.senderFIO = `${userSender.UserFamily} ${userSender.UserName.slice(
@@ -151,21 +157,25 @@ module.exports = function(notificationData, req, callback) {
 											1
 										)}. ${userSender.UserLastName.slice(0, 1)}.`;
 									})
-									.catch(err => {
+									.catch((err) => {
 										console.log(`${__filename} for of loop ${err}`);
 									});
 								io.emitUser(receiverId, 'receiveNotification', {
-									createdNotification: { notification: notification, shouldAdd: true, addToStart: false },
+									createdNotification: {
+										notification: notification,
+										shouldAdd: true,
+										addToStart: false
+									},
 									actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
 								});
 							}
 						})
-						.catch(err => {
+						.catch((err) => {
 							console.log({ file: __filename, err: err });
 						});
 					callback('true');
 				}
 			}
 		})
-		.catch(err => console.log(err));
+		.catch((err) => console.log(err));
 };
