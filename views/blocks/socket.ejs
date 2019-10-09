@@ -1,3 +1,8 @@
 <script src="/socket.io/socket.io.js"></script>
-<script>const socket = io.connect(location.protocol + '//' + location.host, {transports: ['pooling']});</script>
+<script>
+const socket = io.connect(location.protocol + '//' + location.host, {transports: ['pooling']});
+socket.on('Info', function(message) {
+	Swal('Info', message, 'info');
+});
+</script>
 <script src="/public/js/notificationSocket.js"></script>

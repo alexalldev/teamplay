@@ -54,10 +54,6 @@ socket.on('TeamCreated', function(data) {
 	location.reload();
 });
 
-socket.on('Info', function(message) {
-	Swal('Info', message, 'info');
-});
-
 socket.on('roomAdded', function() {
 	location.reload();
 });
