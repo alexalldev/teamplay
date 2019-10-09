@@ -9,12 +9,12 @@
                 </div>
                 <div class="row mb-5">
                     <div class="col-md-12 text-center">
-                        <h1>Проведите викторину удаленно в TeamPlay</h1>
+                        <h1><%= btnName == 'btnCreateQuiz' ? 'Проведите викторину удаленно в TeamPlay' : btnName == 'btnCreateRoom' ? 'В комнату могут подключаться команды' : 'Команда — игровое сообщество' %></h1>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-12 text-center">
-                        <h2>Создайте <%= btnName == 'btnCreateQuiz' ? 'викторину и добавьте в нее вопросы' : 'комнату для проведения игры' %> </h2>
+                        <h2>Создайте <%= btnName == 'btnCreateQuiz' ? 'викторину и добавьте в нее вопросы' : btnName == 'btnCreateRoom' ? 'комнату для проведения игры' : 'команду' %> </h2>
                     </div>
                 </div>
                 <div class="row">
