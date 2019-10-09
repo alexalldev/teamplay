@@ -38,7 +38,7 @@ $(document).ready(function() {
 	});
 
 	$('.btnLeaveTeam').click(function() {
-		socket.emit('LeaveTeam');
+		socket.emit('LeaveTeam', $("#SuccessorId").val());
 	});
 
 	$('#createRoomModal').submit(function() {

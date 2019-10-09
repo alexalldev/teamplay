@@ -16,10 +16,19 @@
             <div class="row">
                 <%- include('blocks/navigation-area', {page:"teams"}) %>
                 <div class="col-md-10 working-area mt-2">
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                                <% if(isMyTeam) {%>
+                                    <span class="h1">Моя команда</span>
+                                <% } %>
+                        </div>
+                    </div>
                     <span class='h1'><%=users.teamName%></span>
                     <div class="row">
                         <div class="col-md-12 text-center">
-                            <button class="btn btn-outline-danger ml-2 mt-2 h1 btnLeaveTeamModal">Покинуть команду</button>
+                            <% if(isMyTeam) {%>
+                                <button class="btn btn-outline-danger ml-2 mt-2 h1 btnLeaveTeamModal">Покинуть команду</button>
+                            <% } %>
                             <% for(let i = 0; i < users.length; i++){ %>
                             <% if (i === 0) users[i].isCoach = true; %>
                             <%- include('blocks/teamPageUser', {user: users[i]}); %>
@@ -60,7 +69,9 @@
                         <% if (users.length > 1) { %>
                             <select class="form-control mb-2" id="SuccessorId" name="SuccessorId">
                                 <% users.forEach(function(user){ %>
-                                    <option value="<%= user.UserId %>"><%= user.FIO %></option>
+                                    <% if (!user.isCoach) { %>
+                                        <option value="<%= user.userId %>"><%= user.FIO %></option>
+                                    <% } %>
                                 <% }) %>
                             </select>
                         <% } %>

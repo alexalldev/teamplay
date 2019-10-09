@@ -213,6 +213,12 @@ io.on('connection', function(socket) {
 			}
 		}
 	});
+	
+	socket.on('LeaveTeam', function(SuccessorId) {
+		if (session.passport.user) {
+			console.log(SuccessorId);
+		}
+	});
 
 	//запрос на получение всех игр
 	socket.on('LoadGames', function() {
