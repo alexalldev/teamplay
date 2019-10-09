@@ -1,4 +1,4 @@
-rs$(function() {
+$(function() {
 	$('.btn').click(function() {
 		ToggleBtn();
 	});
