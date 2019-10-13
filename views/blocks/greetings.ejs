@@ -1,28 +1,33 @@
 <table class="centred-table">
-    <tr align="center">
-        <td valign="center">
-            <div class="container greetings">
-                <div class="row">
-                    <div class="col-md-12 text-center">
-                        <img src="/public/images/logo.svg" class="greetings-img" alt="">
-                    </div>
-                </div>
-                <div class="row mb-5">
-                    <div class="col-md-12 text-center">
-                        <h1>Проведите викторину удаленно в TeamPlay</h1>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12 text-center">
-                        <h2>Создайте <%= btnName == 'btnCreateQuiz' ? 'викторину и добавьте в нее вопросы' : 'комнату для проведения игры' %> </h2>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12 text-center">
-                        <button class="btn btn-outline-success h1 <%= btnName ? btnName : 'btnCreateQuiz' %>">Создать</button>
-                    </div>
-                </div>
-            </div>
-        </td>
-    </tr>
+  <tr align="center">
+    <td valign="center">
+      <div class="container greetings">
+        <div class="row">
+          <div class="col-md-12 text-center">
+            <img src="/public/images/logo.svg" class="greetings-img" alt="" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12 text-center">
+            <h2>
+            Создайте
+            <% if(btnName === 'btnCreateQuiz'){ %>
+                викторину и добавьте в нее вопросы
+            <% } else if(btnName === 'btnCreateRoom'){ %>
+                комнату для проведения игры
+            <% } else if(btnName === 'btnCreateTeam'){ %>
+                 команду для участия в викторинах
+            <% } %>
+            <h2>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12 text-center">
+            <button class="btn btn-outline-success h1 <%= btnName%>">Создать</button>
+
+          </div>
+        </div>
+      </div>
+    </td>
+  </tr>
 </table>

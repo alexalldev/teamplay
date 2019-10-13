@@ -1,16 +1,8 @@
-let {
-    express,
+const {
     router,
-    passport,
-    Team,
-    Admin,
-    Player,
     Game,
-    GameTeam,
     app,
-    bodyParser,
     urlencodedParser,
-    io,
     Category,
     Question,
     Answer
@@ -246,9 +238,9 @@ router.post('/RemoveQuestion', urlencodedParser,  function(req, res) {
     if (req.body.QuestionId)
     {
         Answer.destroy({where: {Question_Id: req.body.QuestionId}})
-        .then(answer =>
+        .then(() =>
             {
-                Question.RemoveQuestionImage(req.body.QuestionId, function(result) {
+                Question.RemoveQuestionImage(req.body.QuestionId, function() {
                     Question.destroy({raw: true, where: {QuestionId: req.body.QuestionId}})
                     .then(question =>
                         {
@@ -270,14 +262,14 @@ router.post('/RemoveCategory', urlencodedParser,  function(req, res) {
         .then(async questions =>  {
             for (var question of questions)
             {
-                await Question.RemoveQuestionImage(question.QuestionId, function(result) {});
+                await Question.RemoveQuestionImage(question.QuestionId, function() {});
                 await Answer.destroy({where: {Question_Id: question.QuestionId}})
                 .then()
                 .catch(err => res.end(JSON.stringify(err)))
             }
 
             Question.destroy({raw: true, where: {Category_Id: req.body.CategoryId}})
-            .then(question =>
+            .then(() =>
                 {
                     Category.destroy({where:{CategoryId: req.body.CategoryId}})
                     .then(category => res.end(category ? 'true' : 'false'))
@@ -327,7 +319,7 @@ router.post('/UpdateQuestion', urlencodedParser, function(req, res) {
                     Question.findOne({where: {QuestionId: QuestionId}})
                     .then(question =>
                         {
-                            Question.RemoveQuestionImage(QuestionId, function(result) {
+                            Question.RemoveQuestionImage(QuestionId, function() {
                                 question.update({QuestionText: QuestionText, QuestionCost: QuestionCost, QuestionImagePath: QuestionImagePath})
                                 .then(updated => {
                                     res.end(updated ? 'true' : 'false');

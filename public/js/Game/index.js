@@ -247,13 +247,13 @@ socket.on('RecivePoints', function (count) {
     AddPoints(count, true);
 });
 
-socket.on('StopGame', async function (teams) {
+socket.on('StopGame', function (teams) {
     var rating = [];
     for (var team of teams) {
         rating.push(team.Points + " - " + team.TeamName);
     }
-    await rating.push('<a href="/logout" class="btn btn-outline-info text-white">Готово</a>');
-    await ShowInfo("Игра завершена", rating);
+    rating.push('<a href="/logout" class="btn btn-outline-info text-white">Готово</a>');
+    ShowInfo("Игра завершена", rating);
 });
 
 function LoadAnswers(answers) {
