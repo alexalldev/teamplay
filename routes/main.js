@@ -619,10 +619,7 @@ router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
                     UserFio[2].charAt(0).toUpperCase() +
                     UserFio[2].substring(1).toLowerCase(),
                   UserPassword: Hash.generate(req.body.password),
-                  UserRegistrationToken: confirmation_hash,
-                  UserIsActive: false,
-                  isCoach: false,
-                  Team_Id: 0
+                  UserRegistrationToken: confirmation_hash
                 }
               })
                 .then(([user, created]) => {

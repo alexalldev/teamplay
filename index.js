@@ -104,6 +104,10 @@ app.use("/notification", require("./routes/notifications"));
 
 app.use("/teamOperation", require("./routes/team-operation"));
 
+app.use(function(req, res, next) {
+  res.redirect("/");
+});
+
 app.get("/QuestionImage", (req, res) => {
   if (req.query.QuestionId)
     Question.findOne({ raw: true, where: { QuestionId: req.query.QuestionId } })

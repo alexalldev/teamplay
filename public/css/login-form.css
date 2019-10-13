@@ -473,7 +473,7 @@ button.btn-signup:hover, button.btn-signin:hover {
 }
 
 .welcome-left {
-  top: -150px;
+  top: -120px;
   transform: translateY(-780px);
   opacity: 1; 
 }
