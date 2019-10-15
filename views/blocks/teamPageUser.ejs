@@ -1,10 +1,29 @@
 <div class="row Player Player-<%= user.userId %> mt-2 mb-2">
-    <div class="col-md-12 text-left">
-        <%if (user.isCoach) { %>
-            <span class="h2" title="Коуч команды"><i class="fas fa-star text-warning"></i></span>
-        <% } else { %>
-            <img class="user_organizer" title="Игрок команды" src="/public/user-icon.png" alt="">
-        <% } %>
-        <a href="/user/<%= user.userId %>" style="font-size: 30px; position:relative; top: 5%"><%= user.FIO %></a>
-    </div>
+  <div class="col-md-12 text-left">
+    <%if (user.isCoach) { %>
+    <span class="h2" title="Коуч команды"
+      ><i class="fas fa-star text-warning"></i
+    ></span>
+    <% } else { %>
+    <img
+      class="user_organizer"
+      title="Игрок команды"
+      src="/public/user-icon.png"
+      alt=""
+    />
+    <% } %>
+    <a
+      href="/user/<%= user.userId %>"
+      style="font-size: 30px; position:relative; top: 5%"
+      ><%= user.FIO %></a
+    >
+    <%if (amICoach && !user.isCoach) {%>
+    <button
+      class=" btn btn-outline-danger ml-2 mt-2 h1 btnKickUser float-right"
+      value="<%=user.userId%>"
+    >
+      Исключить
+    </button>
+    <%}%>
+  </div>
 </div>

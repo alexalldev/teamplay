@@ -14,7 +14,7 @@
     <% if (!user.userTeam && senderIsCoach) { %>
     <button
       class=" btn btn-outline-success ml-2 mt-2 h1"
-      onclick="teamInvite('<%= user.UserId %>')"
+      onclick="teamInvite('<%= user.UserId %>', 'Пригласить')"
     >
       <i class="fas fa-user-plus"></i> Пригласить
     </button>

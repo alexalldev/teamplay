@@ -23,7 +23,11 @@
                                 <% } %>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center">
                     <span class='h1'><%=users.teamName%></span>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col-md-12 text-center">
                             <% if(isMyTeam) {%>
@@ -31,7 +35,7 @@
                             <% } %>
                             <% for(let i = 0; i < users.length; i++){ %>
                             <% if (i === 0) users[i].isCoach = true; %>
-                            <%- include('blocks/teamPageUser', {user: users[i]}); %>
+                            <%- include('blocks/teamPageUser', {user: users[i], amICoach}); %>
                             <% }; %>
                         </div>
                     </div>
@@ -44,7 +48,7 @@
               
                 <!-- Modal Header -->
                 <div class="modal-header">
-                        <% if (isCoach) { %>
+                        <% if (amICoach) { %>
                             <% if (users.length > 1) {%>
                                 <h4 class="modal-title">Выберите преемника, который станет новым коучем команды</h4>
                             <% } else { %>
@@ -70,7 +74,7 @@
                 <!-- Modal body -->
                 <div class="modal-body">
                   <form action="javascript:void(null)">
-                        <% if (users.length > 1 && isCoach) { %>
+                        <% if (users.length > 1 && amICoach) { %>
                             <select class="form-control mb-2" id="SuccessorId" name="SuccessorId">
                                 <% users.forEach(function(user){ %>
                                     <% if (!user.isCoach) { %>

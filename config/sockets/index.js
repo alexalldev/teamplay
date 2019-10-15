@@ -104,8 +104,6 @@ io.emitTeam = function(teamId, eventName, data) {
 
 io.emitUser = function(userId, eventName, data) {
   var user = io.ClientsStore.userById(userId);
-  console.log({ userId: userId, eventName: eventName });
-  console.log({ data: data.createdNotification });
   if (user != null)
     try {
       if (io.sockets.connected[user.SocketId])

@@ -20,7 +20,7 @@
                         <div class="col-md-12 text-center">
                             <% if (users.length > 0) { %>
                             <% users.forEach(function(user){ %>
-                            <%- include('blocks/usersListItem', {user: user, senderIsCoach: users.senderIsCoach}); %>
+                            <%- include('blocks/usersListItem', {user, senderIsCoach: users.senderIsCoach}); %>
                             <% }); %>
                             <% } else { %>
                             <% include blocks/greetings %>

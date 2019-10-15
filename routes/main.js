@@ -93,50 +93,47 @@ router.get("/rooms", app.protect, function(req, res) {
     .catch(err => console.log(err));
 });
 
-router.get("/team/:TeamTag", app.protect, async (req, res) => {
+router.get("/team/:TeamTag", app.protect, (req, res) => {
   const users = [];
   let counter = 0;
-  let isMyTeam;
-  let isCoach;
-  await Team.findOne({ where: { TeamTag: req.params.TeamTag } })
-    .then(async team => {
+  Team.findOne({ where: { TeamTag: req.params.TeamTag }, raw: true })
+    .then(team => {
       if (team) {
-        await User.findOne({
+        User.findOne({
           where: { UserId: req.session.passport.user },
           raw: true
-        }).then(user => {
-          if (user) isMyTeam = user.Team_Id == team.dataValues.TeamId;
-          isCoach = user.isCoach;
-        });
-
-        await User.findAll({ where: { Team_Id: team.TeamId }, raw: true })
-          .then(async members => {
-            for (const member of members) {
-              if (member.isCoach) members.coachInd = counter;
-              users.push({
-                isActive: member.UserIsActive,
-                userId: member.UserId,
-                FIO: `${member.UserFamily} ${member.UserName} ${member.UserLastName}`
+        }).then(async user => {
+          if (user) {
+            await User.findAll({ where: { Team_Id: team.TeamId }, raw: true })
+              .then(async members => {
+                for (const member of members) {
+                  if (member.isCoach) members.coachInd = counter;
+                  users.push({
+                    isActive: member.UserIsActive,
+                    userId: member.UserId,
+                    FIO: `${member.UserFamily} ${member.UserName} ${member.UserLastName}`
+                  });
+                  counter++;
+                }
+                users.teamName = team.TeamName;
+                [users[members.coachInd], users[0]] = [
+                  users[0],
+                  users[members.coachInd]
+                ];
+              })
+              .catch(err => {
+                console.log({
+                  file: __filename,
+                  func: 'router.get("/team/:TeamTag"), User.findAll',
+                  err
+                });
               });
-              counter++;
-            }
-            users.teamName = team.TeamName;
-            [users[members.coachInd], users[0]] = [
-              users[0],
-              users[members.coachInd]
-            ];
-          })
-          .catch(err => {
-            console.log({
-              file: __filename,
-              func: 'router.get("/team/:TeamTag"), User.findAll',
-              err
+            res.render("teamPage", {
+              users,
+              isMyTeam: user.Team_Id == team.TeamId,
+              amICoach: user.isCoach
             });
-          });
-        res.render("teamPage", {
-          users,
-          isMyTeam,
-          isCoach
+          }
         });
       } else return res.redirect("/");
     })
@@ -348,13 +345,6 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
           raw: true
         })
           .then(user => {
-            console.log({
-              iftrue: user && (req.session.isRoomCreator || user.Team_Id > 0),
-              user: user,
-              isRoomCreator: req.session.isRoomCreator,
-              team_Id: user.Team_Id,
-              session: req.session
-            });
             if (user && (req.session.isRoomCreator || user.Team_Id > 0)) {
               RoomPlayers.findOne({
                 where: { User_Id: req.session.passport.user },

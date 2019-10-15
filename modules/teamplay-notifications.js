@@ -32,15 +32,15 @@ module.exports = function(notificationData, req, callback) {
   let notification;
   User.findOne({ where: { UserId: receiverId }, raw: true })
     .then(async user => {
-      const invitationHash =
-        isInfoNotification == "false"
-          ? crypto
-              .randomBytes(Math.ceil(120 / 2))
-              .toString("hex")
-              .slice(0, 120)
-          : "";
       if (user) {
         if (shouldCreate == "true") {
+          const invitationHash =
+            isInfoNotification == "false"
+              ? crypto
+                  .randomBytes(Math.ceil(120 / 2))
+                  .toString("hex")
+                  .slice(0, 120)
+              : "";
           if (isInfoNotification == "false")
             await notificationModel
               .findOrCreate({
@@ -87,7 +87,7 @@ module.exports = function(notificationData, req, callback) {
                 if (wasCreated)
                   // Если это заявка, то отправляем на почту
                   fs.readFile(
-                    __dirname + "/../html_mail/TeamPlayNotificationEmail.html",
+                    `${__dirname}/../html_mail/TeamPlayNotificationEmail.html`,
                     "utf-8",
                     function(err, data) {
                       if (err) callback(err);
@@ -174,41 +174,48 @@ module.exports = function(notificationData, req, callback) {
               raw: true
             })
             .then(async notifications => {
+              /* eslint-disable no-restricted-syntax */
+              // eslint-disable-next-line node/no-unsupported-features/es-syntax
               for await (const notification of notifications) {
                 await User.findOne({
                   where: { UserId: notification.senderId },
                   raw: true
                 })
                   .then(async userSender => {
-                    await Team.findOne({
-                      where: { TeamId: userSender.Team_Id }
-                    })
-                      .then(team => {
-                        notification.userTeam = team ? team.TeamName : 0;
+                    // if (userSender) {
+                    if (userSender) {
+                      notification.senderFIO = `${
+                        userSender.UserFamily
+                      } ${userSender.UserName.slice(
+                        0,
+                        1
+                      )}. ${userSender.UserLastName.slice(0, 1)}.`;
+                      await Team.findOne({
+                        where: { TeamId: userSender.Team_Id }
                       })
-                      .catch(err => {
-                        console.log(
-                          `${__filename} Team.FindOne in loop	 ${err}`
-                        );
-                      });
-                    notification.senderFIO = `${
-                      userSender.UserFamily
-                    } ${userSender.UserName.slice(
-                      0,
-                      1
-                    )}. ${userSender.UserLastName.slice(0, 1)}.`;
+                        .then(team => {
+                          notification.userTeam = team ? team.TeamName : 0;
+                        })
+                        .catch(err => {
+                          console.log(
+                            `${__filename} Team.FindOne in loop	 ${err}`
+                          );
+                        });
+                    } else notification.senderFIO = "Пользователь удален";
+                    // TODO: если пользователя не существует
+                    io.emitUser(receiverId, "receiveNotification", {
+                      createdNotification: {
+                        notification,
+                        shouldAdd: true,
+                        addToStart: false
+                      },
+                      actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
+                    });
+                    // }
                   })
                   .catch(err => {
                     console.log(`${__filename} for of loop ${err}`);
                   });
-                io.emitUser(receiverId, "receiveNotification", {
-                  createdNotification: {
-                    notification,
-                    shouldAdd: true,
-                    addToStart: false
-                  },
-                  actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
-                });
               }
             })
             .catch(err => {
@@ -218,5 +225,7 @@ module.exports = function(notificationData, req, callback) {
         }
       }
     })
-    .catch(err => console.log(err));
+    .catch(err =>
+      console.log({ file: __filename, err: `User.findOne receiverId: ${err}` })
+    );
 };

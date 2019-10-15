@@ -64,9 +64,6 @@ socket.on("sendAnswer", serverAnswer => {
         break;
     }
     Swal.fire("", text, "info");
-  } else {
-    //для теста
-    console.log("notification read");
   }
 });
 
@@ -75,9 +72,7 @@ function action(actionUrl) {
     type: "GET",
     url: actionUrl,
     dataType: "text",
-    success: function(data) {
-      console.log(data);
-    },
+    success: function(data) {},
     error: function(xhr, str) {
       alert("Возникла ошибка: " + xhr.responseCode);
     }
