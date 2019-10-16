@@ -1,4 +1,5 @@
 socket.on("receiveNotification", function(result) {
+  console.log(result);
   let notification = result.createdNotification.notification;
   if (result.createdNotification.shouldAdd) {
     let submitBtns;
@@ -39,31 +40,8 @@ socket.on("receiveNotification", function(result) {
       $(".notifications-menu").prepend(ringNotification);
     else $(".notifications-menu").append(ringNotification);
   } else {
-    let answer = getAnswer("sentBefore", notification.InvitationType);
-    Swal.fire("", answer, "info");
-  }
-});
-
-socket.on("sendAnswer", serverAnswer => {
-  let text;
-  let answer = getAnswer(serverAnswer.InvitationType, serverAnswer.answer);
-  if (serverAnswer.InvitationType) {
-    switch (serverAnswer.InvitationType) {
-      case "inviteTeam":
-        text = `Уважаемый ${serverAnswer.senderFullName.join(
-          " "
-        )}, пользователь ${serverAnswer.receiverFullName.join(" ")} 
-				${answer} ваше приглашение.`;
-        type = "success";
-        break;
-      case "joinTeam":
-        text = `Ваша заявка на вступление в команду была ${answer} пользователем ${serverAnswer.senderFullName.join(
-          " "
-        )}`;
-        type = "error";
-        break;
-    }
-    Swal.fire("", text, "info");
+    let { answer, type } = getAnswer("sentBefore", notification.InvitationType);
+    Swal.fire("", answer, type);
   }
 });
 
@@ -79,15 +57,39 @@ function action(actionUrl) {
   });
 }
 
+socket.on("sendAnswer", serverAnswer => {
+  let text;
+  const { answer, type } = getAnswer(
+    serverAnswer.InvitationType,
+    serverAnswer.answer
+  );
+  if (serverAnswer.InvitationType) {
+    switch (serverAnswer.InvitationType) {
+      case "inviteTeam":
+        text = `Уважаемый ${serverAnswer.senderFullName}, пользователь ${serverAnswer.receiverFullName} 
+				${answer} ваше приглашение.`;
+        break;
+      case "joinTeam":
+        text = `Ваша заявка на вступление в команду была ${answer} пользователем ${serverAnswer.senderFullName}`;
+        break;
+    }
+    Swal.fire("", text, type);
+  }
+});
+
 function getAnswer(InvitationType, answer) {
   switch (InvitationType) {
     case "inviteTeam":
-      return answer == "reject" ? "отклонил" : "принял";
+      return answer == "reject"
+        ? { answer: "отклонил", type: "error" }
+        : { answer: "принял", type: "success" };
     case "joinTeam":
-      return answer == "reject" ? "отклонена" : "принята";
+      return answer == "reject"
+        ? { answer: "отклонена", type: "error" }
+        : { answer: "принята", type: "success" };
     case "sentBefore":
       return answer == "inviteTeam"
-        ? "Вы уже приглашали этого игрока"
-        : "Вы уже подали заявку в эту команду";
+        ? { answer: "Вы уже приглашали этого игрока", type: "info" }
+        : { answer: "Вы уже подали заявку в эту команду", type: "info" };
   }
 }

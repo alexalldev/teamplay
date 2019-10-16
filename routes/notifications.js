@@ -1,4 +1,4 @@
-const { router, urlencodedParser, Team } = require("../config/routers-config");
+const { router, Team } = require("../config/routers-config");
 
 const userModel = require("../models/User");
 const io = require("../config/sockets/index");
@@ -41,18 +41,21 @@ router.get("/notificationAction", function(req, res) {
                         userReceiver.Team_Id == 0
                       )
                         userReceiver.update({ Team_Id: team.TeamId });
+                      console.log({ sender: notification.senderId });
                       io.emitUser(notification.senderId, "sendAnswer", {
                         // sender full name при join team в notificationSocket
-                        senderFullName: [
-                          userSender.UserName,
-                          userSender.UserFamily,
-                          userSender.UserLastName
-                        ],
-                        receiverFullName: [
-                          userReceiver.UserName,
-                          userReceiver.UserFamily,
-                          userReceiver.UserLastName
-                        ],
+                        senderFullName: `${
+                          userSender.UserFamily
+                        } ${userSender.UserName.slice(
+                          0,
+                          1
+                        )}. ${userSender.UserLastName.slice(0, 1)}.`,
+                        receiverFullName: `${
+                          userReceiver.UserFamily
+                        } ${userReceiver.UserName.slice(
+                          0,
+                          1
+                        )}. ${userReceiver.UserLastName.slice(0, 1)}.`,
                         answer: req.query.action,
                         InvitationType: notification.InvitationType,
                         TeamId: userReceiver.TeamId

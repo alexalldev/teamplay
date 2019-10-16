@@ -459,10 +459,17 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                   }
                 })
                 .catch(err => console.log(err));
-            } else return res.render("info", { message: "null_user" });
+            } else
+              return res.render("info", {
+                message:
+                  "Для участия в игре вам необходимо находиться в команде"
+              });
           })
           .catch(err => console.log(err));
-      } else res.end("There is no room with such name");
+      } else res.render("info", {
+        message:
+          "Такой комнаты не существует либо она была удалена"
+      });
     })
     .catch(err => console.log(err));
 });

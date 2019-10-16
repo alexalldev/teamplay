@@ -59,7 +59,6 @@ module.exports = function(socket, io) {
   });
 
   socket.on("LeaveTeam", (SuccessorId, shouldKick) => {
-    console.log({ id: SuccessorId, kick: shouldKick });
     if (session.passport.user) {
       User.findOne({ where: { UserId: session.passport.user } }).then(Me => {
         if (Me) {
@@ -97,13 +96,9 @@ module.exports = function(socket, io) {
                   if (Me.isCoach)
                     await User.count({ where: { Team_Id: team.TeamId } }).then(
                       result => {
-                        if (result == 1) {
-                          console.log("1 destroy");
+                        if (result == 1)
                           Team.destroy({ where: { TeamId: team.TeamId } });
-                        }
-
-                        // TODO: доделать кик и преемника
-                        else {
+                        else
                           User.update(
                             { isCoach: 1 },
                             {
@@ -112,10 +107,7 @@ module.exports = function(socket, io) {
                                 Team_Id: coach.Team_Id
                               }
                             }
-                          ).then(succ => {
-                            console.log("succ");
-                          });
-                        }
+                          ).then(succ => {});
                       }
                     );
                   notification(

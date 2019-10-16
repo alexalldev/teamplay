@@ -156,14 +156,18 @@ module.exports = function(notificationData, req, callback) {
                   });
               });
           }
-          io.emitUser(receiverId, "receiveNotification", {
-            createdNotification: {
-              notification,
-              shouldAdd: created || notification.isInfoNotification,
-              addToStart: true
-            },
-            actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
-          });
+          io.emitUser(
+            created || notification.isInfoNotification ? receiverId : senderId,
+            "receiveNotification",
+            {
+              createdNotification: {
+                notification,
+                shouldAdd: created || notification.isInfoNotification,
+                addToStart: true
+              },
+              actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
+            }
+          );
         } else if (shouldCreate == "false") {
           notificationModel
             .findAll({
@@ -182,7 +186,6 @@ module.exports = function(notificationData, req, callback) {
                   raw: true
                 })
                   .then(async userSender => {
-                    // if (userSender) {
                     if (userSender) {
                       notification.senderFIO = `${
                         userSender.UserFamily
@@ -202,7 +205,6 @@ module.exports = function(notificationData, req, callback) {
                           );
                         });
                     } else notification.senderFIO = "Пользователь удален";
-                    // TODO: если пользователя не существует
                     io.emitUser(receiverId, "receiveNotification", {
                       createdNotification: {
                         notification,
@@ -211,7 +213,6 @@ module.exports = function(notificationData, req, callback) {
                       },
                       actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
                     });
-                    // }
                   })
                   .catch(err => {
                     console.log(`${__filename} for of loop ${err}`);
