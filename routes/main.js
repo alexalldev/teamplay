@@ -24,8 +24,6 @@ const {
 const RoomPlayers = require("../models/RoomPlayer");
 const RoomTeam = require("../models/RoomTeam");
 
-const SESSIONS_DIRECTORY = path.join(__dirname, "..", "sessions");
-
 router.get("/", RedirectRules, function(req, res) {
   res.render("index", { Code: req.query.Code, User: req.query.User });
 });
@@ -333,6 +331,8 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
     .then(room => {
       if (room) {
         console.log({
+          params: req.params.RoomTag,
+          room,
           iftrue2: req.session.passport.user == room.RoomCreatorId,
           passportUser: req.session.passport.user,
           roomCreatorId: room.RoomCreatorId
@@ -466,10 +466,10 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
               });
           })
           .catch(err => console.log(err));
-      } else res.render("info", {
-        message:
-          "Такой комнаты не существует либо она была удалена"
-      });
+      } else
+        res.render("info", {
+          message: "Такой комнаты не существует либо она была удалена"
+        });
     })
     .catch(err => console.log(err));
 });

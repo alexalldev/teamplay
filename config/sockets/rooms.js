@@ -6,25 +6,25 @@ function roomsSocket(socket, io) {
   const session = socket.request.session;
   socket.on("createRoom", function(roomName, gameId, roomMaxTeamPlayers) {
     if (roomName && gameId && roomMaxTeamPlayers) {
-      let creatorId = session.passport.user;
       if (roomName.charAt(roomName.length - 1) == " ")
         roomName = roomName.substr(0, roomName.length - 1);
-      roomTag = roomName
+      const roomTag = roomName
         .replace(/[^a-zA-Zа-яА-Я0-9 ]/g, "")
         .toLowerCase()
         .replace(/\s/g, "-");
-      Room.findOrCreate({ where: { RoomTag: roomTag } })
+      Room.findOrCreate({
+        where: { RoomTag: roomTag },
+        defaults: {
+          RoomName: roomName,
+          Game_Id: gameId,
+          RoomMaxTeamPlayers: roomMaxTeamPlayers,
+          RoomCreatorId: session.passport.user
+        }
+      })
         .then(([room, created]) => {
-          if (created == true) {
-            room
-              .update({
-                RoomName: roomName,
-                Game_Id: gameId,
-                RoomMaxTeamPlayers: roomMaxTeamPlayers,
-                RoomCreatorId: creatorId
-              })
-              .then(() => socket.emit("roomAdded", created))
-              .catch(err => console.log(err));
+          if (created) {
+            console.log({ created });
+            socket.emit("roomAdded", created);
           } else {
             socket.emit("Info", "Комната с таким названием существует");
           }

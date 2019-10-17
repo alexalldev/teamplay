@@ -50,15 +50,6 @@ $(document).ready(function() {
     console.log(this);
     socket.emit("LeaveTeam", $(this).val(), true);
   });
-
-  $("#createRoomModal").submit(function() {
-    socket.emit(
-      "createRoom",
-      $("#RoomName").val(),
-      $("#MyGamesSelect").val(),
-      $("#RoomMaxTeamPlayers").val()
-    );
-  });
 });
 
 socket.on("GameAdded", function(data) {

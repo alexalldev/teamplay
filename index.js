@@ -104,10 +104,6 @@ app.use("/notification", require("./routes/notifications"));
 
 app.use("/teamOperation", require("./routes/team-operation"));
 
-app.use(function(req, res, next) {
-  res.redirect("/");
-});
-
 app.get("/QuestionImage", (req, res) => {
   if (req.query.QuestionId)
     Question.findOne({ raw: true, where: { QuestionId: req.query.QuestionId } })
@@ -175,4 +171,8 @@ app.get("/StreamImage", function(req, res) {
 app.get("/UserImage", (req, res) => {
   res.writeHead(200, { "Content-Type": "application/msword" });
   fs.createReadStream(`${__dirname}/IMAGES/NULL_IMAGE`).pipe(res);
+});
+
+app.use(function(req, res, next) {
+  res.redirect("/");
 });
