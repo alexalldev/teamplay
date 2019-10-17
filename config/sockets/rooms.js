@@ -23,7 +23,6 @@ function roomsSocket(socket, io) {
       })
         .then(([room, created]) => {
           if (created) {
-            console.log({ created });
             socket.emit("roomAdded", created);
           } else {
             socket.emit("Info", "Комната с таким названием существует");

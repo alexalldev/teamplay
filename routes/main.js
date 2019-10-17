@@ -407,11 +407,11 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                     })
                                       .then(async ([roomTeam, created]) => {
                                         if (created)
+                                        {
                                           req.session.roomTeamId = await roomTeam.RoomTeamId;
-                                        else
-                                          req.session.roomTeamId = await roomTeam.RoomTeamId;
-                                        player.RoomTeamId = await req.session
-                                          .roomTeamId;
+                                          req.session.isGroupCoach = true;
+                                        }
+                                        player.RoomTeamId = await req.session.roomTeamId;
                                       })
                                       .catch(err => console.log(err));
                                   if (!req.session.isRoomCreator)
@@ -504,6 +504,8 @@ router.get("/leaveRoom", app.protect, function(req, res) {
                             req.session.TeamId
                           );
                           delete req.session.roomTeamId;
+                          if (req.session.isGroupCoach)
+                            delete req.session.isGroupCoach;
                         })
                         .catch(err => console.log(err));
                     else

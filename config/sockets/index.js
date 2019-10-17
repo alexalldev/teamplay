@@ -145,12 +145,20 @@ io.on("connection", function(socket) {
         SocketId: socket.id
       });
   //Подключение к комнате в зависимости от типа пользователя
+  console.log(session);
   if (session.roomId) {
     socket.join("RoomUsers" + session.roomId);
     if (session.isRoomCreator) {
       socket.join("RoomCreators" + session.roomId);
       io.to("RoomUsers" + session.roomId).emit("RecieveCreatorStatus", true);
-    } else socket.join("RoomPlayers" + session.roomId);
+    }
+    else {
+      socket.join("RoomTeam" + session.roomTeamId);
+      if (session.isGroupCoach)
+        socket.join("RoomTeamCoaches" + session.roomId);
+      else
+        socket.join("RoomPlayers" + session.roomId);
+    }
   }
   if (session.Stream) {
     socket.join("Stream" + session.Stream.GameId);

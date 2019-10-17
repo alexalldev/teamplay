@@ -10,15 +10,16 @@
                 <div class="col-md-12 text-right">
                     <% if(user.TeamName) {%>
             <h3>Моя команда</h3>
-            <% if(user.isCoach) {%>
-            <h2 id="TeamName"><i class="fas fa-star text-warning"></i><a
-                    href="/team/<%= user.TeamTag %>"><%= user.TeamName %></a> <i class="fas fa-users"></i>
-                <%= user.teamPlayersCount %></h2>
-            <%} else {%>
-            <h2 id="TeamName"><i class="fas fa-user"></i><%= user.TeamName %> <i class="fas fa-users"></i>
-                <%= user.teamPlayersCount %></h2>
-            <%}%>
+            <h2 id="TeamName">
+                    <% if(user.isCoach) {%>
+                        <i class="fas fa-star text-warning"></i>
+                    <%} else {%>
+                        <i class="fas fa-user"></i>
                     <%}%>
+                <a
+                href="/team/<%= user.TeamTag %>"><%= user.TeamName %></a> <i class="fas fa-users"></i>
+                    <%}%>
+                <%= user.teamPlayersCount %></h2>
         </div>
     </div>
 </div>

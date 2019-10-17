@@ -89,7 +89,7 @@ function AddPlayerToGroup(player) {
 
 async function CreateGroup(player) {
   $(".group-list").append(
-    `<div class="group group-${player.TeamId} col-md-4" TeamId="${player.TeamId}">\
+    `<div class="group group-${player.TeamId} col-md-4 mr-1 mb-1" TeamId="${player.TeamId}">\
         <span class="h4">${player.TeamName}</span>\
         <div class="group-players group-players-${player.TeamId}">\
         </div>\
