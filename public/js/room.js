@@ -58,15 +58,24 @@ socket.on("NewRoomGroupCoach", function(roomPlayer) {
 });
 
 function AddPlayer(player) {
+  console.log({
+    AddPlayerBeforeIf: player
+  });
+
   if ($(".group").length > 0)
     $(".group").each(function(i) {
-      if ($(this).attr("TeamId") == player.TeamId) AddPlayerToGroup(player);
-      else CreateGroup(player);
+      if (!player.isPlayerInTeam) {
+        if ($(this).attr("TeamId") == player.TeamId) {
+          AddPlayerToGroup(player);
+        } else CreateGroup(player);
+        player.isPlayerInTeam = true;
+      }
     });
   else CreateGroup(player);
 }
 
 function AddPlayerToGroup(player) {
+  console.log({ AddPlayerToGroup: player });
   $(`.group-players-${player.TeamId}`).append(
     `<div class="row Player Player-${player.RoomPlayersId} mt-2 mb-2">
         <div class="col-md-12 text-left">
@@ -87,13 +96,14 @@ function AddPlayerToGroup(player) {
   );
 }
 
-async function CreateGroup(player) {
+function CreateGroup(player) {
+  console.log({ CreateGroup: player });
   $(".group-list").append(
-    `<div class="group group-${player.TeamId} col-md-4 mr-1 mb-1" TeamId="${player.TeamId}">\
-        <span class="h4">${player.TeamName}</span>\
-        <div class="group-players group-players-${player.TeamId}">\
-        </div>\
+    `<div class="group group-${player.TeamId} col-md-4 mr-1 mb-1" TeamId="${player.TeamId}">
+        <span class="h4">${player.TeamName}</span>
+        <div class="group-players group-players-${player.TeamId}">
+        </div>
     </div>`
   );
-  await AddPlayerToGroup(player);
+  AddPlayerToGroup(player);
 }
