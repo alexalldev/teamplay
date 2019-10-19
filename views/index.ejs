@@ -1,110 +1,222 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-
 <head>
   <meta charset="utf-8">
+  <meta name="keywords" content="Проведите викторину онлайн в TeamPlay!">
+    <meta name="description" content="Соберите команду и участвуйте в викторинах.">
   <title>Teamplay</title>
   <% include blocks/title %>
-  <link rel="stylesheet" href="/public/css/main.css">
-  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="/public/css/login-form.css">
   <link rel="stylesheet" href="/public/css/animated_loader.css">
+  <link rel="stylesheet" href="/public/css/index.css">
 </head>
 <% include blocks/loader %>
-
 <body>
-  <div class="door door-left door-hidden">
-    <table style="width: 100%; height: 100%;">
-      <tr align="center">
-        <td valign="center">
-          <div class="animated_loader">Loading...</div>
-        </td>
-      </tr>
-    </table>
-  </div>
-  <div class="door door-right door-hidden">
-    <table style="width: 100%; height: 100%;">
-      <tr align="center">
-        <td valign="center">
-          <div class="animated_loader">Loading...</div>
-        </td>
-      </tr>
-    </table>
-  </div>
-  <section class="content">
-    <div class="container">
-      <div class="frame">
-
-        <div class="nav">
-          <ul class="links">
-            <li class="signin-active"><a class="btn">Вход</a></li>
-            <li class="signup-inactive"><a class="btn">Регистрация</a></li>
-          </ul>
-        </div>
-        <div ng-app ng-init="checked = false">
-          <form class="form-signin" action="" method="post" name="form">
-            <label for="username">Email</label>
-            <input class="form-styling" type="text" value="<%= User != null ? User : '' %>" name="username"
-              id="username" placeholder="" required />
-            <label for="password">Пароль</label>
-            <input class="form-styling" type="password" name="password" id="password" placeholder="" required />
-            <input type="checkbox" id="remember_me" name="remember_me" />
-            <label class="rememberme" for="remember_me"><span class="ui"></span>Запомнить меня</label>
-            <div class="btn-animate">
-              <button class="btn-signin">Войти</button>
-            </div>
-            <div class="Message-container">
-              <span id="Message"><%= Code == 'NeedSignIn' ? 'Авторизуйтесь пожалуйста' : '' %></span>
-            </div>
-          </form>
-
-          <form class="form-signup" action="" id="RegisterNewUserForm" method="post" name="form">
-            <span id="Info"></span>
-            <label for="fullname">ФИО</label>
-            <input class="form-styling input-signup" type="text" name="fullname" placeholder="" required />
-            <label for="email">Email</label>
-            <input class="form-styling input-signup" type="email" name="email" id="email" placeholder="" required />
-            <label for="password">Пароль</label>
-            <input class="form-styling input-signup" type="password" name="password" placeholder="" required />
-            <label for="confirmpassword">Повтор пароля</label>
-            <input class="form-styling input-signup" type="password" name="confirmpassword" placeholder="" required />
-            <button ng-click="checked = !checked" class="btn-signup">Зарегистрироваться</button>
-          </form>
-
-          <div class="success">
-            <div width="270" height="270">
-              <i class="fa fa-check fa-10x text-white"></i>
-            </div>
-            <div class="successtext">
-              <p class="AnimateMessage"></p>
-            </div>
-          </div>
-        </div>
-
-        <div class="forgot">
-          <div class="row mb-2">
-            <div class="col-md-12 text-center">
-              <a class="text-info forgot-pass">Забыл пароль?</a>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-12 text-center">
-              <span><img src="/public/images/logo.svg" width="15" height="15" alt=""> Teamplay 2019</span>
-            </div>
-          </div>
-        </div>
-
+    <nav class="navbar bg-dark navbar-dark fixed">
+        <a class="navbar-brand" href="/">
+            <img src="/public/images/logo.svg" width="30" height="30" class="d-inline-block align-top" alt="">
+            <span>TeamPlay</span>
+        </a>
         <div>
-          <div class="cover-photo"></div>
-          <img class="profile-photo" src="https://picsum.photos/200/300">
-          <h1 class="welcome">Welcome, Chris</h1>
-          <a class="btn-forward btn-hidden" onclick="ShowTheDoors();">Создавать!</a>
+          <a href="#signIn" class="mr-1">Sign in</a>
+          <a href="#signUp" class="btn btn-secondary">Sign up</a>
+        </div>
+    </nav>
+    <div class="block face">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h1>Проведите онлайн викторину в TeamPlay!</h1>
+          </div>
+          <div class="col-md-12">
+            <div class="cta-first">
+              <a class="cta btn btn-danger" href="#signUp">Провести виторину</a>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <h2 class="text-white promo-2">Или создайте свою команду и станьте коучем для своих игроков</h2>
+          </div>
         </div>
       </div>
     </div>
-  </section>
-  <section class="footer"></section>
+    <div class="block question">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <h2>Почему это круто?</h2>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="answers row">
+                <div class="answer col-md-3 text-left">
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <i class="fas fa-globe-americas fa-5x text-primary"></i>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <span>Потому что можно находиться где угодно во время игры</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="answer col-md-3 text-left">
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <i class="fas fa-thumbs-up fa-5x text-success"></i>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <span>Можно классно провести время с друзьями</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="answer col-md-3 text-left">
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <i class="fas fa-mobile-alt fa-5x text-secondary"></i>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <span>Быстро запускается на любом устройстве</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="answer col-md-3 text-left">
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <i class="fas fa-user-tie fa-5x text-primary"></i>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="cl-md-12 text-center">
+                        <span>Можно развить навыки лидера и командной работы</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="block advantages">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <h2>Для кого подойдёт?</h2>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="answers row">
+                <div class="answer col-md-6 text-left">
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <i class="fas fa-chalkboard-teacher fa-5x text-success"></i>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <span>Для учителя. Созадйте и проведите викторину, проверьте знания своей группы. Проведите урок по-новому</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="answer col-md-6 text-left">
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <i class="fas fa-user-graduate fa-5x text-primary"></i>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12 text-center">
+                        <span>Для учащегося. Научитесь работать в команде, обсуждая решения онлайн. Станьте коучем своей команды и руководите процессом</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <div class="block ">
+      <div class="container sign-up-container">
+        <div class="row">
+          <div class="col-md-12 sign-up">
+            <a name="signUp"></a>
+            <form class="sign-up-form" action="javascript:void(null)">
+              <div class="form-group text-center">
+                <span class="h1 text-white">Регистрация</span>
+              </div>
+              <div class="form-group">
+                <input class="form-control name" name="name" id="sign-up-name" type="text" placeholder="Имя" required>
+              </div>
+              <div class="form-group">
+                <input class="form-control email" name="email" id="sign-up-email" type="email" placeholder="Email" required>
+              </div>
+              <div class="form-group">
+                <input class="form-control password" name="password" id="sign-up-password" type="password" placeholder="Пароль" required>
+              </div>
+              <div class="form-group">
+                <input class="form-control password-onemore" name="password-onemore" id="sign-up-onemore" type="password" placeholder="Пароль еще раз" required>
+              </div>
+              <div class="form-group text-right">
+                <button type="submit" class="btn btn-danger">Вперед!</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="bg-dark">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-4 text-center">
+            <div class="row">
+              <div class="col-md-12 text-center">
+                <span class="h4 text-white">Пиши нам!</span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 text-center">
+                <span class="text-white">alexalldev@gmail.com</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 text-center">
+            <div class="row">
+              <div class="col-md-12 text-center">
+                <span class="h4 text-white">Присоединяйся!</span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 text-center">
+                <a class="cta btn btn-danger" href="#signUp">Провести виторину</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <script src="/public/js/index.js"></script>
 </body>
-<script src="/public/js/login-form.js"></script>
-
 </html>
+
+
+<!--div class="col-md-6 sign-in">
+    <a name="signIn"></a>
+    <form class="login-form" action="javascript:void(null)">
+      <div class="form-group text-center">
+        <span class="h1 text-white">Вход в TeamPlay</span>
+      </div>
+      <div class="form-group">
+        <input class="form-control email" id="sign-in-email" type="email" placeholder="Email" class="email">
+      </div>
+      <div class="form-group">
+        <input class="form-control password" id="sign-in-password" type="password" placeholder="Пароль" class="password">
+      </div>
+    </form>
+  </div-->
