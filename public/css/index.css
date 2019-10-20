@@ -72,6 +72,37 @@ h2 {
     margin-bottom: 5rem;
 }
 
+#Info {
+    color: gold;
+    font-size: 18px;
+}
+
+.hidden {
+    display: none;
+}
+
+.SignUpInfo {
+    position: absolute;
+    top: 40%;
+    left: 5%;
+    text-align: center;
+}
+
+.span-sign-in {
+    color: whitesmoke;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+@media screen and (max-width: 500px) {
+    .SignUpInfo {
+        position: absolute;
+        top: 20%;
+        left: 5%;
+        text-align: center;
+    }
+}
+
 @keyframes animate-border
 {
     0%

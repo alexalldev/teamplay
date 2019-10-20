@@ -8,6 +8,7 @@
   <% include blocks/title %>
   <link rel="stylesheet" href="/public/css/animated_loader.css">
   <link rel="stylesheet" href="/public/css/index.css">
+  <link rel="stylesheet" href="/public/css/animate.css">
 </head>
 <% include blocks/loader %>
 <body>
@@ -17,8 +18,8 @@
             <span>TeamPlay</span>
         </a>
         <div>
-          <a href="#signIn" class="mr-1">Sign in</a>
-          <a href="#signUp" class="btn btn-secondary">Sign up</a>
+          <span href="#signin" class="mr-1 signin text-white span-sign-in">Sign in</span>
+          <a href="#signup" class="btn btn-secondary">Sign up</a>
         </div>
     </nav>
     <div class="block face">
@@ -29,7 +30,7 @@
           </div>
           <div class="col-md-12">
             <div class="cta-first">
-              <a class="cta btn btn-danger" href="#signUp">Провести виторину</a>
+              <a class="cta btn btn-danger" href="#signup">Провести виторину</a>
             </div>
           </div>
         </div>
@@ -146,13 +147,16 @@
       <div class="container sign-up-container">
         <div class="row">
           <div class="col-md-12 sign-up">
-            <a name="signUp"></a>
+            <a name="signup"></a>
             <form class="sign-up-form" action="javascript:void(null)">
               <div class="form-group text-center">
                 <span class="h1 text-white">Регистрация</span>
               </div>
               <div class="form-group">
-                <input class="form-control name" name="name" id="sign-up-name" type="text" placeholder="Имя" required>
+                <span id="Info"></span>
+              </div>
+              <div class="form-group">
+                <input class="form-control name" name="fullname" id="sign-up-name" type="text" placeholder="ФИО" required>
               </div>
               <div class="form-group">
                 <input class="form-control email" name="email" id="sign-up-email" type="email" placeholder="Email" required>
@@ -161,12 +165,13 @@
                 <input class="form-control password" name="password" id="sign-up-password" type="password" placeholder="Пароль" required>
               </div>
               <div class="form-group">
-                <input class="form-control password-onemore" name="password-onemore" id="sign-up-onemore" type="password" placeholder="Пароль еще раз" required>
+                <input class="form-control password-onemore" name="confirmpassword" id="sign-up-password-onemore" type="password" placeholder="Пароль еще раз" required>
               </div>
               <div class="form-group text-right">
                 <button type="submit" class="btn btn-danger">Вперед!</button>
               </div>
             </form>
+            <span class="h1 text-white SignUpInfo hidden">Успешная регистрация! Подтвердите аккаунт по почте</span>
           </div>
         </div>
       </div>
@@ -194,7 +199,7 @@
             </div>
             <div class="row">
               <div class="col-md-12 text-center">
-                <a class="cta btn btn-danger" href="#signUp">Провести виторину</a>
+                <a class="cta btn btn-danger" href="#signup">Провести виторину</a>
               </div>
             </div>
           </div>
@@ -202,12 +207,13 @@
       </div>
     </footer>
     <script src="/public/js/index.js"></script>
+    <script src="/public/js/form-validators.js"></script>
 </body>
 </html>
 
 
 <!--div class="col-md-6 sign-in">
-    <a name="signIn"></a>
+    <a name="signin"></a>
     <form class="login-form" action="javascript:void(null)">
       <div class="form-group text-center">
         <span class="h1 text-white">Вход в TeamPlay</span>

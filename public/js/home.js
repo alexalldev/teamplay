@@ -47,7 +47,6 @@ $(document).ready(function() {
   });
 
   $(".btnKickUser").click(function() {
-    console.log(this);
     socket.emit("LeaveTeam", $(this).val(), true);
   });
 });

@@ -627,7 +627,6 @@ router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
                       if (error) {
                         return res.end(JSON.stringify(error));
                       }
-                      // console.log('Message %s sent: %s', info.messageId, info.response);
                       res.end("true");
                     });
                   } else {
