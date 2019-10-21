@@ -24,7 +24,7 @@ $(document).ready(function() {
                 );
                 else if (data == "user_exists")
                 $("#Info").html(
-                    'Такой email зарегистрирован, хотите <a href="/signin" class="btn btn-warning text-dark">войти<a>?'
+                    'Такой email зарегистрирован, хотите <button class="btn btn-warning text-dark" onclick="UserExisitsSignIn();">войти</button>?'
                 );
                 else if (data == "incorrect_confirm_password")
                 $("#Info").html("Неверный повтор пароля");
@@ -60,7 +60,12 @@ function SignIn(credentails) {
         success: function(data) {
           if (data == "pass") Swal.fire('Неверный пароль')
           else if (data == "null_user")
-            Swal.fire("Похоже такого пользователя не существует");
+            Swal.fire({title: "Похоже такого пользователя не существует", html: '<a class="btn-signup text-primary" href="#signup">Зарегистрировать</a>', onBeforeOpen: () => {
+                $(".btn-signup").click(function() {
+                    $("#sign-up-email").val(credentails.username);
+                    Swal.close();
+                });
+            }});
           else if (data == "Messing credentials")
             Swal.fire("Заполните все поля");
           else if (data == "Please Activate Your Account via Email")
@@ -154,4 +159,9 @@ function ForgotPassword(credentails) {
             alert("Возникла ошибка: " + xhr.responseCode);
         }
     });
+}
+
+function UserExisitsSignIn() {
+    window.email = $("#sign-up-email").val();
+    SwalSignIn();
 }

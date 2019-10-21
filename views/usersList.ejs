@@ -12,23 +12,16 @@
     <% include blocks/loader %>
     <% include blocks/header %>
     <section class="app-container">
-        <div class="container">
-            <div class="row">
-                <%- include('blocks/navigation-area', {page:"users"}) %>
-                <div class="col-md-10 working-area mt-2">
-                    <div class="row">
-                        <div class="col-md-12 text-center">
-                            <% if (users.length > 0) { %>
-                            <% users.forEach(function(user){ %>
-                            <%- include('blocks/usersListItem', {user, senderIsCoach: users.senderIsCoach}); %>
-                            <% }); %>
-                            <% } else { %>
-                            <% include blocks/greetings %>
-                            <% } %>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <%- include('blocks/navigation-area', {page:"users"}) %>
+        <div class="working-area mt-2">
+                <% if (users.length > 0) { %>
+                <% users.forEach(function(user){ %>
+                <%- include('blocks/usersListItem', {user, senderIsCoach: users.senderIsCoach}); %>
+                <% }); %>
+                <% } else { %>
+                <% include blocks/greetings %>
+                <% } %>
+        </div>
     </section>
     <% include blocks/footer %>
 </body>

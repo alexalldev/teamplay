@@ -95,6 +95,9 @@ io.use((socket, next) => {
 /* SERVER */
 
 app.use("/", require("./routes/main"));
+app.use("/", require("./routes/pages_router"));
+app.use("/", require("./routes/registration"));
+app.use("/", require("./routes/password"));
 
 app.use("/EditGame", require("./routes/editGame"));
 
