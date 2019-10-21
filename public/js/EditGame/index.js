@@ -343,7 +343,6 @@ function OpenCategory(categoryId) {
       `<div class="collapse m-2 QuestionsList QuestionsList-${categoryId}"></div>`
     );
     Load.Questions(categoryId); // Загрузка вопросов категории
-    console.log({ editGameQuestionsList: $(`.QuestionsList-${categoryId}`) });
     $(`.QuestionsList-${categoryId}`).collapse();
     $(`.Category-${categoryId}`).attr("data-toggle", "collapse");
     $(`.Category-${categoryId}`).attr(

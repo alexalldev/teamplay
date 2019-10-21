@@ -32,7 +32,6 @@ router.get("/rooms", app.protect, function(req, res) {
   Room.findAll({ raw: true })
     .then(async rooms => {
       const roomModels = [];
-      // eslint-disable-next-line node/no-unsupported-features/es-syntax
       for await (const room of rooms) {
         await RoomPlayers.count({
           where: { Room_Id: room.RoomId }
@@ -238,7 +237,6 @@ router.get("/teams", app.protect, function(req, res) {
 router.get("/users", app.protect, function(req, res) {
   User.findAll({ where: { UserIsActive: true }, raw: true })
     .then(async users => {
-      // eslint-disable-next-line node/no-unsupported-features/es-syntax
       for await (const user of users) {
         user.userFIO = `${user.UserFamily} ${user.UserName.slice(
           0,
@@ -327,149 +325,208 @@ router.get("/home", app.protect, function(req, res) {
 });
 
 router.get("/room/:RoomTag", app.protect, function(req, res) {
+  // TODO: возможно не уникальный рyм тег
   Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
     .then(room => {
-      if (room) {
-        console.log({
-          params: req.params.RoomTag,
-          room,
-          iftrue2: req.session.passport.user == room.RoomCreatorId,
-          passportUser: req.session.passport.user,
-          roomCreatorId: room.RoomCreatorId
-        });
-        if (req.session.passport.user == room.RoomCreatorId)
-          req.session.isRoomCreator = true;
-        else req.session.isRoomCreator = false;
-        User.findOne({
-          where: { UserId: req.session.passport.user },
-          raw: true
-        })
-          .then(user => {
-            if (user && (req.session.isRoomCreator || user.Team_Id > 0)) {
-              RoomPlayers.findOne({
-                where: { User_Id: req.session.passport.user },
-                raw: true
-              })
-                .then(roomPlayer => {
-                  if (roomPlayer == null) {
-                    RoomPlayers.findAll({
-                      where: { Team_Id: user.Team_Id, Room_Id: room.RoomId }
-                    })
-                      .then(roomPlayers => {
-                        // if (req.session.isRoomCreator)
-                        if (roomPlayers.length < room.RoomMaxTeamPlayers) {
-                          RoomPlayers.findOrCreate({
-                            where: {
-                              Room_Id: room.RoomId,
-                              User_Id: req.session.passport.user,
-                              Team_Id: req.session.isRoomCreator
-                                ? -1
-                                : user.Team_Id,
-                              isRoomCreator: req.session.isRoomCreator,
-                              isGroupCoach: req.session.isRoomCreator
-                                ? false
-                                : roomPlayers.length == 0
-                            }
-                          })
-                            .then(async ([createdRoomPlayer]) => {
-                              req.session.roomPlayersId =
-                                createdRoomPlayer.RoomPlayersId;
-                              Team.findOne({
-                                where: { TeamId: createdRoomPlayer.Team_Id },
-                                raw: true
+      GamePlay.findOne({ where: { Room_Id: room.RoomId } })
+        .then(gamePlay => {
+          // TODO: поиск по roomPlayers если в списке, то продолжать, иначе игра началась
+          // room.maxTeamPlayers сравнить с room_team.count({where: {Room_Id и Team_Id}}) =>
+          if (room) {
+            if (req.session.passport.user == room.RoomCreatorId)
+              req.session.isRoomCreator = true;
+            else req.session.isRoomCreator = false;
+            User.findOne({
+              where: { UserId: req.session.passport.user },
+              raw: true
+            })
+              .then(user => {
+                RoomTeam.findOne({
+                  where: { Room_Id: room.RoomId, Team_Id: user.Team_Id }
+                })
+                  .then(roomTeam => {
+                    if (
+                      ((roomTeam || req.session.isRoomCreator) && gamePlay) ||
+                      !gamePlay
+                    ) {
+                      if (
+                        user &&
+                        (req.session.isRoomCreator || user.Team_Id > 0)
+                      ) {
+                        RoomPlayers.findOne({
+                          where: { User_Id: req.session.passport.user },
+                          raw: true
+                        })
+                          .then(roomPlayer => {
+                            if (roomPlayer == null) {
+                              RoomPlayers.findAll({
+                                where: {
+                                  Team_Id: user.Team_Id,
+                                  Room_Id: room.RoomId
+                                }
                               })
-                                .then(async team => {
-                                  req.session.roomId = room.RoomId;
-                                  req.session.TeamId =
-                                    createdRoomPlayer.Team_Id;
-                                  let player = {
-                                    RoomPlayersId:
-                                      createdRoomPlayer.RoomPlayersId,
-                                    UserName: user.UserName,
-                                    UserFamily: user.UserFamily,
-                                    UserLastName: user.UserLastName,
-                                    RoomId: createdRoomPlayer.Room_Id,
-                                    TeamId: createdRoomPlayer.Team_Id,
-                                    TeamName: createdRoomPlayer.isRoomCreator
-                                      ? ""
-                                      : team.TeamName,
-                                    isRoomCreator:
-                                      createdRoomPlayer.isRoomCreator,
-                                    isGroupCoach: createdRoomPlayer.isGroupCoach
-                                  };
-                                  if (createdRoomPlayer.isGroupCoach)
-                                    await RoomTeam.findOrCreate({
+                                .then(roomPlayers => {
+                                  if (
+                                    roomPlayers.length < room.RoomMaxTeamPlayers
+                                  ) {
+                                    RoomPlayers.findOrCreate({
                                       where: {
-                                        Team_Id: createdRoomPlayer.Team_Id,
-                                        Room_Id: createdRoomPlayer.Room_Id
-                                      },
-                                      raw: true
+                                        Room_Id: room.RoomId,
+                                        User_Id: req.session.passport.user,
+                                        Team_Id: req.session.isRoomCreator
+                                          ? -1
+                                          : user.Team_Id,
+                                        isRoomCreator:
+                                          req.session.isRoomCreator,
+                                        isGroupCoach: req.session.isRoomCreator
+                                          ? false
+                                          : roomPlayers.length == 0
+                                      }
                                     })
-                                      .then(async ([roomTeam, created]) => {
-                                        if (created)
-                                        {
-                                          req.session.roomTeamId = await roomTeam.RoomTeamId;
-                                          req.session.isGroupCoach = true;
-                                        }
-                                        player.RoomTeamId = await req.session.roomTeamId;
+                                      .then(async ([createdRoomPlayer]) => {
+                                        req.session.roomPlayersId =
+                                          createdRoomPlayer.RoomPlayersId;
+                                        Team.findOne({
+                                          where: {
+                                            TeamId: createdRoomPlayer.Team_Id
+                                          },
+                                          raw: true
+                                        })
+                                          .then(async team => {
+                                            req.session.roomId = room.RoomId;
+                                            req.session.TeamId =
+                                              createdRoomPlayer.Team_Id;
+                                            const player = {
+                                              RoomPlayersId:
+                                                createdRoomPlayer.RoomPlayersId,
+                                              UserName: user.UserName,
+                                              UserFamily: user.UserFamily,
+                                              UserLastName: user.UserLastName,
+                                              RoomId: createdRoomPlayer.Room_Id,
+                                              TeamId: createdRoomPlayer.Team_Id,
+                                              TeamName: createdRoomPlayer.isRoomCreator
+                                                ? ""
+                                                : team.TeamName,
+                                              isRoomCreator:
+                                                createdRoomPlayer.isRoomCreator,
+                                              isGroupCoach:
+                                                createdRoomPlayer.isGroupCoach
+                                            };
+                                            await RoomTeam.findOrCreate({
+                                              where: {
+                                                Team_Id:
+                                                  createdRoomPlayer.Team_Id,
+                                                Room_Id:
+                                                  createdRoomPlayer.Room_Id
+                                              },
+                                              raw: true
+                                            })
+                                              .then(([roomTeam, created]) => {
+                                                if (created) {
+                                                  req.session.roomTeamId =
+                                                    roomTeam.RoomTeamId;
+                                                  req.session.isGroupCoach =
+                                                    createdRoomPlayer.isGroupCoach;
+                                                }
+                                                console.log({
+                                                  sess: req.session
+                                                });
+                                                if (!req.session.isRoomCreator)
+                                                  io.to(
+                                                    `RoomUsers${room.RoomId}`
+                                                  ).emit(
+                                                    "AddUserToRoom",
+                                                    player
+                                                  );
+                                                io.emit("RoomOnline", {
+                                                  roomId: room.RoomId,
+                                                  online: req.session
+                                                    .isRoomCreator
+                                                    ? roomPlayers.length
+                                                    : roomPlayers.length + 1
+                                                });
+                                                res.render("room", {
+                                                  room,
+                                                  roomPlayer:
+                                                    createdRoomPlayer.dataValues,
+                                                  readyState:
+                                                    roomTeam.ReadyState,
+                                                  wasGameStarted: !!gamePlay
+                                                });
+                                                player.RoomTeamId =
+                                                  req.session.roomTeamId;
+                                                // })
+                                                // .catch(err =>
+                                                //   console.log(err)
+                                                // );
+                                              })
+                                              .catch(err => console.log(err));
+                                          })
+                                          .catch(err => console.log(err));
                                       })
                                       .catch(err => console.log(err));
-                                  if (!req.session.isRoomCreator)
-                                    io.to(`RoomUsers${room.RoomId}`).emit(
-                                      "AddUserToRoom",
-                                      player
-                                    );
-                                  io.emit("RoomOnline", {
-                                    roomId: room.RoomId,
-                                    online: req.session.isRoomCreator
-                                      ? roomPlayers.length
-                                      : roomPlayers.length + 1
-                                  });
-                                  res.render("room", {
-                                    room,
-                                    roomPlayer: createdRoomPlayer.dataValues
-                                  });
+                                  } else
+                                    return res.render("info", {
+                                      message:
+                                        "Достигнуто максимально число игроков от вашей команды"
+                                    });
                                 })
                                 .catch(err => console.log(err));
-                            })
-                            .catch(err => console.log(err));
-                        } else
-                          return res.render("info", {
-                            message:
-                              "Достигнуто максимально число игроков от вашей команды"
-                          });
-                      })
-                      .catch(err => console.log(err));
-                  } else {
-                    Room.findOne({
-                      where: { roomId: roomPlayer.Room_Id },
-                      raw: true
-                    })
-                      .then(findedRoom => {
-                        if (findedRoom)
-                          if (req.params.RoomTag == findedRoom.RoomTag)
-                            res.render("room", {
-                              room: findedRoom,
-                              roomPlayer
-                            });
-                          else res.redirect(`/room/${findedRoom.RoomTag}`);
-                        else res.redirect(`/room/${req.params.RoomTag}`);
-                      })
-                      .catch(err => console.log(err));
-                  }
-                })
-                .catch(err => console.log(err));
-            } else
-              return res.render("info", {
-                message:
-                  "Для участия в игре вам необходимо находиться в команде"
-              });
-          })
-          .catch(err => console.log(err));
-      } else
-        res.render("info", {
-          message: "Такой комнаты не существует либо она была удалена"
-        });
+                            } else {
+                              Room.findOne({
+                                where: { roomId: roomPlayer.Room_Id },
+                                raw: true
+                              })
+                                .then(findedRoom => {
+                                  if (findedRoom)
+                                    if (
+                                      req.params.RoomTag == findedRoom.RoomTag
+                                    ) {
+                                      RoomTeam.findOne({
+                                        where: {
+                                          Room_Id: findedRoom.RoomId,
+                                          Team_Id: req.session.TeamId
+                                        }
+                                      }).then(roomTeam => {
+                                        res.render("room", {
+                                          room: findedRoom,
+                                          roomPlayer,
+                                          readyState: roomTeam.ReadyState,
+                                          wasGameStarted: !!gamePlay
+                                        });
+                                      });
+                                    } else
+                                      res.redirect(
+                                        `/room/${findedRoom.RoomTag}`
+                                      );
+                                  else
+                                    res.redirect(`/room/${req.params.RoomTag}`);
+                                })
+                                .catch(err => console.log(err));
+                            }
+                          })
+                          .catch(err => console.log(err));
+                      } else
+                        return res.render("info", {
+                          message:
+                            "Для участия в игре вам необходимо находиться в команде"
+                        });
+                    } else {
+                      res.render("info", {
+                        message:
+                          "Игра уже начата и в ней нет кого-либо из вашей команды"
+                      });
+                    }
+                  })
+                  .catch(err => console.log(err));
+              })
+              .catch(err => console.log(err));
+          } else
+            res.render("info", {
+              message: "Такой комнаты не существует либо она была удалена"
+            });
+        })
+        .catch(err => console.log(err));
     })
     .catch(err => console.log(err));
 });
@@ -479,6 +536,10 @@ router.get("/leaveRoom", app.protect, function(req, res) {
     Room.findOne({ where: { RoomId: req.session.roomId }, raw: true })
       .then(room => {
         if (room)
+          //         GamePlay.findOne({
+          //   where: { Room_Id: room.RoomId, Game_Id: room.Game_Id }
+          // })
+          //   .then(gamePlay => {
           RoomPlayers.destroy({
             where: { RoomPlayersId: req.session.roomPlayersId }
           })
@@ -489,7 +550,10 @@ router.get("/leaveRoom", app.protect, function(req, res) {
                   req.session.roomPlayersId
                 );
               RoomPlayers.findAndCountAll({
-                where: { Room_Id: room.RoomId, Team_Id: req.session.TeamId },
+                where: {
+                  Room_Id: room.RoomId,
+                  Team_Id: req.session.TeamId
+                },
                 raw: true
               })
                 .then(async result => {
@@ -550,10 +614,18 @@ router.get("/leaveRoom", app.protect, function(req, res) {
             .catch(err => console.log(err));
         else {
           // Creator deleted the room
+
           delete req.session.roomId;
-          if (req.session.isRoomCreator) delete req.session.isRoomCreator;
+          if (req.session.isRoomCreator) {
+            // TODO: socket removeGamePlayStructure
+            // if (gamePlay)
+            //   io.emit("RemoveGamePlayStructure", room.RoomId, room.Game_Id);
+            delete req.session.isRoomCreator;
+          }
           res.redirect("/");
         }
+        // })
+        // .catch(err => console.log(err));
       })
       .catch(err => console.log(err));
   else res.redirect("/");
@@ -578,12 +650,12 @@ router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
           "utf-8",
           function(err, data) {
             if (err) res.end(JSON.stringify(err));
-            let html_mail_array = data.split("CONFIRM_NEW_USER_BUTTON");
-            let confirmation_hash = crypto
+            const html_mail_array = data.split("CONFIRM_NEW_USER_BUTTON");
+            const confirmation_hash = crypto
               .randomBytes(Math.ceil(120 / 2))
               .toString("hex") // convert to hexadecimal format
               .slice(0, 120);
-            let html_mail = `${html_mail_array[0] + req.protocol}://${
+            const html_mail = `${html_mail_array[0] + req.protocol}://${
               req.hostname
             }/ConfirmNewUserAccount?confirmation_type=email&security_code=${confirmation_hash}${
               html_mail_array[1]
@@ -596,7 +668,7 @@ router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
               html: html_mail
             };
 
-            let UserFio = req.body.fullname.split(" ");
+            const UserFio = req.body.fullname.split(" ");
             if (
               UserFio.length == 3 &&
               UserFio[0] != "" &&
@@ -811,12 +883,12 @@ router.post("/ForgotPassword", urlencodedParser, function(req, res) {
                 "utf-8",
                 function(err, data) {
                   if (err) res.end(JSON.stringify(err));
-                  let html_mail_array = data.split("NEW_EMAILBUTTON");
-                  let confirmation_hash = crypto
+                  const html_mail_array = data.split("NEW_EMAILBUTTON");
+                  const confirmation_hash = crypto
                     .randomBytes(Math.ceil(120 / 2))
                     .toString("hex") // convert to hexadecimal format
                     .slice(0, 120);
-                  let html_mail = `${html_mail_array[0] + req.protocol}://${
+                  const html_mail = `${html_mail_array[0] + req.protocol}://${
                     req.hostname
                   }/ChangePassword?confirmation_type=email&security_code=${confirmation_hash}${
                     html_mail_array[1]
@@ -953,12 +1025,12 @@ router.post("/SetStreamBackground", app.protect, urlencodedParser, function(
 ) {
   if (req.session.passport) {
     if (req.session.Game) {
-      let form = formidable.IncomingForm();
+      const form = formidable.IncomingForm();
       form.uploadDir = "./IMAGES/STREAM_IMAGES";
       form.parse(req, function(err, fields, files) {
         if (files.StreamImage) {
           if (files.StreamImage.size < 20000000) {
-            let StreamImagePath = files.StreamImage.path
+            const StreamImagePath = files.StreamImage.path
               .split("STREAM_IMAGES")[1]
               .replace(/\\/g, "");
 
@@ -970,7 +1042,7 @@ router.post("/SetStreamBackground", app.protect, urlencodedParser, function(
             ) {
               GamePlay.findOne({ where: { Game_Id: req.session.Game.Id } })
                 .then(gamePlay => {
-                  let returnData = {};
+                  const returnData = {};
                   gamePlay.update({ StreamImagePath }).then(updated => {
                     if (updated) {
                       returnData.StreamImage = `${req.protocol}://${req.hostname}/StreamImage?GamePlayId=${gamePlay.dataValues.GamePlayId}`;
@@ -1001,6 +1073,6 @@ function RedirectRules(req, res, next) {
 }
 
 function validateEmail(email) {
-  let re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase());
 }

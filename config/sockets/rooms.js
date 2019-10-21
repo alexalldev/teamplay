@@ -2,8 +2,9 @@ const Room = require("../../models/Room");
 const RoomPlayer = require("../../models/RoomPlayer");
 const User = require("../../models/User");
 const Team = require("../../models/Team");
+
 function roomsSocket(socket, io) {
-  const session = socket.request.session;
+  const { session } = socket.request;
   socket.on("createRoom", function(roomName, gameId, roomMaxTeamPlayers) {
     if (roomName && gameId && roomMaxTeamPlayers) {
       if (roomName.charAt(roomName.length - 1) == " ")
@@ -54,9 +55,7 @@ function roomsSocket(socket, io) {
                   if (user)
                     socket.emit(
                       "RecieveCreatorStatus",
-                      io.ClientsStore.creatorById(room.RoomCreatorId)
-                        ? true
-                        : false
+                      !!io.ClientsStore.creatorById(room.RoomCreatorId)
                     );
                   else console.log("rooms.js: There is no user");
                 })
@@ -77,7 +76,7 @@ function roomsSocket(socket, io) {
           })
             .then(room => {
               if (room)
-                io.to("RoomUsers" + session.roomId).emit("roomDeleted", true);
+                io.to(`RoomUsers${session.roomId}`).emit("roomDeleted", true);
               else socket.emit("roomDeleted", "You cant delete this room");
             })
             .catch(err => console.log(err));
@@ -87,7 +86,7 @@ function roomsSocket(socket, io) {
   });
 
   async function findRoomPlayers(room) {
-    let roomPlayersArray = [];
+    const roomPlayersArray = [];
     let counter = 0;
     for await (const player of room) {
       if (!player.isRoomCreator)

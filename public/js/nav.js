@@ -1,6 +1,6 @@
 $(document).ready(function() {
   $(".nav-notifications").click(function() {
-    let state = $(this).data("state");
+    const state = $(this).data("state");
     $(".notifications-menu").toggle("collapse");
     switch (state) {
       case 1:
@@ -12,7 +12,7 @@ $(document).ready(function() {
         $.ajax({
           type: "POST",
           url: "/getCurrUserId",
-          success: function(session) {
+          success(session) {
             $.ajax({
               type: "POST",
               url: "/teamOperation/invite",
@@ -21,13 +21,13 @@ $(document).ready(function() {
                 receiverId: session.userId,
                 shouldCreate: "false"
               },
-              success: function(data) {},
-              error: function(xhr, str) {
+              success(data) {},
+              error(xhr, str) {
                 alert(`Возникла ошибка: ${str} ${xhr.responseCode}`);
               }
             });
           },
-          error: function(xhr, str) {
+          error(xhr, str) {
             alert(`Возникла ошибка: ${str} ${xhr.responseCode}`);
           }
         });

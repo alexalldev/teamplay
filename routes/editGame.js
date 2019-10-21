@@ -111,14 +111,12 @@ router.post("/CreateQuestion", urlencodedParser, function(req, res) {
   form.parse(req, function(err, fields, files) {
     if (err) return res.end(JSON.stringify(err));
     const { QuestionText, QuestionCost, Category_Id, AnswerTime } = fields;
-    console.log({ fields });
     if (QuestionText && QuestionCost && Category_Id && AnswerTime)
       if (files.QuestionImage) {
         if (files.QuestionImage.size < 20000000) {
           const QuestionImagePath = files.QuestionImage.path
             .split("QUESTIONS_IMAGES")[1]
             .replace(/\\/g, "");
-          console.log({ type: files.QuestionImage.type });
           if (
             files.QuestionImage.type == "image/png" ||
             files.QuestionImage.type == "image/jpeg" ||
@@ -138,7 +136,6 @@ router.post("/CreateQuestion", urlencodedParser, function(req, res) {
                 });
                 if (returnData) {
                   returnData.QuestionImage = `${req.protocol}://${req.hostname}/QuestionImage?QuestionId=${returnData.QuestionId}`;
-                  console.log({ returnData });
                   res.end(JSON.stringify(returnData));
                 } else res.end("null");
               })
@@ -155,7 +152,6 @@ router.post("/CreateQuestion", urlencodedParser, function(req, res) {
             const returnData = question.get({
               plain: true
             });
-            console.log({ returnData1: returnData });
             if (returnData) {
               res.end(JSON.stringify(returnData));
             } else res.end("null");

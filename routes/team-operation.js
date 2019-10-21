@@ -69,7 +69,6 @@ router.post("/invite", urlencodedParser, async function(req, res) {
   if (req.body.shouldCreate == "true")
     await User.findOne({ where: { UserId: req.body.senderId }, raw: true })
       .then(sender_user => {
-        console.log(sender_user);
         if (req.body.isInfoNotification)
           if (
             req.body.isInfoNotification == "false" &&

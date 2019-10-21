@@ -1,18 +1,22 @@
-const Sequelize = require('sequelize');
-const db = require('../config/database');
+const Sequelize = require("sequelize");
+const db = require("../config/database");
 
-const RoomTeam = db.define('room_team', {
-	RoomTeamId: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		primaryKey: true
-	},
-	Room_Id: {
-		type: Sequelize.STRING
-	},
-	Team_Id: {
-		type: Sequelize.INTEGER
-	}
+const RoomTeam = db.define("room_team", {
+  RoomTeamId: {
+    type: Sequelize.INTEGER,
+    autoIncrement: true,
+    primaryKey: true
+  },
+  ReadyState: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false
+  },
+  Room_Id: {
+    type: Sequelize.STRING
+  },
+  Team_Id: {
+    type: Sequelize.INTEGER
+  }
 });
 
 module.exports = RoomTeam;
