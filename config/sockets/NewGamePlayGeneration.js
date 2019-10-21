@@ -13,126 +13,45 @@ const User = require("../../models/User");
 const util = require("util");
 
 function NewGamePlayGeneration(socket, io) {
+
   const { session } = socket.request;
 
-  function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-  }
+  const NextRandomQuestion = require('./NextRandomQuestion');
+  const GamePlayStructure = require('./GamePlayStructure');
 
-  socket.on("gameStarted", async roomId => {
+  socket.on("gameStarted", async ()  => {
     if (session.isRoomCreator) {
       // TODO: roomPlayers, roomTeams destroy при входе в комнату, чтобы не было вдруг there is no roomId in session
 
       // TODO: проверить работоспособность RemoveGamePlayStructure
       // await RemoveGamePlayStructure();
-
-      await CreateGamePlayStructure();
-
-      Room.findOne({ where: { RoomId: roomId }, raw: true })
-        .then(room => {
-          GamePlay.findOne({
-            // проверка по roomId
-            where: { Game_Id: room.Game_Id, Room_Id: room.RoomId }
-          })
-            .then(gamePlay => {
-              if (gamePlay)
-                GamePlayCategory.findAll({
-                  where: { GamePlay_Id: gamePlay.dataValues.GamePlayId }
-                })
-                  .then(gamePlayCategories => {
-                    if (gamePlayCategories.length > 0) {
-                      const gamePlayCategory =
-                        gamePlayCategories[
-                          getRandomInt(gamePlayCategories.length)
-                        ];
-                      Category.findOne({
-                        where: {
-                          CategoryId: gamePlayCategory.dataValues.Category_Id
-                        },
-                        raw: true
-                      })
-                        .then(category => {
-                          GamePlayQuestion.findAll({
-                            where: {
-                              GamePlayCategory_Id:
-                                gamePlayCategory.dataValues.GamePlayCategoryId
-                            },
-                            raw: true
-                          })
-                            .then(gamePlayQuestions => {
-                              if (gamePlayQuestions.length > 0) {
-                                const gamePlayQuestion =
-                                  gamePlayQuestions[
-                                    getRandomInt(gamePlayQuestions.length)
-                                  ];
-                                Question.findOne({
-                                  where: {
-                                    QuestionId: gamePlayQuestion.Question_Id
-                                  }
-                                })
-                                  .then(question => {
-                                    Answer.findAll({
-                                      where: {
-                                        Question_Id:
-                                          question.dataValues.QuestionId
-                                      },
-                                      raw: true
-                                    })
-                                      .then(answers => {
-                                        let type = "checkbox";
-                                        session.GamePlayId =
-                                          gamePlay.dataValues.GamePlayId;
-                                        if (answers.length == 1) type = "text";
-                                        io.to(
-                                          `RoomPlayers${session.roomId}`
-                                        ).emit(
-                                          "sendQuestion",
-                                          question.dataValues,
-                                          answers,
-                                          type,
-                                          false,
-                                          category.CategoryName
-                                        );
-                                        io.to(
-                                          `RoomCreators${session.roomId}`
-                                        ).emit(
-                                          "sendQuestion",
-                                          question.dataValues,
-                                          answers.filter(
-                                            answer => answer.Correct
-                                          ),
-                                          type,
-                                          true,
-                                          category.CategoryName
-                                        );
-                                        gamePlay
-                                          .update({
-                                            CurrentQuestionId:
-                                              question.dataValues.QuestionId
-                                          })
-                                          .catch(err => console.log(err));
-                                      })
-                                      .catch(err => console.log(err));
-
-                                    // TODO: когда все ответили удалить вопрос
-                                  })
-                                  .catch(err => console.log(err));
-                              } else gamePlayCategory.destroy();
-                            })
-                            .catch(err => console.log(err));
-                        })
-                        .catch(err => console.log(err));
-                    } else
-                      socket
-                        .to(`RoomUsers${session.roomId}`)
-                        .emit("game ended");
-                  })
-                  .catch(err => console.log(err));
-            })
-            .catch(err => console.log(err));
-        })
-        .catch(err => console.log(err));
+      if (await getCanStartGame())
+      {
+        await GamePlayStructure.Create(session);
+      
+        await NextRandomQuestion(socket, io, session);
+      }
     }
+  });
+
+  async function getCanStartGame() {
+    await RoomTeam.findAll({where: {Room_Id: session.roomId, ReadyState: true}, raw: true})
+      .then(async roomTeams => {
+        if (roomTeams.length == 0)
+          return false
+        else
+          return true
+      })
+      .catch(err => {
+        console.log(err)
+        return false;
+      });
+  }
+
+  socket.on('getCanStartGame', async function() {
+    console.log(await getCanStartGame());
+    if (session.isRoomCreator)
+      socket.emit('reciveCanStartGame', await getCanStartGame());
   });
 
   socket.on("writeOffers", async offerIds => {
@@ -266,8 +185,13 @@ function NewGamePlayGeneration(socket, io) {
     io.to(`RoomPlayers${session.roomId}`).emit("GamePreparationTick", current);
   });
 
+  socket.on("StopGamePreparationTick", () => {
+    if (session.isRoomCreator)
+      io.to(`RoomPlayers${session.roomId}`).emit("StopGamePreparationTick");
+  });
+ 
   socket.on("RemoveGamePlayStructure", (roomId, gameId) => {
-    RemoveGamePlayStructure();
+    GamePlayStructure.Remove(session);
   });
 
   socket.on("getGroupStatus", player => {
@@ -305,6 +229,7 @@ function NewGamePlayGeneration(socket, io) {
                     ReadyState: !roomTeam.ReadyState
                   })
                   .then(() => {
+                    socket.emit("MyGroupReadyState", roomTeam.ReadyState);
                     io.to(`RoomUsers${session.roomId}`).emit(
                       "GroupReady",
                       roomTeam.ReadyState,
@@ -317,108 +242,6 @@ function NewGamePlayGeneration(socket, io) {
       })
       .catch(err => console.log(err));
   });
-  // TODO: будет удалять каждый игрок, хотя можно сделать, чтобы удалял запрос только коуча, если коуч вышел, то следующего игрока в команде,
-  // пока таковой не будет найден.
-  // TODO: подумать чтобы сделать его более ассинхронным, вместо for or -> promise.all
-  async function RemoveGamePlayStructure() {
-    await Room.findOne({ where: { RoomId: session.roomId } })
-      .then(async room => {
-        await GamePlay.findOne({
-          where: { Game_Id: room.Game_Id, Room_Id: room.RoomId }
-        })
-          .then(async gamePlay => {
-            if (gamePlay) {
-              await GamePlayCategory.findAll({
-                where: { GamePlay_Id: gamePlay.dataValues.GamePlayId }
-              })
-                .then(async gamePlayCategories => {
-                  if (gamePlayCategories.length > 0)
-                    for await (const gamePlayCategory of gamePlayCategories) {
-                      await GamePlayQuestion.destroy({
-                        where: {
-                          GamePlayCategory_Id:
-                            gamePlayCategory.dataValues.GamePlayCategoryId
-                        }
-                      });
-                      await gamePlayCategory.destroy();
-                    }
-                })
-                .catch(err => console.log(err));
-              await GamePlay.RemoveStreamImage(
-                gamePlay.dataValues.GamePlayId,
-                function() {}
-              );
-              await gamePlay.destroy();
-            }
-          })
-          .catch(err => console.log(err));
-      })
-      .catch(err => console.log(err));
-  }
-
-  async function CreateGamePlayStructure() {
-    /*                          GamePlay Structure                      */
-    await Room.findOne({ where: { RoomId: session.roomId } }).then(
-      async room => {
-        await Game.findOne({ raw: true, where: { GameId: room.Game_Id } })
-          .then(async game => {
-            if (game)
-              await GamePlay.findOrCreate({
-                raw: true,
-                where: { Game_Id: game.GameId, Room_Id: room.RoomId },
-                defaults: {
-                  GamePlayId: 0,
-                  CurrentQuestionId: 0,
-                  StartTime: getUnixTime(),
-                  StopTime: 0,
-                  Room_Id: room.RoomId
-                }
-              })
-                .then(async ([gamePlay, created]) => {
-                  await Category.findAll({
-                    raw: true,
-                    where: { Game_Id: game.GameId }
-                  })
-                    .then(async categories => {
-                      if (categories.length > 0)
-                        for await (const C of categories) {
-                          await GamePlayCategory.findOrCreate({
-                            raw: true,
-                            where: {
-                              Category_Id: C.CategoryId,
-                              GamePlay_Id: gamePlay.GamePlayId
-                            }
-                          })
-                            .then(async ([gamePlayCategory, created]) => {
-                              await Question.findAll({
-                                raw: true,
-                                where: { Category_Id: C.CategoryId }
-                              })
-                                .then(async questions => {
-                                  for await (const Q of questions) {
-                                    await GamePlayQuestion.findOrCreate({
-                                      raw: true,
-                                      where: {
-                                        Question_Id: Q.QuestionId,
-                                        GamePlayCategory_Id:
-                                          gamePlayCategory.GamePlayCategoryId
-                                      }
-                                    }).catch(err => console.log(err));
-                                  }
-                                })
-                                .catch(err => console.log(err));
-                            })
-                            .catch(err => console.log(err));
-                        }
-                    })
-                    .catch(err => console.log(err));
-                })
-                .catch(err => console.log(err));
-          })
-          .catch(err => console.log(err));
-      }
-    );
-  }
 }
 
 function getUnixTime() {

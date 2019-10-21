@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
-module.exports = new Sequelize('teamplay', 'root', '', {
-  host: 'localhost',
+module.exports = new Sequelize('alexallr_teamplay_temp', 'alexallr_teamplay_temp', '-6vJ8r3?xf^f', {
+  host: 'alexall.dev',
   dialect: 'mysql',
   logging: false,
   define: {

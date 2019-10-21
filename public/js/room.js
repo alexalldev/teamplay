@@ -36,22 +36,34 @@ $(document).ready(function() {
     }
 
     function StartPreparation() {
-      $(".roomActions").after(`
-      <div class="row cancelRow">
-      <div class="col-md-12 text-center mb-2">
-    <label class="h5">Отмена</label>
-    <button
-      class="btn btn-warning btnStartGame mr-3"
-      onclick="cancelGame(${roomId})">
-      <i class="fas fa-ban"></i>
-    </button>
-    <span class="h4 startGameFrom"></span>
-    </div>
-    </div>`);
-      PrepareGameTimer();
-      window.PrepareGameTimer = setInterval(PrepareGameTimer, 1000);
+      socket.emit('getCanStartGame');
     }
+
+    socket.on('reciveCanStartGame', function(state) {
+      if (state)
+      {
+        $(".roomActions").after(`
+        <div class="row cancelRow">
+          <div class="col-md-12 text-center mb-2">
+          <label class="h5">Отмена</label>
+          <button
+            class="btn btn-warning btnStartGame mr-3"
+            onclick="cancelGame(${roomId})">
+            <i class="fas fa-ban"></i>
+          </button>
+          <span class="h4 startGameFrom"></span>
+          </div>
+        </div>`);
+        PrepareGameTimer();
+        window.PrepareGameTimer = setInterval(PrepareGameTimer, 1000);
+      }
+      else
+        Swal.fire('', 'Сейчас вы не можете начать игру', 'warning');
+    });
+
     console.log({ groups: $(".group > .team-readyState") });
+
+
     await $(".group > .team-readyState").each(function(i) {
       if ($(this).attr("readyState") == false) {
         console.log({ readyState: $(this).attr("readyState") });
@@ -220,6 +232,10 @@ async function AddPlayer(player) {
 }
 
 socket.on("GroupReady", (status, teamId) => {
+  $(`.group-${teamId} > .team-readyState`).attr("ReadyState", status);
+});
+
+socket.on("MyGroupReadyState", function(status) {
   if (status) {
     $(".btnGroupReady")
       .removeClass("btn-success")
@@ -235,8 +251,7 @@ socket.on("GroupReady", (status, teamId) => {
     <span>Команда готова!</span>
       </div>`);
   }
-  $(`.group-${teamId} > .team-readyState`).attr("ReadyState", status);
-});
+})
 
 socket.on("GamePreparationTick", current => {
   console.log({ current });
@@ -244,6 +259,10 @@ socket.on("GamePreparationTick", current => {
   $("body").append(`<div class="GamePreparationTimer"></div>`);
   $(".GamePreparationTimer").html(`Игра начнется через ${current} с.`);
   if (current == 0) $(".GamePreparationTimer").remove();
+});
+
+socket.on("StopGamePreparationTick", () => {
+  $(".GamePreparationTimer").remove();
 });
 
 socket.on("RecieveCreatorStatus", function(status) {
@@ -283,3 +302,10 @@ socket.on("NewRoomGroupCoach", function(roomPlayer) {
     '<span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>'
   );
 });
+
+function cancelGame(roomId) {
+  $(".cancelRow").remove();
+  $(".GamePreparationTimer").remove();
+  clearInterval(window.PrepareGameTimer);
+   socket.emit("StopGamePreparationTick");
+}

@@ -75,13 +75,5 @@
 <% include blocks/socket %>
 <script src="/public/js/animateCSS.js"></script>
 <script src="/public/js/room.js"></script>
-<script>
-  function cancelGame(roomId) {
-    $(".cancelRow").remove();
-    $(".GamePreparationTimer").remove();
-    clearInterval(window.PrepareGameTimer);
-    // socket.to(`RoomUsers${roomId}`).emit("GamePreparationTick", -1);
-  }
-</script>
 
 </html>

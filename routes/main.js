@@ -428,9 +428,6 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                                   req.session.isGroupCoach =
                                                     createdRoomPlayer.isGroupCoach;
                                                 }
-                                                console.log({
-                                                  sess: req.session
-                                                });
                                                 if (!req.session.isRoomCreator)
                                                   io.to(
                                                     `RoomUsers${room.RoomId}`
@@ -534,22 +531,22 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
 router.get("/leaveRoom", app.protect, function(req, res) {
   if (req.session.roomId)
     Room.findOne({ where: { RoomId: req.session.roomId }, raw: true })
-      .then(room => {
+      .then( async room => {
         if (room)
           //         GamePlay.findOne({
           //   where: { Room_Id: room.RoomId, Game_Id: room.Game_Id }
           // })
           //   .then(gamePlay => {
-          RoomPlayers.destroy({
+          await RoomPlayers.destroy({
             where: { RoomPlayersId: req.session.roomPlayersId }
           })
-            .then(() => {
+            .then(async () => {
               if (!req.session.isRoomCreator)
                 io.to(`RoomUsers${req.session.roomId}`).emit(
                   "RoomPlayerLeaved",
                   req.session.roomPlayersId
                 );
-              RoomPlayers.findAndCountAll({
+              await RoomPlayers.findAndCountAll({
                 where: {
                   Room_Id: room.RoomId,
                   Team_Id: req.session.TeamId
@@ -580,6 +577,7 @@ router.get("/leaveRoom", app.protect, function(req, res) {
                         }
                       })
                         .then(roomPlayer => {
+                          console.log(roomPlayer);
                           if (roomPlayer)
                             roomPlayer
                               .update({ isGroupCoach: true })
