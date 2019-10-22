@@ -13,45 +13,47 @@ const User = require("../../models/User");
 const util = require("util");
 
 function NewGamePlayGeneration(socket, io) {
-
   const { session } = socket.request;
 
-  const NextRandomQuestion = require('./NextRandomQuestion');
-  const GamePlayStructure = require('./GamePlayStructure');
+  const NextRandomQuestion = require("./NextRandomQuestion");
+  const GamePlayStructure = require("./GamePlayStructure");
 
-  socket.on("gameStarted", async ()  => {
+  socket.on("gameStarted", async () => {
+    console.log({ isRoomCreator: session.isRoomCreator });
     if (session.isRoomCreator) {
       // TODO: roomPlayers, roomTeams destroy при входе в комнату, чтобы не было вдруг there is no roomId in session
-
       // TODO: проверить работоспособность RemoveGamePlayStructure
       // await RemoveGamePlayStructure();
-      if (await getCanStartGame())
-      {
-        await GamePlayStructure.Create(session);
-      
-        await NextRandomQuestion(socket, io, session);
-      }
+      await GamePlayStructure.Create(session);
+
+      await NextRandomQuestion(socket, io, session);
     }
   });
 
-  async function getCanStartGame() {
-    await RoomTeam.findAll({where: {Room_Id: session.roomId, ReadyState: true}, raw: true})
-      .then(async roomTeams => {
-        if (roomTeams.length == 0)
-          return false
-        else
-          return true
+  async function getCanStartGameMessage() {
+    let message = "true";
+    await RoomTeam.findAll({
+      where: { Room_Id: session.roomId },
+      raw: true
+    })
+      .then(roomTeams => {
+        // создатель считается за команду с Team_Id -1
+        if (roomTeams.length == 1) message = "noTeams";
+        else if (
+          roomTeams.filter(
+            roomTeam => roomTeam.ReadyState == false && roomTeam.Team_Id > 0
+          ).length > 0
+        )
+          message = "teamsNotReady";
       })
-      .catch(err => {
-        console.log(err)
-        return false;
-      });
+      .catch(err => console.log(err));
+    console.log({ message });
+    return message;
   }
 
-  socket.on('getCanStartGame', async function() {
-    console.log(await getCanStartGame());
+  socket.on("getCanStartGame", async function() {
     if (session.isRoomCreator)
-      socket.emit('reciveCanStartGame', await getCanStartGame());
+      socket.emit("receiveCanStartGame", await getCanStartGameMessage());
   });
 
   socket.on("writeOffers", async offerIds => {
@@ -75,15 +77,12 @@ function NewGamePlayGeneration(socket, io) {
                   Answer_Id: offerId
                 }).catch(err => console.log(err));
               }
-              // .then(async () => {
               await RoomOfferAnswer.findAll({
                 where: {
                   RoomTeam_Id: roomTeam.RoomTeamId
                 },
                 raw: true
               }).then(async roomOfferAnswers => {
-                // roomPlayer answerid roomteamid
-                // OFFERS == ANSWER_IDS ARRAY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 console.log({ roomOfferAnswers });
                 let usersOffers = [];
 
@@ -101,7 +100,6 @@ function NewGamePlayGeneration(socket, io) {
                     };
                   }
                 );
-                // найти все ответы для определенного roomPlayerId в roomOfferAnswers
                 console.log("RoomPlayersOffers");
                 console.log(
                   util.inspect(roomPlayersOffers, {
@@ -162,9 +160,6 @@ function NewGamePlayGeneration(socket, io) {
                   );
                 });
               });
-              // })
-              // .catch(err => console.log(err));
-              // }
             })
             .catch(err => console.log(err));
           console.log("offersUsers");
@@ -174,8 +169,10 @@ function NewGamePlayGeneration(socket, io) {
               depth: null
             })
           );
-          // TODO: emit to somebody?
-          socket.emit("sendOffersChanges", usersFioOffers);
+          io.to(`RoomPlayers${session.roomId}`).emit(
+            "sendOffersChanges",
+            usersFioOffers
+          );
         })
         .catch(err => console.log(err));
     }
@@ -185,11 +182,11 @@ function NewGamePlayGeneration(socket, io) {
     io.to(`RoomPlayers${session.roomId}`).emit("GamePreparationTick", current);
   });
 
-  socket.on("StopGamePreparationTick", () => {
+  socket.on("StopGamePreparation", () => {
     if (session.isRoomCreator)
       io.to(`RoomPlayers${session.roomId}`).emit("StopGamePreparationTick");
   });
- 
+
   socket.on("RemoveGamePlayStructure", (roomId, gameId) => {
     GamePlayStructure.Remove(session);
   });
@@ -242,10 +239,6 @@ function NewGamePlayGeneration(socket, io) {
       })
       .catch(err => console.log(err));
   });
-}
-
-function getUnixTime() {
-  return Math.floor(new Date() / 1000);
 }
 
 module.exports = NewGamePlayGeneration;

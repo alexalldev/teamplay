@@ -21,12 +21,13 @@ $(document).ready(function() {
   $(".btnStartGame").click(async () => {
     const roomId = $(".btnStartGame").attr("roomId");
     let current = 3;
-    let isTeamsReady = true;
+
+    socket.emit("getCanStartGame");
 
     function PrepareGameTimer() {
       socket.emit("GamePreparation", current);
       $(".startGameFrom").html(`Начало игры через ${current} c.`);
-      if (current == 0) {
+      if (current < 1) {
         socket.emit("gameStarted", roomId);
         $(".cancelRow").remove();
         $(".btnStartGame").remove();
@@ -36,59 +37,52 @@ $(document).ready(function() {
     }
 
     function StartPreparation() {
-      socket.emit('getCanStartGame');
+      $(".roomActions").after(`
+      <div class="row cancelRow">
+        <div class="col-md-12 text-center mb-2">
+        <label class="h5">Отмена</label>
+        <button
+          class="btn btn-warning btnStartGame mr-3"
+          onclick="cancelGame(${roomId})">
+          <i class="fas fa-ban"></i>
+        </button>
+        <span class="h4 startGameFrom"></span>
+        </div>
+      </div>`);
+      PrepareGameTimer();
+      window.PrepareGameTimer = setInterval(PrepareGameTimer, 1000);
     }
 
-    socket.on('reciveCanStartGame', function(state) {
-      if (state)
-      {
-        $(".roomActions").after(`
-        <div class="row cancelRow">
-          <div class="col-md-12 text-center mb-2">
-          <label class="h5">Отмена</label>
-          <button
-            class="btn btn-warning btnStartGame mr-3"
-            onclick="cancelGame(${roomId})">
-            <i class="fas fa-ban"></i>
-          </button>
-          <span class="h4 startGameFrom"></span>
-          </div>
-        </div>`);
-        PrepareGameTimer();
-        window.PrepareGameTimer = setInterval(PrepareGameTimer, 1000);
-      }
-      else
-        Swal.fire('', 'Сейчас вы не можете начать игру', 'warning');
-    });
-
-    console.log({ groups: $(".group > .team-readyState") });
-
-
-    await $(".group > .team-readyState").each(function(i) {
-      if ($(this).attr("readyState") == false) {
-        console.log({ readyState: $(this).attr("readyState") });
-        isTeamsReady = false;
-        return false;
-      }
-    });
-    console.log({ isTeamsReady });
-    if (!isTeamsReady)
-      Swal.fire({
-        title: "Вы уверены, что хотите начать игру?",
-        text: "Не все команды еще готовы!",
-        type: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Да"
-      }).then(result => {
-        if (result.value) {
+    socket.on("receiveCanStartGame", function(message) {
+      console.log({ message });
+      switch (message) {
+        case "true":
           StartPreparation();
-        }
-      });
-    else if (isTeamsReady) {
-      StartPreparation();
-    }
+          break;
+        case "noTeams":
+          Swal.fire(
+            "В комнате нет ни одной команды",
+            "Сейчас вы не можете начать игру",
+            "warning"
+          );
+          break;
+        case "teamsNotReady":
+          Swal.fire({
+            title: "Не все команды еще готовы!",
+            text: "Вы уверены, что хотите начать игру?",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Да"
+          }).then(result => {
+            if (result.value) {
+              StartPreparation();
+            }
+          });
+          break;
+      }
+    });
   });
 
   $(".btnGroupReady").click(() => {
@@ -112,6 +106,19 @@ function CreateGroup(player) {
 socket.on(
   "sendQuestion",
   (question, answers, type, isRoomCreator, categoryName) => {
+    let answerTime = question.AnswerTime;
+    function NextQuestionTimer() {
+      $(".startGameFrom").html(`Начало игры через ${answerTime} c.`);
+      if (answerTime < 1) {
+        socket.emit("checkAnswers");
+        clearInterval(window.NextQuestionTimer);
+      }
+      answerTime--;
+    }
+
+    NextQuestionTimer();
+    window.NextQuestionTimer = setInterval(NextQuestionTimer, 1000);
+
     $(".QuestionArea").html(
       `<div class="row"><div class="col-md-12 text-center mb-2 CategoryName">${categoryName}</div></div> 
     ${question.QuestionText}
@@ -122,6 +129,7 @@ socket.on(
     }
   `
     );
+    $(".answers-form").empty();
     for (const answer of answers) {
       $(".answers-form").append(
         `<div class="row">
@@ -145,13 +153,6 @@ socket.on(
       </div>`
       );
     }
-    $(".answers-form").append(
-      `${
-        !isRoomCreator
-          ? `<button class="btn btn-primary" onclick="sendAnswer()">Выбрать</button>`
-          : ``
-      }`
-    );
   }
 );
 
@@ -205,7 +206,6 @@ async function isTeamInRoom(player) {
 }
 
 function AddPlayerToGroup(player) {
-  // TODO: кнопка Команда готова -> Отмена
   $(`.group-players-${player.TeamId}`).append(
     `<div class="row Player Player-${player.RoomPlayersId} mt-2 mb-2 ">	
 		<div class="col-md-12 text-left">
@@ -251,10 +251,11 @@ socket.on("MyGroupReadyState", function(status) {
     <span>Команда готова!</span>
       </div>`);
   }
-})
+});
 
 socket.on("GamePreparationTick", current => {
   console.log({ current });
+  console.log({ timer: window.PrepareGameTimer });
   $(".GamePreparationTimer").remove();
   $("body").append(`<div class="GamePreparationTimer"></div>`);
   $(".GamePreparationTimer").html(`Игра начнется через ${current} с.`);
@@ -262,6 +263,7 @@ socket.on("GamePreparationTick", current => {
 });
 
 socket.on("StopGamePreparationTick", () => {
+  clearInterval(window.PrepareGameTimer);
   $(".GamePreparationTimer").remove();
 });
 
@@ -304,8 +306,9 @@ socket.on("NewRoomGroupCoach", function(roomPlayer) {
 });
 
 function cancelGame(roomId) {
+  console.log("game canceled");
   $(".cancelRow").remove();
   $(".GamePreparationTimer").remove();
   clearInterval(window.PrepareGameTimer);
-   socket.emit("StopGamePreparationTick");
+  socket.emit("StopGamePreparation");
 }

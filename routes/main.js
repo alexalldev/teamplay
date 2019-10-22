@@ -781,7 +781,7 @@ router.get("/Room/:GameTag", app.protect, function(req, res) {
                 }
                 return res.render("info", {
                   message:
-                    "Игра уже идет. Дождитесь окночания и подключитесь позже."
+                    "Игра уже идет. Дождитесь окончания и подключитесь позже."
                 });
               })
               .catch(err => res.end(JSON.stringify(err)));
