@@ -376,16 +376,7 @@ function NewGamePlayGeneration(socket, io) {
                 const userTeamNamePoints = teamNamesPoints.find(
                   teamNamePoints => teamNamePoints.Team_Id == roomTeam.Team_Id
                 );
-                // console.log({ userTeamNamePoints });
-                // console.log({ teamNamesPoints });
-                // io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
-                //   "BreakBetweenQuestions",
-                //   answers.filter(answer => answer.Correct),
-                //   teamNamesPoints,
-                //   userTeamNamePoints,
-                //   roomTeam.Points
-                // );
-                console.log(`emit to RoomTeam${roomTeam.RoomTeamId}`);
+
                 io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
                   "BreakBetweenQuestions",
                   answers.filter(answer => answer.Correct),
@@ -574,7 +565,9 @@ function NewGamePlayGeneration(socket, io) {
           //     depth: null
           //   })
           // );
-          io.to(`RoomTeam${session.roomTeamId}`).emit(
+          console.log({ session });
+          console.log(`session emit to RoomTeam ${roomTeam.RoomTeamId}`);
+          io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
             "sendOffersChanges",
             usersFioOffers
           );

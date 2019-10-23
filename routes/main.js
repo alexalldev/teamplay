@@ -421,10 +421,10 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                               },
                                               raw: true
                                             })
-                                              .then(([roomTeam, created]) => {
+                                              .then(([roomTeam2, created]) => {
                                                 if (created) {
                                                   req.session.roomTeamId =
-                                                    roomTeam.RoomTeamId;
+                                                    roomTeam2.RoomTeamId;
                                                   req.session.isGroupCoach =
                                                     createdRoomPlayer.isGroupCoach;
                                                 }
@@ -447,15 +447,9 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                                   roomPlayer:
                                                     createdRoomPlayer.dataValues,
                                                   readyState:
-                                                    roomTeam.ReadyState,
+                                                    roomTeam2.ReadyState,
                                                   wasGameStarted: !!gamePlay
                                                 });
-                                                player.RoomTeamId =
-                                                  req.session.roomTeamId;
-                                                // })
-                                                // .catch(err =>
-                                                //   console.log(err)
-                                                // );
                                               })
                                               .catch(err => console.log(err));
                                           })
@@ -531,7 +525,7 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
 router.get("/leaveRoom", app.protect, function(req, res) {
   if (req.session.roomId)
     Room.findOne({ where: { RoomId: req.session.roomId }, raw: true })
-      .then( async room => {
+      .then(async room => {
         if (room)
           //         GamePlay.findOne({
           //   where: { Room_Id: room.RoomId, Game_Id: room.Game_Id }

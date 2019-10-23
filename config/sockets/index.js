@@ -155,6 +155,10 @@ io.on("connection", function(socket) {
       io.to(`RoomUsers${session.roomId}`).emit("RecieveCreatorStatus", true);
     } else {
       socket.join(`RoomTeam${session.roomTeamId}`);
+      console.log({
+        id: session.roomTeamId,
+        roomPlayer: session.roomPlayersId
+      });
       if (session.isGroupCoach) socket.join(`RoomTeamCoaches${session.roomId}`);
       socket.join(`RoomPlayers${session.roomId}`);
     }
