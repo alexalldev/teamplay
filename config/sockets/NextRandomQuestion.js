@@ -9,32 +9,13 @@ const GamePlayQuestion = require("../../models/GamePlayQuestion");
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
-let TIMERS = [];
-function createAnsweringTimer(answerTime) {
-  let timer = {
-    timer: setTimeout(answerTime, function() {
-      // подвести резы, кто верно кто нет
-      // вернуть
-      // в ранд месте 0 туда + поинты
-      // нованя таблица рейтингов
-      // выдать правильные ответы
-      // вывести
-      // вывести просто правильный ответ через двоеточие
-      // поставить поинты
-      // отправить поинты
-      // таблицу с промежуточными результами
-      // вызвать таймер на 5 секунд
-      // перед каждым таймером проверить не закончились ли вопросы
-      // по окончанию ансвер таймера удалить его из базы
-    }),
-    roomId
-  };
-  TIMERS.push(timer);
-}
 
-function getTimer(roomId) {}
-
-module.exports = async function NextRandomQuestion(socket, io, session) {
+module.exports = async function NextRandomQuestion(
+  socket,
+  io,
+  session,
+  callback
+) {
   await Room.findOne({ where: { RoomId: session.roomId }, raw: true })
     .then(room => {
       GamePlay.findOne({
@@ -86,6 +67,10 @@ module.exports = async function NextRandomQuestion(socket, io, session) {
                                     session.GamePlayId =
                                       gamePlay.dataValues.GamePlayId;
                                     if (answers.length == 1) type = "text";
+                                    callback(
+                                      question.AnswerTime,
+                                      session.roomId
+                                    );
                                     io.to(`RoomPlayers${session.roomId}`).emit(
                                       "sendQuestion",
                                       question.dataValues,

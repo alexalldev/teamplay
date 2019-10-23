@@ -54,7 +54,6 @@ $(document).ready(function() {
     }
 
     socket.on("receiveCanStartGame", function(message) {
-      console.log({ message });
       switch (message) {
         case "true":
           StartPreparation();
@@ -102,22 +101,55 @@ function CreateGroup(player) {
   );
   socket.emit("getGroupStatus", player);
 }
+//  Надо передать сюда результаты: команды и их тимпоинты
+socket.on("end game", () => {
+  $("body").append("this game ended");
+});
+
+socket.on(
+  "BreakBetweenQuestions",
+  (correctAnswers, teamNamesPoints, userTeamNamePoints, addedPoints) => {
+    $(".answers-form").empty();
+    $(".answers-form").append(
+      `<div class="row">
+        <div class="col-md-12 text-center mb-2">
+        ${
+          addedPoints
+            ? `Вы ответили верно +${addedPoints}`
+            : "Вы ответили неверно"
+        }
+        </div>
+      </div>
+      <div class="row">
+      <div class="col-md-12 text-center mb-2">
+    ${
+      correctAnswers.length > 1 ? "Правильные ответы" : "Правильный ответ"
+    }: ${correctAnswers
+        .map(correctAnswer => correctAnswer.AnswerText)
+        .join("; ")}
+      </div>
+    </div>`
+    );
+    for (const teamNamePoints of teamNamesPoints) {
+      $(".answers-form").append(
+        `<div class="row">
+        <div class="col-md-12 text-center mb-2">
+          ${teamNamePoints.TeamName} - ${teamNamePoints.Points} ${
+          teamNamePoints.Team_Id == userTeamNamePoints.Team_Id
+            ? ` (Ваша команда)`
+            : ``
+        }
+        </div>
+      </div>`
+      );
+    }
+  }
+);
 
 socket.on(
   "sendQuestion",
   (question, answers, type, isRoomCreator, categoryName) => {
     let answerTime = question.AnswerTime;
-    function NextQuestionTimer() {
-      $(".startGameFrom").html(`Начало игры через ${answerTime} c.`);
-      if (answerTime < 1) {
-        socket.emit("checkAnswers");
-        clearInterval(window.NextQuestionTimer);
-      }
-      answerTime--;
-    }
-
-    NextQuestionTimer();
-    window.NextQuestionTimer = setInterval(NextQuestionTimer, 1000);
 
     $(".QuestionArea").html(
       `<div class="row"><div class="col-md-12 text-center mb-2 CategoryName">${categoryName}</div></div> 
@@ -173,19 +205,22 @@ async function chooseAnswer(elemClass) {
   socket.emit("writeOffers", offerAnswerIds);
 }
 
-socket.on("sendOffersChanges", usersFioOffers => {
-  //надо из offers достатать похожие для пользователей и вывести их туда
-  console.log({ usersFioOffers });
+socket.on("sendOffersChanges", async usersFioOffers => {
+  //TODO: при определенном большом количестве пользователей не делать append
+  // и после последнего такого пользователя выводить три точки, и добавить
+  //подсказку для этого блока при наведению на которую будут показываться все пользователи
+
+  // Очищаем все
+  await $("[answerid]").each(function(index) {
+    $(this).val("");
+  });
+
+  // Добавляем все новые
   for (const user of usersFioOffers) {
     for (const offer of user.Offers) {
       $(`.whoAnswered-answer-${offer}`).append(`${user.UserFIO}`);
     }
   }
-  // for (const userFioOffers of usersFioOffers) {
-  //   $(`.whoAnswered-answer-${offerUser.offerId}`).html(
-  //     offerUser.usersWhoOffered.join(", ")
-  //   );
-  // }
 });
 
 socket.on("sendGroupStatus", (teamId, status) => {
@@ -254,16 +289,18 @@ socket.on("MyGroupReadyState", function(status) {
 });
 
 socket.on("GamePreparationTick", current => {
-  console.log({ current });
-  console.log({ timer: window.PrepareGameTimer });
   $(".GamePreparationTimer").remove();
   $("body").append(`<div class="GamePreparationTimer"></div>`);
   $(".GamePreparationTimer").html(`Игра начнется через ${current} с.`);
-  if (current == 0) $(".GamePreparationTimer").remove();
+  if (current == 0) {
+    $(".btnGroupReady").remove();
+    $(".GamePreparationTimer").remove();
+  }
 });
 
 socket.on("StopGamePreparationTick", () => {
   clearInterval(window.PrepareGameTimer);
+  $(".btnGroupReady").remove();
   $(".GamePreparationTimer").remove();
 });
 
@@ -306,9 +343,6 @@ socket.on("NewRoomGroupCoach", function(roomPlayer) {
 });
 
 function cancelGame(roomId) {
-  console.log("game canceled");
   $(".cancelRow").remove();
-  $(".GamePreparationTimer").remove();
-  clearInterval(window.PrepareGameTimer);
   socket.emit("StopGamePreparation");
 }

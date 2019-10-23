@@ -1,82 +1,67 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8" />
-    <title>TeamPlay Room</title>
-    <link rel="stylesheet" href="/public/css/room.css" />
-    <% include blocks/title %>
-  </head>
 
-  <body>
-    <% include blocks/loader %> <% include blocks/header %>
-    <section class="app-container">
-      <div class="organizer">
-        <span class="organizer-connection" connection="false">•</span>
-        <img class="user_organizer" src="/public/user_organizer.png" alt="" />
-        <span class="organizer_name"></span>
-      </div>
-      <div class="container">
-        <div class="row">
-          <div class="col-md-12 text-center">
-            <h1 id="RoomName"><%= room.RoomName %></h1>
-          </div>
+<head>
+  <meta charset="utf-8" />
+  <title>TeamPlay Room</title>
+  <link rel="stylesheet" href="/public/css/room.css" />
+  <% include blocks/title %>
+</head>
+
+<body>
+  <% include blocks/loader %> <% include blocks/header %>
+  <section class="app-container">
+    <div class="organizer">
+      <span class="organizer-connection" connection="false">•</span>
+      <img class="user_organizer" src="/public/user_organizer.png" alt="" />
+      <span class="organizer_name"></span>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h1 id="RoomName"><%= room.RoomName %></h1>
         </div>
-        <% if(roomPlayer.isRoomCreator == true) {%>
-        <div class="row roomActions">
-          <div class="col-md-12 text-center mb-2">
-            <% if (!wasGameStarted) {%>
-            <!-- бутстрап?? в плане mr-sm-5 и mr-2 -->
-            <button
-              class="btn btn-success btnStartGame mr-sm-5 mr-2 mb-2"
-              roomId="<%= room.RoomId %>"
-            >
-              <i class="fas fa-flag-checkered mr-2"></i
-              ><span class="h5">Начать игру</span>
-            </button>
-            <button
-              class="btn btn-danger btnRemoveRoom mb-2"
-              roomId="<%= room.RoomId %>"
-            >
-              <i class="fa fa-trash text-white mr-2"></i
-              ><span class="h5">Удалить комнату</span>
-            </button>
-            <% } else if (wasGameStarted) {%>
-            <button
-              class="btn btn-danger btnFinishGame mb-2"
-              roomId="<%= room.RoomId %>"
-            >
-              <i class="fas fa-ban mr-1"></i
-              ><span class="h5">Завершить игру</span>
-            </button>
-            <%}%>
+      </div>
+      <% if(roomPlayer.isRoomCreator == true) {%>
+      <div class="row roomActions">
+        <div class="col-md-12 text-center mb-2">
+          <% if (!wasGameStarted) {%>
+          <!-- бутстрап?? в плане mr-sm-5 и mr-2 -->
+          <button class="btn btn-success btnStartGame mr-sm-5 mr-2 mb-2" roomId="<%= room.RoomId %>">
+            <i class="fas fa-flag-checkered mr-2"></i><span class="h5">Начать игру</span>
+          </button>
+          <button class="btn btn-danger btnRemoveRoom mb-2" roomId="<%= room.RoomId %>">
+            <i class="fa fa-trash text-white mr-2"></i><span class="h5">Удалить комнату</span>
+          </button>
+          <% } else if (wasGameStarted) {%>
+          <button class="btn btn-danger btnFinishGame mb-2" roomId="<%= room.RoomId %>">
+            <i class="fas fa-ban mr-1"></i><span class="h5">Завершить игру</span>
+          </button>
+          <%}%>
           </div>
         </div>
         <div class="row">
           <div class="col-md-12 text-center"></div>
         </div>
-        <%} else if (roomPlayer.isGroupCoach) { %> <%if (!wasGameStarted) {%>
-        <div class="row">
-          <div class="col-md-12 text-center mb-2">
-            <%if (readyState == true) {%>
-            <button
-              class="btn btn-danger btnGroupReady"
-              teamId="<%= roomPlayer.Team_Id%>"
-            >
-              <i class="far fa-times-circle pr-1"></i>
-              <span>Отмена</span>
-            </button>
+        <%} else if (roomPlayer.isGroupCoach) { %>
+          <%if (!wasGameStarted) {%>
+          <div class="row">
+            <div class="col-md-12 text-center mb-2">
+              <%if (readyState == true) {%>
+              <button class="btn btn-danger btnGroupReady" teamId="<%= roomPlayer.Team_Id%>">
+                <i class="far fa-times-circle pr-1"></i>
+                <span>Отмена</span>
+              </button>
+            </div>
           </div>
-        </div>
-        <%} else {%>
-        <button
-          class="btn btn-success btnGroupReady"
-          teamId="<%= roomPlayer.Team_Id %>"
-        >
-          <i class="far fa-check-circle pr-1"></i>
-          <span>Команда готова!</span>
-        </button>
-
-        <%}%> <%}%> <%}%>
+          <%} else {%>
+          <button class="btn btn-success btnGroupReady" teamId="<%= roomPlayer.Team_Id %>">
+            <i class="far fa-check-circle pr-1"></i>
+            <span>Команда готова!</span>
+          </button>
+          <%}%> 
+          <%}%>
+          <%}%>
         <div class="row">
           <div class="col-md-12 text-center mb-2">
             <div class="QuestionArea"></div>
@@ -84,14 +69,15 @@
         </div>
         <div class="answers-form"></div>
         <%if (!wasGameStarted || roomPlayer.isRoomCreator) {%>
-        <div class="row group-list text-center"></div>
-        <%} else if (wasGameStarted) {%> <%# выводить сюда только одну команду
+          <div class="row group-list text-center"></div>
+          <%} else if (wasGameStarted) {%> <%# выводить сюда только одну команду
         пользователя%> <%}%>
       </div>
     </section>
     <% include blocks/footer %>
-  </body>
-  <% include blocks/socket %>
-  <script src="/public/js/animateCSS.js"></script>
-  <script src="/public/js/room.js"></script>
+</body>
+<% include blocks/socket %>
+<script src="/public/js/animateCSS.js"></script>
+<script src="/public/js/room.js"></script>
+
 </html>

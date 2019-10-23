@@ -7,6 +7,10 @@ const RoomTeam = db.define("room_team", {
     autoIncrement: true,
     primaryKey: true
   },
+  Points: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0
+  },
   ReadyState: {
     type: Sequelize.BOOLEAN,
     defaultValue: false
