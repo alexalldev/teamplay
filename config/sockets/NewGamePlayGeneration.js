@@ -153,9 +153,9 @@ function NewGamePlayGeneration(socket, io) {
                 }
               })
                 .then(async gamePlayQuestion => {
-                  console.log({
-                    idToDestroy: gamePlayQuestion.Question_Id
-                  });
+                  // console.log({
+                  //   idToDestroy: gamePlayQuestion.Question_Id
+                  // });
 
                   await gamePlayQuestion
                     .destroy()
@@ -567,13 +567,13 @@ function NewGamePlayGeneration(socket, io) {
               });
             })
             .catch(err => console.log(err));
-          console.log("offersUsers");
-          console.log(
-            util.inspect(usersFioOffers, {
-              showHidden: false,
-              depth: null
-            })
-          );
+          // console.log("offersUsers");
+          // console.log(
+          //   util.inspect(usersFioOffers, {
+          //     showHidden: false,
+          //     depth: null
+          //   })
+          // );
           io.to(`RoomTeam${session.roomTeamId}`).emit(
             "sendOffersChanges",
             usersFioOffers
