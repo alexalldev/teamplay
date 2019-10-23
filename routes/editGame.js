@@ -322,4 +322,28 @@ router.post("/UpdateQuestion", urlencodedParser, function(req, res) {
   });
 });
 
+router.post('/RemoveQuestionImage', function (req, res) {
+  console.log(req.body);
+  Question.findOne({ where: { QuestionId: req.body.questionId }, raw: true })
+  .then(question => {
+    Category.findOne({where: {CategoryId: question.Category_Id}, raw: true})
+    .then(category => {
+      Game.findOne({where: {QuizCreatorId: req.session.passport.user, GameId: category.Game_Id}, raw: true})
+      .then(game => {
+        if (game) {
+          Question.RemoveQuestionImage(req.body.questionId, function() {
+            res.end('true');
+          });
+        }
+        else {
+          res.end('false');
+        }
+      })
+      .catch(err => res.end(JSON.stringify(err)));
+    })
+    .catch(err => res.end(JSON.stringify(err)));
+  })
+  .catch(err => res.end(JSON.stringify(err)));
+})
+
 module.exports = router;

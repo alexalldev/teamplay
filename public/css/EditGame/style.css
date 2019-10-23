@@ -4,6 +4,12 @@
     border-radius: 10px;
 }
 
+.btnDeleteQuestionImage {
+    position: absolute;
+    top: 0;
+    right: 44%;
+}
+
 .alert
 {
     cursor: pointer;

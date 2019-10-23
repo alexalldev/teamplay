@@ -358,10 +358,12 @@ function OpenQuestion(questionId) {
   // Сработает один раз для одного вопроса
   if (!$(".AnswersList").is(`.AnswersList-${questionId}`)) {
     const ImgSrc = $(`.Question-${questionId}`).attr("ImgSrc");
+    console.log(ImgSrc);
     $(`.QuestionsContainer-${questionId}`).append(
       `<div class="collapse m-2 AnswersList AnswersList-${questionId}">\
             <div class="row mb-2">\
                 <div class="col-md-12 text-center">\
+                <button class="btn btn-outline-secondary btnDeleteQuestionImage" onclick="RemoveQuestionImage(${questionId})"><i class="fa fa-trash"></i></button>
                     <img src="${ImgSrc}" class="QuestionImage QuestionImage-${questionId}" alt="">\
                 </div>\
             </div>\
@@ -472,6 +474,37 @@ function RemoveQuestion(questionId) {
               }
             );
           } else alert(data);
+        },
+        error(xhr, str) {
+          alert(`Возникла ошибка: ${xhr.responseCode}`);
+        }
+      });
+    }
+  });
+}
+
+function RemoveQuestionImage(questionId) {
+  Swal({
+    title: "Удаление изображения",
+    text: "Удалить изображение?",
+    type: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#6699FF",
+    confirmButtonText: "Yes"
+  }).then(result => {
+    if (result.value) {
+      $.ajax({
+        type: "POST",
+        url: "RemoveQuestionImage",
+        data: { questionId: questionId },
+        dataType: "text",
+        success(data) {
+          if (data == "true") {
+            $(`.QuestionImage-${questionId}"`).animate({ opacity: 0 }, 50, function() {
+              $(`.QuestionImage-${questionId}"`).remove();
+            });
+          }
         },
         error(xhr, str) {
           alert(`Возникла ошибка: ${xhr.responseCode}`);
