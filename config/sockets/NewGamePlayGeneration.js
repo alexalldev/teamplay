@@ -241,17 +241,6 @@ function NewGamePlayGeneration(socket, io) {
     return sortedTeamNamesPoints;
   }
 
-  /* Сейчас:
-    checkAnswers() Ответы на чекбоксы для определенной команды, находится по сессии -> roomTeam по roomId and Team_Id,
-    эта roomTeam используется чтобы найти все room_offer_answers
-    setTeamsPoints() поинты за них
-    и в таймере вызвать по gamePlayId, найденого по уникальному для него roomId, destroy() room_offers_answers
-    Финальная таблица: рум тимы и их поинты
-    Ошибка при конце игры: ищет уже несуществующий вопрос */
-
-  // TODO: добавить поддержку для нескольких ответов
-  // TODO: дестрой по геймплею !!!!!!!!!!!!!!!!!!!!!!
-  // и офферы пока что не ищутся нормально по roomTeamId, но roomTeam существует, потому что оно creatora
   async function checkAnswers(roomTeamId) {
     let result = true;
     // console.log({ session });
@@ -398,20 +387,6 @@ function NewGamePlayGeneration(socket, io) {
   function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
   }
-
-  // подвести резы, кто верно кто нет
-  // вернуть
-  // в ранд месте 0 туда + поинты
-  // нованя таблица рейтингов
-  // выдать правильные ответы
-  // вывести
-  // вывести просто правильный ответ через двоеточие
-  // поставить поинты
-  // отправить поинты
-  // таблицу с промежуточными результами
-  // вызвать таймер на 5 секунд
-  // перед каждым таймером проверить не закончились ли вопросы
-  // по окончанию ансвер таймера удалить его из базы
 
   function getTimer(roomId) {}
 

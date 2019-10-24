@@ -116,7 +116,6 @@ function SelectTeam(teamId) {
   $(".row-team-" + teamId).addClass("table-success");
 }
 function AddRowTeam(team) {
-  console.log({ team });
   $(".table-teams-rating").append(
     '<tr class="row-team row-team-' +
       team.TeamId +
@@ -188,7 +187,6 @@ socket.on(
   <tbody class="table-teams-rating"></tbody>`);
 
     for (const teamNamePoints of teamNamesPoints) {
-      console.log({ teamNamePoints });
       AddRowTeam(teamNamePoints);
     }
     SelectTeam(userTeamNamePoints.TeamId);
@@ -215,16 +213,16 @@ socket.on(
     for (const answer of answers) {
       $(".answers-form").append(
         `<div class="row">
-      <div class="col-md-12 text-center mb-2">
+      <div class="col-md-12 text-center mb-2 answer answer-${answer.AnswerId}">
       ${
         isRoomCreator
           ? `Правильный ответ: <span>${answer.AnswerText}</span>`
           : `${
               type == "checkbox"
-                ? `<button answerId="${answer.AnswerId}" class="alert alert-info answer answer-${answer.AnswerId}" onclick="chooseAnswer('answer-${answer.AnswerId}')">
-          ${answer.AnswerText}
-         </button>
-         <div class="col-md-12 text-center mb-2 whoAnswered-answer-${answer.AnswerId}">
+                ? `<button answerId="${answer.AnswerId}" class="alert alert-info answerButton" onclick="chooseAnswer('answer-${answer.AnswerId}')">
+                ${answer.AnswerText}
+                </button>
+         <div class="col-md-12 text-center mb-2 whoAnswered"></div>
          `
                 : `<input type="text" answerId="${answer.AnswerId}" class="form-control text-left answer">`
             }
@@ -238,37 +236,39 @@ socket.on(
   }
 );
 
-async function chooseAnswer(elemClass) {
+async function chooseAnswer(answerIdClass) {
   let offerAnswerIds = [];
-  if ($(`.${elemClass}`).hasClass("alert-info")) {
-    $(`.${elemClass}`)
+  const answerButton = $(`.${answerIdClass} > .answerButton`);
+  if (answerButton.hasClass("alert-info")) {
+    answerButton
       .removeClass("alert-info")
       .addClass(`alert-primary chosen-answer`);
-  } else if ($(`.${elemClass}`).hasClass("alert-primary")) {
-    $(`.${elemClass}`)
+  } else if (answerButton.hasClass("alert-primary")) {
+    answerButton
       .removeClass(`alert-primary chosen-answer`)
       .addClass("alert-info");
   }
+  //Stopped here: fixing appends
   await $(".chosen-answer").each(function(i) {
     offerAnswerIds.push($(this).attr("answerId"));
   });
   socket.emit("writeOffers", offerAnswerIds);
 }
 
-socket.on("sendOffersChanges", async usersFioOffers => {
+socket.on("sendOffersChanges", usersFioOffers => {
   //TODO: при определенном большом количестве пользователей не делать append
   // и после последнего такого пользователя выводить три точки, и добавить
   //подсказку для этого блока при наведению на которую будут показываться все пользователи
 
   // Очищаем все
-  await $("[answerid]").each(function(index) {
-    $(this).val("");
+  $(".whoAnswered").each(function(index) {
+    $(this).empty();
   });
 
   // Добавляем все новые
   for (const user of usersFioOffers) {
-    for (const offer of user.Offers) {
-      $(`.whoAnswered-answer-${offer}`).append(`${user.UserFIO}`);
+    for (const offerAnswerId of user.Offers) {
+      $(`.answer-${offerAnswerId} > .whoAnswered`).append(`${user.UserFIO}`);
     }
   }
 });
