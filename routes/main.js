@@ -326,6 +326,7 @@ router.get("/home", app.protect, function(req, res) {
 
 router.get("/room/:RoomTag", app.protect, function(req, res) {
   // TODO: возможно не уникальный рyм тег
+  console.log({tag: req.params.RoomTag})
   Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
     .then(room => {
       GamePlay.findOne({ where: { Room_Id: room.RoomId } })

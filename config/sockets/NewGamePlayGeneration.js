@@ -226,7 +226,7 @@ function NewGamePlayGeneration(socket, io) {
             // .filter заодно убирает команду -1 создателя, тк такой не существует
             sortedTeamNamesPoints = teams.map(team => {
               return {
-                Team_Id: team.TeamId,
+                TeamId: team.TeamId,
                 TeamName: team.TeamName,
                 Points: roomTeams
                   .filter(roomTeam => roomTeam.Team_Id == team.TeamId)
@@ -374,7 +374,7 @@ function NewGamePlayGeneration(socket, io) {
               // console.log({ teamNamesPoints, roomTeams });
               for await (const roomTeam of roomTeams) {
                 const userTeamNamePoints = teamNamesPoints.find(
-                  teamNamePoints => teamNamePoints.Team_Id == roomTeam.Team_Id
+                  teamNamePoints => teamNamePoints.TeamId == roomTeam.Team_Id
                 );
 
                 io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(

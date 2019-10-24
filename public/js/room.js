@@ -1,3 +1,14 @@
+function AddPoints(count, set = false) {
+  $(".AddPoints").css("opacity", 1);
+  $(".AddPoints").text("+" + count);
+  animateCSS(".AddPoints", "slideInUp", function() {
+    $(".AddPoints").css("opacity", 0);
+    $(".PointsCount").text(
+      !set ? Number($(".PointsCount").text()) + count : count
+    );
+  });
+}
+
 $(document).ready(function() {
   socket.emit("getCreatorStatus");
   socket.emit("getRoomPlayers");
@@ -90,6 +101,38 @@ $(document).ready(function() {
   });
 });
 
+function ClearRating() {
+  $(".table-hover").empty();
+  $(".table-teams-rating").fadeTo("slow", 0, function() {
+    $(".table-teams-rating").html("");
+    $(".table-teams-rating").css("opacity", 1);
+  });
+}
+
+function SelectTeam(teamId) {
+  $(".row-team").each(function(i) {
+    $(this).removeClass("table-success");
+  });
+  $(".row-team-" + teamId).addClass("table-success");
+}
+function AddRowTeam(team) {
+  console.log({ team });
+  $(".table-teams-rating").append(
+    '<tr class="row-team row-team-' +
+      team.TeamId +
+      '" teamId="' +
+      team.TeamId +
+      '">\
+      <td>' +
+      team.TeamName +
+      "</td>\
+      <td>" +
+      team.Points +
+      "</td>\
+  </tr>"
+  );
+}
+
 function CreateGroup(player) {
   $(".group-list").append(
     `<div class="group group-${player.TeamId} col-md-4 mr-1 mb-1" TeamId="${player.TeamId}">
@@ -109,6 +152,7 @@ socket.on("end game", () => {
 socket.on(
   "BreakBetweenQuestions",
   (correctAnswers, teamNamesPoints, userTeamNamePoints, addedPoints) => {
+    ClearRating();
     $(".answers-form").empty();
     $(".answers-form").append(
       `<div class="row">
@@ -130,26 +174,31 @@ socket.on(
       </div>
     </div>`
     );
-    for (const teamNamePoints of teamNamesPoints) {
-      $(".answers-form").append(
-        `<div class="row">
-        <div class="col-md-12 text-center mb-2">
-          ${teamNamePoints.TeamName} - ${teamNamePoints.Points} ${
-          teamNamePoints.Team_Id == userTeamNamePoints.Team_Id
-            ? ` (Ваша команда)`
-            : ``
-        }
-        </div>
-      </div>`
-      );
+    if (addedPoints) {
+      AddPoints(addedPoints);
     }
+    $(".table-hover").append(`<thead>
+    <th>
+      Команда
+    </th>
+    <th>
+      Очки
+    </th>
+  </thead>
+  <tbody class="table-teams-rating"></tbody>`);
+
+    for (const teamNamePoints of teamNamesPoints) {
+      console.log({ teamNamePoints });
+      AddRowTeam(teamNamePoints);
+    }
+    SelectTeam(userTeamNamePoints.TeamId);
   }
 );
 
 socket.on(
   "sendQuestion",
   (question, answers, type, isRoomCreator, categoryName) => {
-    let answerTime = question.AnswerTime;
+    startTimer(question.AnswerTime - 1);
 
     $(".QuestionArea").html(
       `<div class="row"><div class="col-md-12 text-center mb-2 CategoryName">${categoryName}</div></div> 
@@ -161,6 +210,7 @@ socket.on(
     }
   `
     );
+    ClearRating();
     $(".answers-form").empty();
     for (const answer of answers) {
       $(".answers-form").append(
