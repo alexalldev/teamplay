@@ -150,28 +150,15 @@ socket.on("end game", () => {
 
 socket.on(
   "BreakBetweenQuestions",
-  (correctAnswers, teamNamesPoints, userTeamNamePoints, addedPoints) => {
+  (teamNamesPoints, userTeamNamePoints, addedPoints) => {
     ClearRating();
     $(".answers-form").empty();
     $(".answers-form").append(
       `<div class="row">
         <div class="col-md-12 text-center mb-2">
-        ${
-          addedPoints
-            ? `Вы ответили верно +${addedPoints}`
-            : "Вы ответили неверно"
-        }
+        ${addedPoints ? "ВЕРНО" : "НЕВЕРНО"}
         </div>
-      </div>
-      <div class="row">
-      <div class="col-md-12 text-center mb-2">
-    ${
-      correctAnswers.length > 1 ? "Правильные ответы" : "Правильный ответ"
-    }: ${correctAnswers
-        .map(correctAnswer => correctAnswer.AnswerText)
-        .join("; ")}
-      </div>
-    </div>`
+      </div>`
     );
     if (addedPoints) {
       AddPoints(addedPoints);

@@ -328,22 +328,19 @@ function NewGamePlayGeneration(socket, io) {
     type,
     category
   ) {
-    // let addedPoints = 0;
     callback(question, answers, type, category);
     const answeringTimer = {
       timer: setTimeout(async function() {
         const checkingTimer = {
           timer: setTimeout(async function() {
             const canDelete = await DeleteGamePlayQuestion(category, question);
-            // console.log({ canDelete });
             if (canDelete) await NextRandomQuestion();
           }, 5 * 1000),
           roomId
         };
-        // проверяет ответы отдельной команды. Тк в сессии creatora
+        // проверяет ответы отдельной команды. Тк в сессии creator
         RoomTeam.findAll({ where: { Team_Id: { [Op.gt]: 0 } } })
           .then(async roomTeams => {
-            // console.log({ OpgtRoomTeam: roomTeams });
             if (roomTeams) {
               // TODO: позже попробовать переделать под Promise.all() и map()
               let teamIdsAddedPoints = {};
@@ -360,15 +357,13 @@ function NewGamePlayGeneration(socket, io) {
               }
 
               const teamNamesPoints = await GetTeamsPoints();
-              // console.log({ teamNamesPoints, roomTeams });
               for await (const roomTeam of roomTeams) {
                 const userTeamNamePoints = teamNamesPoints.find(
                   teamNamePoints => teamNamePoints.TeamId == roomTeam.Team_Id
                 );
-
+                //answers.filter(answer => answer.Correct),
                 io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
                   "BreakBetweenQuestions",
-                  answers.filter(answer => answer.Correct),
                   teamNamesPoints,
                   userTeamNamePoints,
                   teamIdsAddedPoints[roomTeam.Team_Id.toString()]
