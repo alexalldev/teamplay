@@ -206,7 +206,7 @@ function NewGamePlayGeneration(socket, io) {
       category.CategoryName
     );
   }
-  // TODO: поменять - при каждом запросе ищет все команды
+
   async function GetTeamsPoints() {
     let sortedTeamNamesPoints = [];
     await RoomTeam.findAll({
@@ -214,9 +214,6 @@ function NewGamePlayGeneration(socket, io) {
       raw: true
     })
       .then(async roomTeams => {
-        roomTeams.sort(function(a, b) {
-          return a.Points - b.Points;
-        });
         await Team.findAll({
           where: {
             TeamId: roomTeams.map(roomTeam => roomTeam.Team_Id)
@@ -224,18 +221,21 @@ function NewGamePlayGeneration(socket, io) {
         })
           .then(teams => {
             // .filter заодно убирает команду -1 создателя, тк такой не существует
-            sortedTeamNamesPoints = teams.map(team => {
-              return {
-                TeamId: team.TeamId,
-                TeamName: team.TeamName,
-                Points: roomTeams
-                  .filter(roomTeam => roomTeam.Team_Id == team.TeamId)
-                  .map(roomTeam => roomTeam.Points)[0]
-              };
-            });
+            sortedTeamNamesPoints = teams
+              .map(team => {
+                return {
+                  TeamId: team.TeamId,
+                  TeamName: team.TeamName,
+                  Points: roomTeams
+                    .filter(roomTeam => roomTeam.Team_Id == team.TeamId)
+                    .map(roomTeam => roomTeam.Points)[0]
+                };
+              })
+              .sort(function(a, b) {
+                return b.Points - a.Points;
+              });
           })
           .catch(err => console.log(err));
-        // console.log({ session });
       })
       .catch(err => console.log(err));
     return sortedTeamNamesPoints;
@@ -243,30 +243,17 @@ function NewGamePlayGeneration(socket, io) {
 
   async function checkAnswers(roomTeamId) {
     let result = true;
-    // console.log({ session });
-    // console.log({ id: roomTeamId });
-
     await RoomOfferAnswer.findAll({
       where: { RoomTeam_Id: roomTeamId },
       raw: true
     })
       .then(async roomOffersAnswers => {
-        // console.log({
-        //   offers: roomOffersAnswers,
-        //   roomOffersAnswers
-        // });
-        // console.log({
-        //   mapThis: roomOffersAnswers.map(
-        //     roomOfferAnswer => roomOfferAnswer.Answer_Id
-        //   )
-        // });
         if (roomOffersAnswers.length > 0) {
           console.log("it passed");
           const votesAnswers = roomOffersAnswers
             .map(roomOfferAnswer => {
               return {
                 Votes: roomOffersAnswers.filter(roomOfferAnswer2 => {
-                  // console.log({ roomOfferAnswer, roomOfferAnswer2 });
                   return (
                     roomOfferAnswer2.RoomPlayer_Id ==
                     roomOfferAnswer.RoomPlayer_Id
@@ -278,7 +265,6 @@ function NewGamePlayGeneration(socket, io) {
             .sort(function(a, b) {
               return b.Points - a.Points;
             });
-          // console.log({ votesAnswers });
           if (
             votesAnswers.length > 1 &&
             votesAnswers[0].Votes == votesAnswers[1].Votes
@@ -305,9 +291,6 @@ function NewGamePlayGeneration(socket, io) {
 
   async function NextRandomQuestion() {
     const { question, answers, type, category } = await GetRandomQuestion();
-    // console.log({ id: question.QuestionId });
-
-    // console.log({ sessionBeforeCreatingTimer: session });
     createAnsweringTimer(
       session.roomId,
       // function()
@@ -424,7 +407,6 @@ function NewGamePlayGeneration(socket, io) {
 
   socket.on("writeOffers", async offerIds => {
     let usersFioOffers = [];
-    // console.log({ session });
     if (offerIds) {
       await RoomTeam.findOne({
         where: { Room_Id: session.roomId, Team_Id: session.TeamId }
@@ -535,7 +517,6 @@ function NewGamePlayGeneration(socket, io) {
           //     depth: null
           //   })
           // );
-          console.log({ session });
           console.log(`session emit to RoomTeam ${roomTeam.RoomTeamId}`);
           io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
             "sendOffersChanges",
