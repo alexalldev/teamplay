@@ -300,7 +300,7 @@ function AddPlayerToGroup(player) {
             } ${player.UserName.slice(0, 1)}.${player.UserLastName.slice(
       0,
       1
-    )}    .</span>
+    )}.</span>
           <span class="isGroupCoach-${player.RoomPlayersId}">${
       player.isGroupCoach
         ? '<span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>'
