@@ -11,8 +11,10 @@ const {
     Category,
     Question,
     User,
-    Room
+    Room,
   } = require("../config/routers-config");
+
+const RoomPlayers = require('../models/RoomPlayer');
 
 router.get("/home", app.protect, function(req, res) {
   Game.findAll({

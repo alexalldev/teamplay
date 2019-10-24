@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-module.exports = new Sequelize('alexallr_teamplay_dev_host', 'alexallr_teamplay_dev_host', 'lHVhV%*-~^mI', {
+module.exports = new Sequelize('alexallr_teamplay_dev_host', 'alexallr_teamplay_dev_host', '7{l1zCM;d@Z_', {
   host: 'alexall.dev',
   dialect: 'mysql',
   logging: false,
