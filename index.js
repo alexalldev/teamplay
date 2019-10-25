@@ -55,6 +55,7 @@ app.use((req, res, next) => {
               where: { Room_Id: room.RoomId },
               raw: true
             }).then(roomPlayer => {
+              console.log({ roomPlayer });
               if (roomPlayer)
                 return res.render("info", {
                   message: "LEAVE_ROOM",

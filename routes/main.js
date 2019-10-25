@@ -59,25 +59,17 @@ router.get("/rooms", app.protect, function(req, res) {
                       roomCreatorId: userCreator.UserId,
                       roomTag: room.RoomTag,
                       maxTeamPlayers: room.RoomMaxTeamPlayers,
-                      usersOnline: NumRoomPlayers - roomCreator ? 1 : 0
+                      usersOnline: NumRoomPlayers - !!roomCreator
                     });
                   });
                 }
               })
               .catch(err => {
-                console.log({
-                  file: __filename,
-                  func: 'router.get("/rooms"), User.findOne',
-                  err
-                });
+                console.log(err);
               });
           })
           .catch(err => {
-            console.log({
-              file: __filename,
-              func: 'router.get("/rooms"), RoomPlayers.findAll',
-              err
-            });
+            console.log(err);
           });
       }
       Game.findAll({
@@ -326,7 +318,7 @@ router.get("/home", app.protect, function(req, res) {
 
 router.get("/room/:RoomTag", app.protect, function(req, res) {
   // TODO: возможно не уникальный рyм тег
-  console.log({tag: req.params.RoomTag})
+  console.log({ tag: req.params.RoomTag });
   Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
     .then(room => {
       GamePlay.findOne({ where: { Room_Id: room.RoomId } })
