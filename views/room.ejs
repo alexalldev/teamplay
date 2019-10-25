@@ -25,10 +25,9 @@
         </div>
       </div>
       <% if(roomPlayer.isRoomCreator == true) {%>
-      <div class="row roomActions">
-        <div class="col-md-12 text-center mb-2">
+      <div class="row">
+        <div class="col-md-12 text-center mb-2 roomActions">
           <% if (!wasGameStarted) {%>
-          <!-- бутстрап?? в плане mr-sm-5 и mr-2 -->
           <button class="btn btn-success btnStartGame mr-sm-5 mr-2 mb-2" roomId="<%= room.RoomId %>">
             <i class="fas fa-flag-checkered mr-2"></i><span class="h5">Начать игру</span>
           </button>
@@ -36,7 +35,7 @@
             <i class="fa fa-trash text-white mr-2"></i><span class="h5">Удалить комнату</span>
           </button>
           <% } else if (wasGameStarted) {%>
-          <button class="btn btn-danger btnFinishGame mb-2" roomId="<%= room.RoomId %>">
+          <button class="btn btn-danger btnFinishGame mb-2" onclick="FinishGame()" roomId="<%= room.RoomId %>">
             <i class="fas fa-ban mr-1"></i><span class="h5">Завершить игру</span>
           </button>
           <%}%>

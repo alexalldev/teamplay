@@ -40,8 +40,10 @@ $(document).ready(function() {
       $(".startGameFrom").html(`Начало игры через ${current} c.`);
       if (current < 1) {
         socket.emit("gameStarted", roomId);
-        $(".cancelRow").remove();
-        $(".btnStartGame").remove();
+        $(".roomActions").empty()
+          .append(`<button class="btn btn-danger btnFinishGame" onclick="FinishGame()" roomId="<%= room.RoomId %>">
+        <i class="fas fa-ban mr-1"></i><span class="h5">Завершить игру</span>
+      </button>`);
         clearInterval(window.PrepareGameTimer);
       }
       current--;
@@ -144,9 +146,6 @@ function CreateGroup(player) {
   socket.emit("getGroupStatus", player);
 }
 //  Надо передать сюда результаты: команды и их тимпоинты
-socket.on("end game", () => {
-  $("body").append("this game ended");
-});
 
 socket.on(
   "BreakBetweenQuestions",
@@ -379,7 +378,16 @@ socket.on("NewRoomGroupCoach", function(roomPlayer) {
   );
 });
 
+socket.on("GameFinished", () => {
+  $("body").append("GameFinished");
+});
+
 function cancelGame(roomId) {
   $(".cancelRow").remove();
   socket.emit("StopGamePreparation");
+}
+
+function FinishGame() {
+  console.log("emit works");
+  socket.emit("FinishGame");
 }
