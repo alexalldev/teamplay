@@ -236,50 +236,78 @@ function NewGamePlayGeneration(socket, io) {
     return sortedTeamNamesPoints;
   }
 
+  // FIXME: переделать на базе объекта {AnswerId: votes}
   async function checkTeamAnswers(roomTeamId) {
-    let result = true;
+    let result = false;
     await RoomOfferAnswer.findAll({
       where: { RoomTeam_Id: roomTeamId },
       raw: true
     })
       .then(async roomOffersAnswers => {
-        if (roomOffersAnswers.length > 0) {
-          const votesAnswers = roomOffersAnswers
-            .map(roomOfferAnswer => {
-              return {
-                Votes: roomOffersAnswers.filter(roomOfferAnswer2 => {
-                  return (
-                    roomOfferAnswer2.RoomPlayer_Id ==
-                    roomOfferAnswer.RoomPlayer_Id
-                  );
-                }).length,
-                Answer_Id: roomOfferAnswer.Answer_Id
-              };
+        if (roomOffersAnswers.length > 0)
+          await Answer.findAll({
+            where: {
+              AnswerId: roomOffersAnswers.map(
+                roomOfferAnswer => roomOfferAnswer.Answer_Id
+              )
+            },
+            raw: true
+          })
+            .then(async answers => {
+              // const votesAnswers = {};
+              // for (const roomOfferAnswer of roomOffersAnswers) {
+              //   votesAnswer[
+              //     roomOfferAnswer.Answer_Id
+              //   ] = roomOffersAnswers.filter(roomOfferAnswer2 => {
+              //     return (
+              //       roomOfferAnswer2.RoomPlayer_Id ==
+              //       roomOfferAnswer.RoomPlayer_Id
+              //     );
+              //   });
+              // }
+              const votesAnswers = roomOffersAnswers.map(roomOfferAnswer => {
+                return {
+                  Votes: roomOffersAnswers.filter(roomOfferAnswer2 => {
+                    return (
+                      roomOfferAnswer2.RoomPlayer_Id ==
+                      roomOfferAnswer.RoomPlayer_Id
+                    );
+                  }),
+                  Answer_Id: roomOfferAnswer.Answer_Id
+                };
+              });
+
+              const maxVotesAnswer = votesAnswers.reduce((prev, current) =>
+                prev.Votes > current.Votes ? prev : current
+              );
+
+              const dominantVotesAnswers = votesAnswers.filter(
+                votesAnswer => maxVotesAnswer.Votes == votesAnswer.Votes
+              );
+              const correctAnswersIds = answers
+                .filter(answer => answer.Correct)
+                .map(answer => answer.AnswerId);
+              if (dominantVotesAnswers.length == correctAnswersIds.length) {
+                for (const dominantVotesAnswer of dominantVotesAnswers) {
+                  if (
+                    !correctAnswersIds.includes(dominantVotesAnswer.Answer_Id)
+                  ) {
+                    result = false;
+                    break;
+                  }
+                  result = true;
+                }
+              }
             })
-            .sort(function(a, b) {
-              return b.Points - a.Points;
-            });
-          if (
-            votesAnswers.length > 1 &&
-            votesAnswers[0].Votes == votesAnswers[1].Votes
-          )
-            result = false;
-          else
-            await Answer.findOne({
-              where: { AnswerId: votesAnswers[0].Answer_Id }
-            })
-              .then(answer => {
-                result = answer.Correct;
-              })
-              .catch(err => console.log(err));
-        } else result = false;
+            .catch(err => console.log(err));
       })
       .catch(err => console.log(err));
     await RoomOfferAnswer.destroy({
       where: {
         RoomTeam_Id: roomTeamId
       }
-    });
+    }).catch(err => console.log(err));
+    console.log({ result });
     return result;
   }
 
@@ -297,12 +325,10 @@ function NewGamePlayGeneration(socket, io) {
     }
     return teamIdsAddedPoints;
   }
-  // FIXME: stopped here, dividing all on function to stop game with timers
   function checkAnswers(question) {
     RoomTeam.findAll({ where: { Team_Id: { [Op.gt]: 0 } } })
       .then(async roomTeams => {
         if (roomTeams) {
-          // TODO: позже попробовать переделать под Promise.all() и map()
           const teamIdsAddedPoints = await AddRoomTeamsPoints(
             roomTeams,
             question
@@ -376,7 +402,6 @@ function NewGamePlayGeneration(socket, io) {
   function getTimer(roomId) {}
 
   socket.on("gameStarted", async () => {
-    // console.log({ isRoomCreator: session.isRoomCreator });
     if (session.isRoomCreator) {
       // TODO: roomPlayers, roomTeams destroy при входе в комнату, чтобы не было вдруг there is no roomId in session
       // TODO: проверить работоспособность RemoveGamePlayStructure
