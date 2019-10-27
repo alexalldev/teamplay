@@ -236,7 +236,6 @@ function NewGamePlayGeneration(socket, io) {
     return sortedTeamNamesPoints;
   }
 
-  // FIXME: переделать на базе объекта {AnswerId: votes}
   async function checkTeamAnswers(roomTeamId) {
     let result = false;
     await RoomOfferAnswer.findAll({
@@ -254,65 +253,64 @@ function NewGamePlayGeneration(socket, io) {
             raw: true
           })
             .then(async answers => {
-              // const votesAnswers = {};
-              // for (const roomOfferAnswer of roomOffersAnswers) {
-              //   votesAnswer[
-              //     roomOfferAnswer.Answer_Id
-              //   ] = roomOffersAnswers.filter(roomOfferAnswer2 => {
-              //     return (
-              //       roomOfferAnswer2.RoomPlayer_Id ==
-              //       roomOfferAnswer.RoomPlayer_Id
-              //     );
-              //   });
-              // }
-              const votesAnswers = roomOffersAnswers.map(roomOfferAnswer => {
-                return {
-                  Votes: roomOffersAnswers.filter(roomOfferAnswer2 => {
-                    return (
-                      roomOfferAnswer2.RoomPlayer_Id ==
-                      roomOfferAnswer.RoomPlayer_Id
-                    );
-                  }),
-                  Answer_Id: roomOfferAnswer.Answer_Id
-                };
-              });
-
-              const maxVotesAnswer = votesAnswers.reduce((prev, current) =>
-                prev.Votes > current.Votes ? prev : current
-              );
-
-              const dominantVotesAnswers = votesAnswers.filter(
-                votesAnswer => maxVotesAnswer.Votes == votesAnswer.Votes
-              );
               const correctAnswersIds = answers
                 .filter(answer => answer.Correct)
                 .map(answer => answer.AnswerId);
-              if (dominantVotesAnswers.length == correctAnswersIds.length) {
-                for (const dominantVotesAnswer of dominantVotesAnswers) {
-                  if (
-                    !correctAnswersIds.includes(dominantVotesAnswer.Answer_Id)
-                  ) {
+
+              const votesAnswers = {};
+              for (const roomOfferAnswer of roomOffersAnswers) {
+                // { Answer_Id : roomOfferAnswer with this Answer_Id }
+                votesAnswers[
+                  roomOfferAnswer.Answer_Id
+                ] = roomOffersAnswers.filter(roomOfferAnswer2 => {
+                  return (
+                    roomOfferAnswer2.RoomPlayer_Id ==
+                    roomOfferAnswer.RoomPlayer_Id
+                  );
+                });
+              }
+
+              let maxVotedAnswer = { Answer_Id: 0, Votes: [] };
+              for (const [answerId, votes] of Object.entries(votesAnswers)) {
+                if (votes.length > maxVotedAnswer.Votes.length)
+                  maxVotedAnswer = { Answer_Id: answerId, Votes: votes };
+              }
+
+              const dominantVotesAnswers = {};
+              for (const [answerId, votes] of Object.entries(votesAnswers)) {
+                if (votes.length == maxVotedAnswer.Votes.length)
+                  dominantVotesAnswers[answerId] = votes;
+              }
+              if (
+                Object.keys(dominantVotesAnswers).length ==
+                correctAnswersIds.length
+              ) {
+                result = true;
+                for (const [answerId, votes] of Object.entries(
+                  dominantVotesAnswers
+                )) {
+                  if (!correctAnswersIds.includes(parseInt(answerId, 10))) {
+                    console.log("result false");
                     result = false;
                     break;
                   }
-                  result = true;
                 }
               }
             })
             .catch(err => console.log(err));
       })
       .catch(err => console.log(err));
+
     await RoomOfferAnswer.destroy({
       where: {
         RoomTeam_Id: roomTeamId
       }
     }).catch(err => console.log(err));
-    console.log({ result });
     return result;
   }
 
   async function AddRoomTeamsPoints(roomTeams, question) {
-    let teamIdsAddedPoints = {};
+    const teamIdsAddedPoints = {};
     for await (const roomTeam of roomTeams) {
       const isAnswerCorrect = await checkTeamAnswers(roomTeam.RoomTeamId);
       teamIdsAddedPoints[roomTeam.Team_Id] =
@@ -382,9 +380,7 @@ function NewGamePlayGeneration(socket, io) {
           } = await GetRandomQuestion();
           runTimers(
             session.roomId,
-            // function()
             sendRandomQuestion,
-            // this function() params
             question,
             answers,
             type,
@@ -399,13 +395,9 @@ function NewGamePlayGeneration(socket, io) {
     return Math.floor(Math.random() * Math.floor(max));
   }
 
-  function getTimer(roomId) {}
-
   socket.on("gameStarted", async () => {
     if (session.isRoomCreator) {
       // TODO: roomPlayers, roomTeams destroy при входе в комнату, чтобы не было вдруг there is no roomId in session
-      // TODO: проверить работоспособность RemoveGamePlayStructure
-      // await RemoveGamePlayStructure();
       await GamePlayStructure.Create(session);
       await NextRandomQuestion();
     }
@@ -480,13 +472,7 @@ function NewGamePlayGeneration(socket, io) {
                     };
                   }
                 );
-                // console.log("RoomPlayersOffers");
-                // console.log(
-                //   util.inspect(roomPlayersOffers, {
-                //     showHidden: false,
-                //     depth: null
-                //   })
-                // );
+
                 await RoomPlayer.findAll({
                   where: {
                     RoomPlayersId: roomPlayersOffers.map(
@@ -506,13 +492,6 @@ function NewGamePlayGeneration(socket, io) {
                       )[0].Offers
                     };
                   });
-                  // console.log("usersOffers");
-                  // console.log(
-                  //   util.inspect(usersOffers, {
-                  //     showHidden: false,
-                  //     depth: null
-                  //   })
-                  // );
                 });
                 await User.findAll({
                   where: {
@@ -531,24 +510,11 @@ function NewGamePlayGeneration(socket, io) {
                       )[0].Offers
                     };
                   });
-                  // console.log("usersFioOffers");
-                  // console.log(
-                  //   util.inspect(usersFioOffers, {
-                  //     showHidden: false,
-                  //     depth: null
-                  //   })
-                  // );
                 });
               });
             })
             .catch(err => console.log(err));
-          // console.log("offersUsers");
-          // console.log(
-          //   util.inspect(usersFioOffers, {
-          //     showHidden: false,
-          //     depth: null
-          //   })
-          // );
+
           console.log(`session emit to RoomTeam ${roomTeam.RoomTeamId}`);
           io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
             "sendOffersChanges",
@@ -566,10 +532,6 @@ function NewGamePlayGeneration(socket, io) {
   socket.on("StopGamePreparation", () => {
     if (session.isRoomCreator)
       io.to(`RoomPlayers${session.roomId}`).emit("StopGamePreparationTick");
-  });
-
-  socket.on("RemoveGamePlayStructure", (roomId, gameId) => {
-    GamePlayStructure.Remove(session);
   });
 
   socket.on("getGroupStatus", player => {

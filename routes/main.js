@@ -398,6 +398,9 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                               isGroupCoach:
                                                 createdRoomPlayer.isGroupCoach
                                             };
+                                            console.log({
+                                              createdRoomPlayer
+                                            });
                                             await RoomTeam.findOrCreate({
                                               where: {
                                                 Team_Id:
@@ -411,9 +414,9 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                                 if (created) {
                                                   req.session.roomTeamId =
                                                     roomTeam2.RoomTeamId;
-                                                  req.session.isGroupCoach =
-                                                    createdRoomPlayer.isGroupCoach;
                                                 }
+                                                req.session.isGroupCoach =
+                                                  createdRoomPlayer.isGroupCoach;
                                                 if (!req.session.isRoomCreator)
                                                   io.to(
                                                     `RoomUsers${room.RoomId}`
@@ -526,31 +529,27 @@ router.get("/leaveRoom", app.protect, function(req, res) {
                   "RoomPlayerLeaved",
                   req.session.roomPlayersId
                 );
-              await RoomPlayers.findAndCountAll({
+              await RoomPlayers.count({
                 where: {
                   Room_Id: room.RoomId,
                   Team_Id: req.session.TeamId
-                },
-                raw: true
+                }
               })
-                .then(async result => {
+                .then(async roomPlayersNum => {
+                  console.log({ roomPlayersNum });
                   if (req.session.roomTeamId) {
-                    if (result.count == 0)
+                    if (roomPlayersNum == 0)
                       await RoomTeam.destroy({
                         where: { RoomTeamId: req.session.roomTeamId }
                       })
-                        .then(async () => {
+                        .then(() => {
                           io.to(`RoomUsers${req.session.roomId}`).emit(
                             "RoomGroupRemoved",
                             req.session.TeamId
                           );
-                          delete req.session.roomTeamId;
-                          if (req.session.isGroupCoach)
-                            delete req.session.isGroupCoach;
                         })
                         .catch(err => console.log(err));
                     else {
-                      console.log({ session: req.session, leaveRoom: true });
                       await RoomPlayers.findOne({
                         where: {
                           Room_Id: req.session.roomId,
@@ -558,11 +557,14 @@ router.get("/leaveRoom", app.protect, function(req, res) {
                         }
                       })
                         .then(roomPlayer => {
-                          console.log({ roomPlayer, leaveRoom: true });
                           if (roomPlayer)
                             roomPlayer
                               .update({ isGroupCoach: true })
                               .then(newCoach => {
+                                console.log({
+                                  info: "NewGroupCoach emit",
+                                  session: req.session
+                                });
                                 io.to(`RoomUsers${req.session.roomId}`).emit(
                                   "NewRoomGroupCoach",
                                   newCoach.get()
@@ -573,18 +575,15 @@ router.get("/leaveRoom", app.protect, function(req, res) {
                         .catch(err => console.log(err));
                     }
                   }
-                  RoomPlayers.findAndCountAll({
-                    where: { Room_Id: room.RoomId },
-                    raw: true
+                  RoomPlayers.count({
+                    where: { Room_Id: room.RoomId }
                   })
                     .then(roomOnlineresult => {
                       io.emit("RoomOnline", {
                         roomId: room.RoomId,
-                        online: roomOnlineresult.count
+                        online: roomOnlineresult
                       });
-                      delete req.session.roomId;
-                      delete req.session.isRoomCreator;
-                      delete req.session.roomPlayersId;
+
                       res.redirect("/");
                     })
                     .catch(err => console.log(err));
@@ -592,17 +591,16 @@ router.get("/leaveRoom", app.protect, function(req, res) {
                 .catch(err => console.log(err));
             })
             .catch(err => console.log(err));
-        else {
-          // Creator deleted the room
-
-          delete req.session.roomId;
-          if (req.session.isRoomCreator) delete req.session.isRoomCreator;
-
-          res.redirect("/");
-        }
+        else res.redirect("/");
       })
       .catch(err => console.log(err));
   else res.redirect("/");
+  // FIXME: НОРМАЛЬНОЕ УДАЛЕНИЕ СЕССИЙ
+  delete req.session.roomTeamId;
+  delete req.session.isGroupCoach;
+  delete req.session.roomId;
+  delete req.session.isRoomCreator;
+  delete req.session.roomPlayersId;
 });
 
 router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
