@@ -55,7 +55,6 @@ app.use((req, res, next) => {
               where: { Room_Id: room.RoomId },
               raw: true
             }).then(roomPlayer => {
-              console.log({ roomPlayer });
               if (roomPlayer)
                 return res.render("info", {
                   message: "LEAVE_ROOM",
@@ -81,8 +80,7 @@ io.use((socket, next) => {
 
 // LoggedAdmin
 io.use((socket, next) => {
-  if (socket.request.session.passport)
-    socket.LoggedAdmin = !!socket.request.session.passport.user;
+  if (socket.request.session.passport) socket.LoggedAdmin = !!socket.request.session.passport.user;
   else socket.LoggedAdmin = null;
   next();
 });
@@ -123,9 +121,7 @@ app.get("/QuestionImage", (req, res) => {
               fs.createReadStream(`${__dirname}/IMAGES/NULL_IMAGE`).pipe(res);
             } else {
               res.writeHead(200, { "Content-Type": "application/msword" });
-              fs.createReadStream(
-                `${__dirname}/IMAGES/QUESTIONS_IMAGES/${question.QuestionImagePath}`
-              ).pipe(res);
+              fs.createReadStream(`${__dirname}/IMAGES/QUESTIONS_IMAGES/${question.QuestionImagePath}`).pipe(res);
             }
           });
         }
@@ -155,9 +151,7 @@ app.get("/StreamImage", function(req, res) {
               fs.createReadStream(`${__dirname}/IMAGES/NULL_IMAGE`).pipe(res);
             } else {
               res.writeHead(200, { "Content-Type": "application/msword" });
-              fs.createReadStream(
-                `${__dirname}/IMAGES/STREAM_IMAGES/${gamePlay.StreamImagePath}`
-              ).pipe(res);
+              fs.createReadStream(`${__dirname}/IMAGES/STREAM_IMAGES/${gamePlay.StreamImagePath}`).pipe(res);
             }
           });
         }

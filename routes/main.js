@@ -3,7 +3,6 @@ const formidable = require("formidable");
 const nodeMailer = require("nodemailer");
 const { Op } = require("sequelize");
 const fs = require("fs");
-const path = require("path");
 const crypto = require("crypto");
 const Hash = require("password-hash");
 const GamePlay = require("../models/GamePlay");
@@ -310,14 +309,10 @@ router.get("/home", app.protect, function(req, res) {
 });
 
 router.get("/room/:RoomTag", app.protect, function(req, res) {
-  // TODO: возможно не уникальный рyм тег
-  console.log({ tag: req.params.RoomTag });
   Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
     .then(room => {
       GamePlay.findOne({ where: { Room_Id: room.RoomId } })
         .then(gamePlay => {
-          // TODO: поиск по roomPlayers если в списке, то продолжать, иначе игра началась
-          // room.maxTeamPlayers сравнить с room_team.count({where: {Room_Id и Team_Id}}) =>
           if (room) {
             if (req.session.passport.user == room.RoomCreatorId)
               req.session.isRoomCreator = true;
@@ -369,85 +364,91 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                           : roomPlayers.length == 0
                                       }
                                     })
-                                      .then(async ([createdRoomPlayer]) => {
-                                        req.session.roomPlayersId =
-                                          createdRoomPlayer.RoomPlayersId;
-                                        Team.findOne({
-                                          where: {
-                                            TeamId: createdRoomPlayer.Team_Id
-                                          },
-                                          raw: true
-                                        })
-                                          .then(async team => {
-                                            req.session.roomId = room.RoomId;
-                                            req.session.TeamId =
-                                              createdRoomPlayer.Team_Id;
-                                            const player = {
-                                              RoomPlayersId:
-                                                createdRoomPlayer.RoomPlayersId,
-                                              UserName: user.UserName,
-                                              UserFamily: user.UserFamily,
-                                              UserLastName: user.UserLastName,
-                                              RoomId: createdRoomPlayer.Room_Id,
-                                              TeamId: createdRoomPlayer.Team_Id,
-                                              TeamName: createdRoomPlayer.isRoomCreator
-                                                ? ""
-                                                : team.TeamName,
-                                              isRoomCreator:
-                                                createdRoomPlayer.isRoomCreator,
-                                              isGroupCoach:
-                                                createdRoomPlayer.isGroupCoach
-                                            };
-                                            console.log({
-                                              createdRoomPlayer
-                                            });
-                                            await RoomTeam.findOrCreate({
-                                              where: {
-                                                Team_Id:
-                                                  createdRoomPlayer.Team_Id,
-                                                Room_Id:
-                                                  createdRoomPlayer.Room_Id
-                                              },
-                                              raw: true
-                                            })
-                                              .then(([roomTeam2, created]) => {
-                                                if (created) {
-                                                  req.session.roomTeamId =
-                                                    roomTeam2.RoomTeamId;
-                                                }
-                                                req.session.isGroupCoach =
-                                                  createdRoomPlayer.isGroupCoach;
-                                                if (!req.session.isRoomCreator)
-                                                  io.to(
-                                                    `RoomUsers${room.RoomId}`
-                                                  ).emit(
-                                                    "AddUserToRoom",
-                                                    player
-                                                  );
-                                                RoomPlayers.count({
-                                                  where: {
-                                                    Room_Id: room.RoomId,
-                                                    isRoomCreator: false
-                                                  }
-                                                }).then(roomOnline => {
-                                                  io.emit("RoomOnline", {
-                                                    roomId: room.RoomId,
-                                                    online: roomOnline
-                                                  });
-                                                  res.render("room", {
-                                                    room,
-                                                    roomPlayer:
-                                                      createdRoomPlayer.dataValues,
-                                                    readyState:
-                                                      roomTeam2.ReadyState,
-                                                    wasGameStarted: !!gamePlay
-                                                  });
-                                                });
-                                              })
-                                              .catch(err => console.log(err));
+                                      .then(
+                                        async ([
+                                          createdRoomPlayer,
+                                          created
+                                        ]) => {
+                                          req.session.roomPlayersId =
+                                            createdRoomPlayer.RoomPlayersId;
+                                          Team.findOne({
+                                            where: {
+                                              TeamId: createdRoomPlayer.Team_Id
+                                            },
+                                            raw: true
                                           })
-                                          .catch(err => console.log(err));
-                                      })
+                                            .then(async team => {
+                                              req.session.roomId = room.RoomId;
+                                              req.session.TeamId =
+                                                createdRoomPlayer.Team_Id;
+                                              const player = {
+                                                RoomPlayersId:
+                                                  createdRoomPlayer.RoomPlayersId,
+                                                UserName: user.UserName,
+                                                UserFamily: user.UserFamily,
+                                                UserLastName: user.UserLastName,
+                                                RoomId:
+                                                  createdRoomPlayer.Room_Id,
+                                                TeamId:
+                                                  createdRoomPlayer.Team_Id,
+                                                TeamName: createdRoomPlayer.isRoomCreator
+                                                  ? ""
+                                                  : team.TeamName,
+                                                isRoomCreator:
+                                                  createdRoomPlayer.isRoomCreator,
+                                                isGroupCoach:
+                                                  createdRoomPlayer.isGroupCoach
+                                              };
+                                              await RoomTeam.findOrCreate({
+                                                where: {
+                                                  Team_Id:
+                                                    createdRoomPlayer.Team_Id,
+                                                  Room_Id:
+                                                    createdRoomPlayer.Room_Id
+                                                },
+                                                raw: true
+                                              })
+                                                .then(
+                                                  ([roomTeam2, created2]) => {
+                                                    req.session.roomTeamId =
+                                                      roomTeam2.RoomTeamId;
+                                                    req.session.isGroupCoach =
+                                                      createdRoomPlayer.isGroupCoach;
+                                                    if (
+                                                      !req.session.isRoomCreator
+                                                    )
+                                                      io.to(
+                                                        `RoomUsers${room.RoomId}`
+                                                      ).emit(
+                                                        "AddUserToRoom",
+                                                        player
+                                                      );
+                                                    RoomPlayers.count({
+                                                      where: {
+                                                        Room_Id: room.RoomId,
+                                                        isRoomCreator: false
+                                                      }
+                                                    }).then(roomOnline => {
+                                                      io.emit("RoomOnline", {
+                                                        roomId: room.RoomId,
+                                                        online: roomOnline
+                                                      });
+                                                      res.render("room", {
+                                                        room,
+                                                        roomPlayer:
+                                                          createdRoomPlayer.dataValues,
+                                                        readyState:
+                                                          roomTeam2.ReadyState,
+                                                        wasGameStarted: !!gamePlay
+                                                      });
+                                                    });
+                                                  }
+                                                )
+                                                .catch(err => console.log(err));
+                                            })
+                                            .catch(err => console.log(err));
+                                        }
+                                      )
                                       .catch(err => console.log(err));
                                   } else
                                     return res.render("info", {
@@ -471,11 +472,11 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                           Room_Id: findedRoom.RoomId,
                                           Team_Id: req.session.TeamId
                                         }
-                                      }).then(roomTeam => {
+                                      }).then(roomTeam2 => {
                                         res.render("room", {
                                           room: findedRoom,
                                           roomPlayer,
-                                          readyState: roomTeam.ReadyState,
+                                          readyState: roomTeam2.ReadyState,
                                           wasGameStarted: !!gamePlay
                                         });
                                       });
@@ -515,9 +516,9 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
     .catch(err => console.log(err));
 });
 
-router.get("/leaveRoom", app.protect, function(req, res) {
+router.get("/leaveRoom", app.protect, async function(req, res) {
   if (req.session.roomId)
-    Room.findOne({ where: { RoomId: req.session.roomId }, raw: true })
+    await Room.findOne({ where: { RoomId: req.session.roomId }, raw: true })
       .then(async room => {
         if (room)
           await RoomPlayers.destroy({
@@ -536,7 +537,6 @@ router.get("/leaveRoom", app.protect, function(req, res) {
                 }
               })
                 .then(async roomPlayersNum => {
-                  console.log({ roomPlayersNum });
                   if (req.session.roomTeamId) {
                     if (roomPlayersNum == 0)
                       await RoomTeam.destroy({
@@ -556,14 +556,14 @@ router.get("/leaveRoom", app.protect, function(req, res) {
                           Team_Id: req.session.TeamId
                         }
                       })
-                        .then(roomPlayer => {
+                        .then(async roomPlayer => {
                           if (roomPlayer)
-                            roomPlayer
+                            await roomPlayer
                               .update({ isGroupCoach: true })
                               .then(newCoach => {
                                 console.log({
                                   info: "NewGroupCoach emit",
-                                  session: req.session
+                                  sessionEmit: req.session
                                 });
                                 io.to(`RoomUsers${req.session.roomId}`).emit(
                                   "NewRoomGroupCoach",
@@ -575,7 +575,7 @@ router.get("/leaveRoom", app.protect, function(req, res) {
                         .catch(err => console.log(err));
                     }
                   }
-                  RoomPlayers.count({
+                  await RoomPlayers.count({
                     where: { Room_Id: room.RoomId }
                   })
                     .then(roomOnlineresult => {
@@ -592,15 +592,14 @@ router.get("/leaveRoom", app.protect, function(req, res) {
             })
             .catch(err => console.log(err));
         else res.redirect("/");
+        delete req.session.roomTeamId;
+        delete req.session.isGroupCoach;
+        delete req.session.roomId;
+        delete req.session.isRoomCreator;
+        delete req.session.roomPlayersId;
       })
       .catch(err => console.log(err));
   else res.redirect("/");
-  // FIXME: НОРМАЛЬНОЕ УДАЛЕНИЕ СЕССИЙ
-  delete req.session.roomTeamId;
-  delete req.session.isGroupCoach;
-  delete req.session.roomId;
-  delete req.session.isRoomCreator;
-  delete req.session.roomPlayersId;
 });
 
 router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
