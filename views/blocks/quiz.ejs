@@ -1,19 +1,28 @@
-<!--button class="btn btn-outline-success ml-2 mt-2 h1 btnCreateQuiz">Создать</button-->
-
-<div class="quiz" gameTag="<%= quiz.GameTag %>">
+<div class="create-quiz btn btn-outline-success btnCreateQuiz">
         <table class="centred-table">
                 <tr align="center" class="quiz-row">
                         <td valign="center">
-                                <div class="quiz-hover">
-                                        <a href="/EditGame/<%= quiz.GameTag %>" class="mr-5"><i class="fas fa-pencil-alt"></i></a>
-                                        <a href="#" class="btnRemoveGame" gameId="<%= quiz.GameId %>"><i class="fa fa-trash ml-5"></i></a>
-                                </div>
-                                <div class="quiz-name h1">
-                                        <%= quiz.GameName %>
+                                <div class="quiz-name">
+                                        <i class="fa fa-plus"></i>
                                 </div>
                         </td>
                 </tr>
         </table>
 </div>
-<%= quiz.averageAsnwerTime%>
-<%= quiz.questionCount%>
+<% games.forEach(function(quiz){ %>
+        <div class="quiz alert" gameTag="<%= quiz.GameTag %>">
+                        <table class="centred-table">
+                                <tr align="center" class="quiz-row">
+                                        <td valign="center">
+                                                <div class="quiz-name h1">
+                                                        <%= quiz.GameName %>
+                                                </div>
+                                                <div class="quiz-hover">
+                                                        <a href="/EditGame/<%= quiz.GameTag %>" class="mr-5"><i class="fas fa-pencil-alt"></i></a>
+                                                        <a href="#" class="btnRemoveGame" gameId="<%= quiz.GameId %>"><i class="fa fa-trash ml-5"></i></a>
+                                                </div>
+                                        </td>
+                                </tr>
+                        </table>
+                </div>
+<% }); %>

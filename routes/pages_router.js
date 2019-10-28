@@ -50,7 +50,6 @@ router.get("/home", app.protect, function(req, res) {
           }
         });
       }
-      console.log(games);
       res.render("view", { games, page: 'home' });
     })
     .catch(err => console.log(err));

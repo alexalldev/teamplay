@@ -29,6 +29,12 @@ body {
 	cursor: pointer;
 }
 
+.navbar {
+	position: fixed!important;
+    width: 100%!important;
+    z-index: 2;
+}
+
 .user, .team
 {
 	border: solid 1.75px #eee;

@@ -1,9 +1,12 @@
 .navigation-area {
-	display: inline-block;
+    position: fixed;
+    display: inline-block;
     width: 20%;
     height: 94.2vh;
     background-color: #397798;
     transition: all 0.3s;
+    z-index: 1;
+    top: 3.5rem;
 }
 
 .menu-item {
