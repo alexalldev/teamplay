@@ -146,7 +146,6 @@ io.on("connection", function(socket) {
       });
   // Подключение к комнате в зависимости от типа пользователя
   if (session.roomId) {
-    console.log({ sessionIndeJs: session });
     socket.join(`RoomUsers${session.roomId}`);
     if (session.isRoomCreator) {
       socket.join(`RoomCreators${session.roomId}`);

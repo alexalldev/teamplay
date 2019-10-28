@@ -1,19 +1,8 @@
-function AddPoints(count, set = false) {
-  $(".AddPoints").css("opacity", 1);
-  $(".AddPoints").text("+" + count);
-  animateCSS(".AddPoints", "slideInUp", function() {
-    $(".AddPoints").css("opacity", 0);
-    $(".PointsCount").text(
-      !set ? Number($(".PointsCount").text()) + count : count
-    );
-  });
-}
-
 $(document).ready(function() {
   socket.emit("getCreatorStatus");
   socket.emit("getRoomPlayers");
   $(".btnRemoveRoom").click(function() {
-    let roomId = $(this).attr("roomId");
+    const roomId = $(this).attr("roomId");
     Swal({
       title: "Удаление комнаты",
       text: "Удалить комнату?",
@@ -50,7 +39,7 @@ $(document).ready(function() {
     }
 
     function StartPreparation() {
-      $(".roomActions").after(`
+      $(".roomActions").append(`
       <div class="row cancelRow">
         <div class="col-md-12 text-center mb-2">
         <label class="h5">Отмена</label>
@@ -103,6 +92,17 @@ $(document).ready(function() {
   });
 });
 
+function AddPoints(count, set = false) {
+  $(".AddPoints").css("opacity", 1);
+  $(".AddPoints").text(`+${count}`);
+  animateCSS(".AddPoints", "slideInUp", function() {
+    $(".AddPoints").css("opacity", 0);
+    $(".PointsCount").text(
+      !set ? Number($(".PointsCount").text()) + count : count
+    );
+  });
+}
+
 function ClearRating() {
   $(".table-hover").empty();
   $(".table-teams-rating").fadeTo("slow", 0, function() {
@@ -115,22 +115,14 @@ function SelectTeam(teamId) {
   $(".row-team").each(function(i) {
     $(this).removeClass("table-success");
   });
-  $(".row-team-" + teamId).addClass("table-success");
+  $(`.row-team-${teamId}`).addClass("table-success");
 }
 function AddRowTeam(team) {
   $(".table-teams-rating").append(
-    '<tr class="row-team row-team-' +
-      team.TeamId +
-      '" teamId="' +
-      team.TeamId +
-      '">\
-      <td>' +
-      team.TeamName +
-      "</td>\
-      <td>" +
-      team.Points +
-      "</td>\
-  </tr>"
+    `<tr class="row-team row-team-${team.TeamId}" teamId="${team.TeamId}">
+      <td>${team.TeamName}</td>
+      <td>${team.Points}</td>
+  </tr>`
   );
 }
 
@@ -182,6 +174,7 @@ socket.on(
 socket.on(
   "sendQuestion",
   (question, answers, type, isRoomCreator, categoryName) => {
+    console.log({ question });
     startTimer(question.AnswerTime - 1);
 
     $(".QuestionArea").html(
@@ -223,7 +216,7 @@ socket.on(
 );
 
 async function chooseAnswer(answerIdClass) {
-  let offerAnswerIds = [];
+  const offerAnswerIds = [];
   const answerButton = $(`.${answerIdClass} > .answerButton`);
   if (answerButton.hasClass("alert-info")) {
     answerButton
@@ -234,7 +227,7 @@ async function chooseAnswer(answerIdClass) {
       .removeClass(`alert-primary chosen-answer`)
       .addClass("alert-info");
   }
-  //Stopped here: fixing appends
+
   await $(".chosen-answer").each(function(i) {
     offerAnswerIds.push($(this).attr("answerId"));
   });
@@ -242,9 +235,9 @@ async function chooseAnswer(answerIdClass) {
 }
 
 socket.on("sendOffersChanges", usersFioOffers => {
-  //TODO: при определенном большом количестве пользователей не делать append
+  // TODO: при определенном большом количестве пользователей не делать append
   // и после последнего такого пользователя выводить три точки, и добавить
-  //подсказку для этого блока при наведению на которую будут показываться все пользователи
+  // подсказку для этого блока при наведению на которую будут показываться все пользователи
 
   // Очищаем все
   $(".whoAnswered").each(function(index) {
@@ -379,7 +372,9 @@ socket.on("NewRoomGroupCoach", function(roomPlayer) {
 });
 
 socket.on("GameFinished", () => {
-  $("body").append("GameFinished");
+  Swal.fire("Игра завершена", "Спасибо за участие", "success").then(result => {
+    document.location.reload(true);
+  });
 });
 
 function cancelGame(roomId) {

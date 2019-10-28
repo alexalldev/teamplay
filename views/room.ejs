@@ -63,6 +63,11 @@
           <%}%> 
           <%}%>
           <%}%>
+          <%if (wasGameStarted) {%>
+          <%#if (isAnsweringTime) {%>            
+
+        <%#}%>
+      <%}%>
         <div class="row">
           <div class="col-md-12 text-center mb-2">
             <div class="QuestionArea"></div>
@@ -83,8 +88,7 @@
     <% include blocks/footer %>
           <div class="Info">
             <div class="animated_timer">
-              <!--Use sratTimer(time)-->
-              <h2>0</h2>
+              <h2 class="animated_timer_value">0</h2>
               <svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
                 <g>
                   <title>Layer 1</title>
@@ -94,7 +98,6 @@
               </svg>
             </div>
             <div class="Points">
-              <!--Use AddPoints(count)-->
               <span class="h2 AddPoints text-success">+ 10</span>
               <span class="h2 PointsCount">0</span>
               <i class="fas fa-ticket-alt"></i>

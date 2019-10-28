@@ -12,6 +12,10 @@ const GamePlay = db.define("game_play", {
   CurrentQuestionId: {
     type: Sequelize.INTEGER
   },
+  isAnsweringTime: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false
+  },
   StartTime: {
     type: Sequelize.INTEGER
   },

@@ -322,6 +322,7 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
               raw: true
             })
               .then(user => {
+                console.log({user});
                 RoomTeam.findOne({
                   where: { Room_Id: room.RoomId, Team_Id: user.Team_Id }
                 })
@@ -369,6 +370,7 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                           createdRoomPlayer,
                                           created
                                         ]) => {
+                                          console.log({createdRoomPlayer})
                                           req.session.roomPlayersId =
                                             createdRoomPlayer.RoomPlayersId;
                                           Team.findOne({
@@ -428,20 +430,94 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                                         Room_Id: room.RoomId,
                                                         isRoomCreator: false
                                                       }
-                                                    }).then(roomOnline => {
-                                                      io.emit("RoomOnline", {
-                                                        roomId: room.RoomId,
-                                                        online: roomOnline
-                                                      });
-                                                      res.render("room", {
-                                                        room,
-                                                        roomPlayer:
-                                                          createdRoomPlayer.dataValues,
-                                                        readyState:
-                                                          roomTeam2.ReadyState,
-                                                        wasGameStarted: !!gamePlay
-                                                      });
-                                                    });
+                                                    })
+                                                      .then(roomOnline => {
+                                                        io.emit("RoomOnline", {
+                                                          roomId: room.RoomId,
+                                                          online: roomOnline
+                                                        });
+                                                        if (gamePlay) {
+                                                          GamePlayCategory.findOne(
+                                                            {
+                                                              where: {
+                                                                GamePlay_Id:
+                                                                  gamePlay.GamePlayId
+                                                              }
+                                                            }
+                                                          )
+                                                            .then(
+                                                              gamePlayCategory => {
+                                                                Category.findOne({
+                                                                  where: {
+                                                                    CategoryId:
+                                                                      gamePlayCategory.Category_Id
+                                                                  }
+                                                                })
+                                                                  .then(
+                                                                    category => {
+                                                                      Question.findOne({
+                                                                        where: {
+                                                                          QuestionId:
+                                                                            gamePlay.CurrentQuestionId
+                                                                        }
+                                                                      }).then(currentQuestion => {
+                                                                          Answer.findAll({
+                                                                            where: {
+                                                                              Question_Id:
+                                                                                currentQuestion.QuestionId
+                                                                            }
+                                                                          }).then(
+                                                                            answers => {
+                                                                              res.render(
+                                                                                "room",
+                                                                                {
+                                                                                  room,
+                                                                                  roomPlayer:
+                                                                                    createdRoomPlayer.dataValues,
+                                                                                  readyState:
+                                                                                    roomTeam2.ReadyState,
+                                                                                  wasGameStarted: !!gamePlay,
+                                                                                  isAnsweringTime:
+                                                                                    gamePlay.isAnsweringTime,
+                                                                                  currentQuestion,
+                                                                                  answers: req.session.isRoomCreator ? answers.filter(answer => answer.Correct) : answers,
+                                                                                  type: answers.length == 1 ? 'text' : 'checkbox',
+                                                                                  isRoomCreator: req.session.isRoomCreator,
+                                                                                  categoryName: category.CategoryName
+                                                                                }
+                                                                              );
+                                                                            }
+                                                                          ).catch(err => console.log(err))
+                                                                        }
+                                                                      ).catch(err => console.log(err))
+                                                                    }
+                                                                  )
+                                                                  .catch(err =>
+                                                                    console.log(
+                                                                      err
+                                                                    )
+                                                                  );
+                                                              }
+                                                            )
+                                                            .catch(err =>
+                                                              console.log(err)
+                                                            );
+                                                        }
+                                                        res.render(
+                                                          "room",
+                                                          {
+                                                            room,
+                                                            roomPlayer:
+                                                              createdRoomPlayer.dataValues,
+                                                            readyState:
+                                                              roomTeam2.ReadyState,
+                                                            wasGameStarted: !!gamePlay
+                                                          }
+                                                        );
+                                                      })
+                                                      .catch(err =>
+                                                        console.log(err)
+                                                      );
                                                   }
                                                 )
                                                 .catch(err => console.log(err));
@@ -520,7 +596,7 @@ router.get("/leaveRoom", app.protect, async function(req, res) {
   if (req.session.roomId)
     await Room.findOne({ where: { RoomId: req.session.roomId }, raw: true })
       .then(async room => {
-        if (room)
+        if (room) {
           await RoomPlayers.destroy({
             where: { RoomPlayersId: req.session.roomPlayersId }
           })
@@ -538,7 +614,7 @@ router.get("/leaveRoom", app.protect, async function(req, res) {
               })
                 .then(async roomPlayersNum => {
                   if (req.session.roomTeamId) {
-                    if (roomPlayersNum == 0)
+                    if (roomPlayersNum == 0) {
                       await RoomTeam.destroy({
                         where: { RoomTeamId: req.session.roomTeamId }
                       })
@@ -549,7 +625,7 @@ router.get("/leaveRoom", app.protect, async function(req, res) {
                           );
                         })
                         .catch(err => console.log(err));
-                    else {
+                    } else {
                       await RoomPlayers.findOne({
                         where: {
                           Room_Id: req.session.roomId,
@@ -557,20 +633,17 @@ router.get("/leaveRoom", app.protect, async function(req, res) {
                         }
                       })
                         .then(async roomPlayer => {
-                          if (roomPlayer)
+                          if (roomPlayer) {
                             await roomPlayer
                               .update({ isGroupCoach: true })
                               .then(newCoach => {
-                                console.log({
-                                  info: "NewGroupCoach emit",
-                                  sessionEmit: req.session
-                                });
                                 io.to(`RoomUsers${req.session.roomId}`).emit(
                                   "NewRoomGroupCoach",
                                   newCoach.get()
                                 );
                               })
                               .catch(err => console.log(err));
+                          }
                         })
                         .catch(err => console.log(err));
                     }
@@ -583,7 +656,11 @@ router.get("/leaveRoom", app.protect, async function(req, res) {
                         roomId: room.RoomId,
                         online: roomOnlineresult
                       });
-
+                      delete req.session.roomTeamId;
+                      delete req.session.isGroupCoach;
+                      delete req.session.roomId;
+                      delete req.session.isRoomCreator;
+                      delete req.session.roomPlayersId;
                       res.redirect("/");
                     })
                     .catch(err => console.log(err));
@@ -591,12 +668,7 @@ router.get("/leaveRoom", app.protect, async function(req, res) {
                 .catch(err => console.log(err));
             })
             .catch(err => console.log(err));
-        else res.redirect("/");
-        delete req.session.roomTeamId;
-        delete req.session.isGroupCoach;
-        delete req.session.roomId;
-        delete req.session.isRoomCreator;
-        delete req.session.roomPlayersId;
+        } else res.redirect("/");
       })
       .catch(err => console.log(err));
   else res.redirect("/");

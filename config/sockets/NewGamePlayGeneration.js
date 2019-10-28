@@ -1,4 +1,4 @@
-const util = require("util");
+const util = require('util')
 const { Op } = require("sequelize");
 const Category = require("../../models/Category");
 const Question = require("../../models/Question");
@@ -36,11 +36,7 @@ function NewGamePlayGeneration(socket, io) {
                 .then(async gamePlayCategories => {
                   const randomInd = getRandomInt(gamePlayCategories.length);
                   const gamePlayCategory = gamePlayCategories[randomInd];
-                  // console.log({
-                  //   gamePlayCategories,
-                  //   gamePlayCategory,
-                  //   randomInd
-                  // });
+
                   await Category.findOne({
                     where: {
                       CategoryId: gamePlayCategory.Category_Id
@@ -48,7 +44,6 @@ function NewGamePlayGeneration(socket, io) {
                     raw: true
                   })
                     .then(async category => {
-                      // console.log({ category });
                       await GamePlayQuestion.findAll({
                         where: {
                           GamePlayCategory_Id:
@@ -57,19 +52,12 @@ function NewGamePlayGeneration(socket, io) {
                         raw: true
                       })
                         .then(async gamePlayQuestions => {
-                          // console.log({
-                          //   gamePlayQuestions,
-                          //   len: gamePlayQuestions.length
-                          // });
                           const randomInd2 = getRandomInt(
                             gamePlayQuestions.length
                           );
                           const gamePlayQuestion =
                             gamePlayQuestions[randomInd2];
-                          // console.log({
-                          //   gamePlayQuestion,
-                          //   randomInd2
-                          // });
+
                           await Question.findOne({
                             where: {
                               QuestionId: gamePlayQuestion.Question_Id
@@ -105,25 +93,16 @@ function NewGamePlayGeneration(socket, io) {
                                 .catch(err => console.log(err));
                             })
                             .catch(err => console.log(err));
-                          // }
                         })
                         .catch(err => console.log(err));
                     })
                     .catch(err => console.log(err));
-                  // }
                 })
                 .catch(err => console.log(err));
           })
           .catch(err => console.log(err));
       })
       .catch(err => console.log(err));
-    // console.log("result: ");
-    // console.log(
-    //   util.inspect(result, {
-    //     showHidden: false,
-    //     depth: null
-    //   })
-    // );
     return result;
   }
   async function DeleteGamePlayQuestion(category, question) {
@@ -151,10 +130,6 @@ function NewGamePlayGeneration(socket, io) {
                 }
               })
                 .then(async gamePlayQuestion => {
-                  // console.log({
-                  //   idToDestroy: gamePlayQuestion.Question_Id
-                  // });
-
                   await gamePlayQuestion
                     .destroy()
                     .catch(err => console.log(err));
@@ -259,28 +234,31 @@ function NewGamePlayGeneration(socket, io) {
 
               const votesAnswers = {};
               for (const roomOfferAnswer of roomOffersAnswers) {
-                // { Answer_Id : roomOfferAnswer with this Answer_Id }
                 votesAnswers[
                   roomOfferAnswer.Answer_Id
                 ] = roomOffersAnswers.filter(roomOfferAnswer2 => {
                   return (
-                    roomOfferAnswer2.RoomPlayer_Id ==
-                    roomOfferAnswer.RoomPlayer_Id
+                    roomOfferAnswer2.Answer_Id ==
+                    roomOfferAnswer.Answer_Id
                   );
-                });
+                }).map(roomOfferAnswer3 => roomOfferAnswer3.RoomPlayer_Id);
               }
-
+              console.log("votesAnswers")
+              console.log(util.inspect(votesAnswers, false, null, true /* enable colors */))
               let maxVotedAnswer = { Answer_Id: 0, Votes: [] };
               for (const [answerId, votes] of Object.entries(votesAnswers)) {
-                if (votes.length > maxVotedAnswer.Votes.length)
+                if (votes.length > maxVotedAnswer.Votes.length) {
                   maxVotedAnswer = { Answer_Id: answerId, Votes: votes };
+                }
               }
-
+              console.log({maxVotedAnswer})
               const dominantVotesAnswers = {};
               for (const [answerId, votes] of Object.entries(votesAnswers)) {
                 if (votes.length == maxVotedAnswer.Votes.length)
                   dominantVotesAnswers[answerId] = votes;
               }
+              console.log({obj: Object.keys(dominantVotesAnswers),
+                  arr: correctAnswersIds})
               if (
                 Object.keys(dominantVotesAnswers).length ==
                 correctAnswersIds.length
@@ -306,14 +284,16 @@ function NewGamePlayGeneration(socket, io) {
         RoomTeam_Id: roomTeamId
       }
     }).catch(err => console.log(err));
+    console.log({resultOut: result, roomTeamId})
     return result;
   }
 
   async function AddRoomTeamsPoints(roomTeams, question) {
-    const teamIdsAddedPoints = {};
+    const roomTeamIdsAddedPoints = {};
     for await (const roomTeam of roomTeams) {
       const isAnswerCorrect = await checkTeamAnswers(roomTeam.RoomTeamId);
-      teamIdsAddedPoints[roomTeam.Team_Id] =
+      console.log({question, isAnswerCorrect, team: roomTeam.Team_Id})
+      roomTeamIdsAddedPoints[roomTeam.RoomTeamId] =
         question.QuestionCost * isAnswerCorrect;
       await roomTeam
         .update({
@@ -321,18 +301,19 @@ function NewGamePlayGeneration(socket, io) {
         })
         .catch(err => console.log(err));
     }
-    return teamIdsAddedPoints;
+    return roomTeamIdsAddedPoints;
   }
-  function checkAnswers(question) {
-    RoomTeam.findAll({ where: { Team_Id: { [Op.gt]: 0 } } })
+  function checkAnswers(question, roomId) {
+    RoomTeam.findAll({ where: { Team_Id: { [Op.gt]: 0 }, Room_Id: roomId } })
       .then(async roomTeams => {
         if (roomTeams) {
-          const teamIdsAddedPoints = await AddRoomTeamsPoints(
+          const roomTeamIdsAddedPoints = await AddRoomTeamsPoints(
             roomTeams,
             question
           );
 
           const teamNamesPoints = await GetTeamsPoints();
+          console.log({roomTeamIdsAddedPoints})
           for (const roomTeam of roomTeams) {
             io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
               "BreakBetweenQuestions",
@@ -340,7 +321,7 @@ function NewGamePlayGeneration(socket, io) {
               teamNamesPoints.find(
                 teamNamePoints => teamNamePoints.TeamId == roomTeam.Team_Id
               ),
-              teamIdsAddedPoints[roomTeam.Team_Id.toString()]
+              roomTeamIdsAddedPoints[roomTeam.RoomTeamId.toString()]
             );
           }
         }
@@ -350,22 +331,34 @@ function NewGamePlayGeneration(socket, io) {
 
   function runTimers(RoomId, callback, question, answers, type, category) {
     callback(question, answers, type, category);
-    const answeringTimer = {
-      timer: setTimeout(async function() {
-        const checkingTimer = {
-          timer: setTimeout(async function() {
-            const canDelete = await DeleteGamePlayQuestion(category, question);
-            if (canDelete) await NextRandomQuestion();
-          }, 5 * 1000),
-          RoomId
-        };
-        // проверяет ответы отдельной команды. Тк в сессии creator
-        checkAnswers(question);
-        CHECKING_TIMERS.push(checkingTimer);
-      }, question.AnswerTime * 1000),
-      RoomId
-    };
-    ANSWERING_TIMERS.push(answeringTimer);
+    GamePlay.findOne({ where: { GamePlayId: session.GamePlayId } })
+      .then(gamePlay => {
+        if (gamePlay) {
+          gamePlay.update({ isAnsweringTime: true });
+          const answeringTimer = {
+            timer: setTimeout(async function() {
+              gamePlay.update({ isAnsweringTime: false });
+              const checkingTimer = {
+                timer: setTimeout(async function() {
+                  const canDelete = await DeleteGamePlayQuestion(
+                    category,
+                    question
+                  );
+                  if (canDelete) {
+                    await NextRandomQuestion();
+                  }
+                }, 5 * 1000),
+                RoomId
+              };
+              checkAnswers(question, RoomId);
+              CHECKING_TIMERS.push(checkingTimer);
+            }, question.AnswerTime * 1000),
+            RoomId
+          };
+          ANSWERING_TIMERS.push(answeringTimer);
+        }
+      })
+      .catch(err => console.log(err));
   }
 
   async function NextRandomQuestion() {
@@ -397,7 +390,6 @@ function NewGamePlayGeneration(socket, io) {
 
   socket.on("gameStarted", async () => {
     if (session.isRoomCreator) {
-      // TODO: roomPlayers, roomTeams destroy при входе в комнату, чтобы не было вдруг there is no roomId in session
       await GamePlayStructure.Create(session);
       await NextRandomQuestion();
     }
@@ -420,7 +412,6 @@ function NewGamePlayGeneration(socket, io) {
           message = "teamsNotReady";
       })
       .catch(err => console.log(err));
-    // console.log({ message });
     return message;
   }
 
@@ -481,7 +472,6 @@ function NewGamePlayGeneration(socket, io) {
                   },
                   raw: true
                 }).then(roomPlayers => {
-                  // console.log({ roomPlayers });
                   usersOffers = roomPlayers.map(roomPlayer => {
                     return {
                       UserId: roomPlayer.User_Id,
@@ -594,7 +584,6 @@ function NewGamePlayGeneration(socket, io) {
               answeringTimer => answeringTimer.RoomId == session.roomId
             );
             if (answerTimer) clearTimeout(answerTimer.timer);
-
             const checkTimer = CHECKING_TIMERS.find(
               checkingTimer => checkingTimer.RoomId == session.roomId
             );
