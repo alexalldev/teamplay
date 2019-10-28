@@ -50,7 +50,8 @@ router.get("/home", app.protect, function(req, res) {
           }
         });
       }
-      res.render("view", { games });
+      console.log(games);
+      res.render("view", { games, page: 'home' });
     })
     .catch(err => console.log(err));
 });
@@ -111,8 +112,8 @@ router.get("/rooms", app.protect, function(req, res) {
       Game.findAll({
         where: { QuizCreatorId: req.session.passport.user },
         raw: true
-      }).then(games => {
-        res.render("view", { roomModels, games });
+      }).then(gameModels => {
+        res.render("view", { roomModels, gameModels, page: 'rooms' });
       });
     })
     .catch(err => console.log(err));
@@ -157,7 +158,7 @@ router.get("/teams", app.protect, function(req, res) {
           teams.userTeamId = user.Team_Id;
         }
       );
-      res.render("teamsList", { teams });
+      res.render("view", { teams, page: 'teams' });
     })
     .catch(err => {
       console.log({
@@ -200,7 +201,7 @@ router.get("/users", app.protect, function(req, res) {
         }
       );
 
-      res.render("usersList", { users });
+      res.render("view", { users, page: 'users' });
     })
     .catch(err => {
       console.log({

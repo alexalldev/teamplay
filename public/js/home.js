@@ -18,10 +18,6 @@ $(document).ready(function() {
     );
   });
 
-  $(".quiz").click(function() {
-    location.href = "/EditGame/" + $(this).attr("gameTag");
-  });
-
   $(".room").click(function() {
     location.href = "/room/" + $(this).attr("roomTag");
   });

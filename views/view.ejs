@@ -5,7 +5,9 @@
     <meta charset="utf-8">
     <title>TeamPlay Home</title>
     <link rel="stylesheet" href="/public/css/home.css">
-    <link rel="stylesheet" href="/public/css/quiz.css">
+    <% if (locals.games) { %>
+        <link rel="stylesheet" href="/public/css/quiz.css">
+    <% }%>
     <% include blocks/title %>
 </head>
 
@@ -13,14 +15,14 @@
     <% include blocks/loader %>
     <% include blocks/header %>
     <section class="app-container">
-        <%- include('blocks/navigation-area', {page:"home"}) %>
-        <div class="working-area mt-2">
+        <%- include('blocks/navigation-area', {page: locals.page ? locals.page : ''}) %>
+        <div class="working-area">
+                <%- include('blocks/page-header', {page: locals.page ? locals.page : ''}) %>
 <% if (locals.games) { %>
             <% if (games.length > 0) { %>
                 <% games.forEach(function(quiz){ %>
                 <%- include('blocks/quiz', {quiz: quiz}); %>
                 <% }); %>
-                <button class="btn btn-outline-success ml-2 mt-2 h1 btnCreateQuiz">Создать</button>
             <% } else { %>
                 <%- include('blocks/greetings', {btnName: 'btnCreateQuiz'}) %>
             <% } %>
@@ -33,6 +35,42 @@
         <% } else { %>
             <%- include('blocks/greetings', {btnName: 'btnCreateRoom'}) %>
         <% } %>
+        <div class="modal fade" id="createRoomModal">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                  
+              
+                <!-- Modal Header -->
+                <div class="modal-header">
+                  <h4 class="modal-title">Создать новую комнату</h4>
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <% if (gameModels.length == 0) { %>
+                        <div class="text-center">
+                            <span class="h2">Для того, чтобы создать команту, создайте викторину</span>
+                        </div>
+                    <% } else {%>
+                  <form action="javascript:void(null)">
+                        <select class="form-control mb-2" id="MyGamesSelect" name="GameId">
+                            <% if (gameModels.length > 0) { %>
+                                <% gameModels.forEach(function(quiz){ %>
+                                    <option value="<%= quiz.GameId %>"><%= quiz.GameName %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                        <input type="text" class="form-control mb-2" name="RoomName" id="RoomName" placeholder="Название комнаты">
+                        <input type="number" class="form-control mb-2" name="RoomMaxTeamPlayers" id="RoomMaxTeamPlayers" placeholder="Максимально игроков от одной команды" min="1" step="1">
+                        <button class="btn btn-success">Создать</button>
+                    </form>
+                    <% } %>
+                </div>
+                
+              </div>
+            </div>
+          </div>
 <% } %>
         </div>
     </section>
@@ -41,5 +79,8 @@
 <% include blocks/socket %>
 <script src="/public/js/animateCSS.js"></script>
 <script src="/public/js/home.js"></script>
+<% if (locals.games) { %>
+    <script src="/public/js/quiz-page.js"></script>
+<% }%>
 
 </html>

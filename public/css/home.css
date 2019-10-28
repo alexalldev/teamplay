@@ -67,3 +67,7 @@ body {
 .imgbord {
 	border: solid 2px rgba(4, 18, 48, 0.281);
 }
+
+.page-header {
+	border-color: #343a40!important;
+}

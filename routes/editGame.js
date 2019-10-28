@@ -37,20 +37,17 @@ router.post("/SetGameTime", urlencodedParser, function(req, res) {
     if (req.body.time >= 5)
       Game.findOne({ where: { GameId: req.session.Game.Id } })
         .then(game => {
-          if (req.body.type == 1)
-            game
-              .update({
-                SelectionTime: req.body.time
-              })
-              .then(res.end("true"))
-              .catch(err => res.end(JSON.stringify(err)));
-          else if (req.body.type == 2)
-            game
-              .update({
-                AnswerTime: req.body.time
-              })
-              .then(res.end("true"))
-              .catch(err => res.end(JSON.stringify(err)));
+          if (game) {
+            Category.findAll({where: {Game_Id: game.GameId}, raw: true})
+            .then(async categories => {
+                for (var category of categories) {
+                  await Question.update({where: {Category_Id: category.CategoryId}, AnswerTime: req.body.time})
+                  .catch(err => JSON.stringify(err));
+                }
+                await res.end('true');
+            })
+            .catch(err => JSON.stringify(err));
+          }
         })
         .catch(err => console.log(err));
     else res.end("min_time");
