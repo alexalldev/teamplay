@@ -39,18 +39,6 @@ $(document).ready(function() {
     }
 
     function StartPreparation() {
-      $(".roomActions").append(`
-      <div class="row cancelRow">
-        <div class="col-md-12 text-center mb-2">
-        <label class="h5">Отмена</label>
-        <button
-          class="btn btn-warning btnStartGame mr-3"
-          onclick="cancelGame(${roomId})">
-          <i class="fas fa-ban"></i>
-        </button>
-        <span class="h4 startGameFrom"></span>
-        </div>
-      </div>`);
       PrepareGameTimer();
       window.PrepareGameTimer = setInterval(PrepareGameTimer, 1000);
     }
@@ -375,11 +363,6 @@ socket.on("GameFinished", () => {
     document.location.reload(true);
   });
 });
-
-function cancelGame(roomId) {
-  $(".cancelRow").remove();
-  socket.emit("StopGamePreparation");
-}
 
 function FinishGame() {
   console.log("emit works");
