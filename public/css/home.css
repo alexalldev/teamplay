@@ -22,13 +22,6 @@ body {
 	margin-left: unset !important;
 }
 
-.room {
-	width: 15rem;
-	border: solid 1.75px #eee;
-	border-radius: 5px;
-	cursor: pointer;
-}
-
 .navbar {
 	position: fixed!important;
     width: 100%!important;

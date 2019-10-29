@@ -18,7 +18,7 @@ $(document).ready(function() {
     );
   });
 
-  $(".room").click(function() {
+  $(".btnEnterRoom").click(function() {
     location.href = "/room/" + $(this).attr("roomTag");
   });
 

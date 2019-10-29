@@ -1,0 +1,57 @@
+.room {
+    margin: 1rem;
+    width: 10rem;
+    height: 10rem;
+    border: solid 2px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.room-block {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    border: solid 2px;
+    border-radius: 2px;
+    background-color: whitesmoke;
+}
+
+.room-block-top-right {
+    top: -0.8rem;
+    right: -9rem;
+}
+
+.room-block-bottom-right {
+    top: -2.65rem;
+    left: -0.8rem;
+}
+
+.room-block-top-left {
+    top: 5.2rem;
+    left: -0.8rem;
+}
+
+.room-block-bottom-left {
+    top: 3.3rem;
+    right: -8.9rem;
+}
+
+.room-attribute {
+    position: relative;
+    top: -7.5rem;
+    text-align: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    
+    overflow: hidden;
+}
+
+.room-name {
+    top: -7.5rem;
+    max-height: 24px;
+}
+
+.btnEnterRoom {
+    cursor: pointer;
+    width: 90%;
+}

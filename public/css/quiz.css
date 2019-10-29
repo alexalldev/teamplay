@@ -7,15 +7,6 @@
 	display: inline-block;
 }
 
-.create-quiz {
-	width: 98%;
-	height: 2.5rem;
-	border-radius: 100px!important;
-	display: inline-block;
-	color: whitesmoke;
-	font-size: 10px;
-}
-
 .quiz-name {
 	max-height: 11rem;
 	overflow: hidden;
@@ -33,8 +24,4 @@
 
 .quiz-row:hover .quiz-hover {
 	font-size: 25px;
-}
-
-.btnCreateQuiz {
-	cursor: pointer;
 }

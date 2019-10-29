@@ -6,11 +6,14 @@
     <title>TeamPlay Home</title>
     <link rel="stylesheet" href="/public/css/home.css">
     <% if (locals.games) { %>
-        <link rel="stylesheet" href="/public/css/quiz.css">
+    <link rel="stylesheet" href="/public/css/quiz.css">
     <% }%>
     <% if (locals.editGame) { %>
-        <link rel="stylesheet" href="/public/css/EditGame/style.css">
-        <link rel="stylesheet" href="/public/css/CustomControls.css">
+    <link rel="stylesheet" href="/public/css/EditGame/style.css">
+    <link rel="stylesheet" href="/public/css/CustomControls.css">
+    <% }%>
+    <% if (locals.roomModels) { %>
+    <link rel="stylesheet" href="/public/css/roomModel.css">
     <% }%>
     <% include blocks/title %>
 </head>
@@ -21,16 +24,22 @@
     <section class="app-container">
         <%- include('blocks/navigation-area', {page: locals.page ? locals.page : ''}) %>
         <div class="working-area">
-                <%- include('blocks/page-header', {page: locals.page ? locals.page : ''}) %>
-<% if (locals.games) { %>
+            <%- include('blocks/page-header', {page: locals.page ? locals.page : ''}) %>
+            <% if (locals.games) { %>
             <% if (games.length > 0) { %>
-                <%- include('blocks/quiz', {games: games}); %>
+            <%- include('blocks/quiz', {games: games}); %>
             <% } else { %>
-                <%- include('blocks/greetings', {btnName: 'btnCreateQuiz'}) %>
+            <%- include('blocks/greetings', {btnName: 'btnCreateQuiz'}) %>
             <% } %>
-<% } else if (locals.editGame) { %>
-        <%- include('blocks/editGame', {game: locals.editGame}); %>
-<% } %>
+            <% } else if (locals.editGame) { %>
+            <%- include('blocks/editGame', {game: locals.editGame}); %>
+            <% } else if (locals.roomModels) { %>
+            <% if (roomModels.length > 0) { %>
+            <%- include('blocks/rooms', {roomModels: locals.roomModels}); %>
+            <% } else { %>
+            <%- include('blocks/greetings', {btnName: 'btnCreateRoom'}) %>
+            <% } %>
+            <% } %>
         </div>
     </section>
     <% include blocks/footer %>
@@ -39,10 +48,18 @@
 <script src="/public/js/animateCSS.js"></script>
 <script src="/public/js/home.js"></script>
 <% if (locals.games) { %>
-    <script src="/public/js/quiz-page.js"></script>
+<script src="/public/js/quiz-page.js"></script>
 <% }%>
 <% if (locals.editGame) { %>
-    <script src="/public/js/EditGame/index.js"></script>
+<script src="/public/js/EditGame/index.js"></script>
+<% }%>
+<% if (locals.roomModels) { %>
+<script>
+    socket.on('RoomOnline', function (status) {
+        $('.roomOnline-' + status.roomId).text('');
+        $('.roomOnline-' + status.roomId).text(status.online);
+    })
+</script>
 <% }%>
 
 </html>
