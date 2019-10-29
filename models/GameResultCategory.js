@@ -8,6 +8,9 @@ const GameResultCategory = db.define('game_result_category', {
     GameResultCategoryName: {
         type: Sequelize.TEXT
     },
+    Category_Id: {
+        type: Sequelize.INTEGER
+    },
     GameResult_Id: {
         type: Sequelize.INTEGER
     }

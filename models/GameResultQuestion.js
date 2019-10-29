@@ -1,7 +1,7 @@
-const Sequelize = require('sequelize');
-const db = require('../config/database');
+const Sequelize = require("sequelize");
+const db = require("../config/database");
 
-const GameResultQuestion = db.define('game_result_question', {
+const GameResultQuestion = db.define("game_result_question", {
     GameResultQuestionId: {
         type: Sequelize.INTEGER
     },
@@ -10,6 +10,9 @@ const GameResultQuestion = db.define('game_result_question', {
     },
     QuestionImagePath: {
         type: Sequelize.TEXT
+    },
+    Question_Id: {
+        type: Sequelize.INTEGER
     },
     GameResultCategory_Id: {
         type: Sequelize.INTEGER
