@@ -6,6 +6,8 @@ const fs = require("fs");
 const crypto = require("crypto");
 const Hash = require("password-hash");
 const GamePlay = require("../models/GamePlay");
+const GamePlayCategory = require("../models/GamePlayCategory");
+const Answer = require("../models/Answer");
 const {
   router,
   passport,
@@ -23,11 +25,11 @@ const {
 const RoomPlayers = require("../models/RoomPlayer");
 const RoomTeam = require("../models/RoomTeam");
 
-router.get("/", RedirectRules, function(req, res) {
+router.get("/", RedirectRules, function (req, res) {
   res.render("index", { Code: req.query.Code, User: req.query.User });
 });
 
-router.get("/rooms", app.protect, function(req, res) {
+router.get("/rooms", app.protect, function (req, res) {
   Room.findAll({ raw: true })
     .then(async rooms => {
       const roomModels = [];
@@ -46,10 +48,10 @@ router.get("/rooms", app.protect, function(req, res) {
                   roomName: room.RoomName,
                   roomCreator: `${
                     userCreator.UserFamily
-                  } ${userCreator.UserName.slice(
-                    0,
-                    1
-                  )}. ${userCreator.UserLastName.slice(0, 1)}.`,
+                    } ${userCreator.UserName.slice(
+                      0,
+                      1
+                    )}. ${userCreator.UserLastName.slice(0, 1)}.`,
                   roomCreatorId: userCreator.UserId,
                   roomTag: room.RoomTag,
                   maxTeamPlayers: room.RoomMaxTeamPlayers,
@@ -127,7 +129,7 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
     });
 });
 
-router.get("/user/:userId", app.protect, function(req, res) {
+router.get("/user/:userId", app.protect, function (req, res) {
   User.findOne({ where: { UserId: req.params.userId }, raw: true })
     .then(async user => {
       if (req.session.passport.user == user.UserId) user.canEdit = true;
@@ -168,7 +170,7 @@ router.get("/user/:userId", app.protect, function(req, res) {
     });
 });
 
-router.get("/teams", app.protect, function(req, res) {
+router.get("/teams", app.protect, function (req, res) {
   Team.findAll({ raw: true })
     .then(async teams => {
       for await (const team of teams) {
@@ -218,7 +220,7 @@ router.get("/teams", app.protect, function(req, res) {
     });
 });
 
-router.get("/users", app.protect, function(req, res) {
+router.get("/users", app.protect, function (req, res) {
   User.findAll({ where: { UserIsActive: true }, raw: true })
     .then(async users => {
       for await (const user of users) {
@@ -260,16 +262,25 @@ router.get("/users", app.protect, function(req, res) {
     });
 });
 
-router.get("/user", app.protect, function(req, res) {
+router.get("/user", app.protect, function (req, res) {
   if (req.session.passport.user)
     res.redirect(`/user/${req.session.passport.user}`);
 });
 
-router.post("/getCurrUserId", urlencodedParser, function(req, res) {
+router.post("/getCurrUserId", urlencodedParser, function (req, res) {
   res.json({ userId: req.session.passport.user });
 });
 
-router.get("/home", app.protect, function(req, res) {
+router.post("/DeleteRoomPlayerSession", function (req, res) {
+  console.log({ session: req.session });
+  console.log({ body: req.body });
+  req.session.destroy();
+  console.log("post deleted");
+  console.log({ sessionAfter: req.session });
+  res.end("deleted");
+});
+
+router.get("/home", app.protect, function (req, res) {
   Game.findAll({
     where: { QuizCreatorId: req.session.passport.user },
     raw: true
@@ -290,7 +301,7 @@ router.get("/home", app.protect, function(req, res) {
               where: { Category_Id: category.CategoryId }
             }).then(questions => {
               game.questionCount = questions.length;
-              game.averageAsnwerTime = (function() {
+              game.averageAsnwerTime = (function () {
                 let questionsTime = 0;
                 for (const question of questions) {
                   questionsTime += question.AnswerTime;
@@ -308,11 +319,69 @@ router.get("/home", app.protect, function(req, res) {
     .catch(err => console.log(err));
 });
 
-router.get("/room/:RoomTag", app.protect, function(req, res) {
+router.get("/room/:RoomTag", app.protect, function (req, res) {
   Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
     .then(room => {
       GamePlay.findOne({ where: { Room_Id: room.RoomId } })
         .then(gamePlay => {
+          let wasGameStarted;
+          let isAnsweringTime;
+          let currentQuestion;
+          let answers;
+          let type;
+          let isRoomCreator;
+          let categoryName;
+          if (gamePlay) {
+            GamePlayCategory.findOne({
+              where: {
+                GamePlay_Id: gamePlay.GamePlayId
+              }
+            })
+              .then(async gamePlayCategory => {
+                if (gamePlayCategory)
+                  await Category.findOne({
+                    where: {
+                      CategoryId: gamePlayCategory.Category_Id
+                    }
+                  })
+                    .then(async category => {
+                      if (category)
+                        await Question.findOne({
+                          where: {
+                            QuestionId: gamePlay.CurrentQuestionId
+                          }
+                        })
+                          .then(async currQuestion => {
+                            if (currQuestion)
+                              await Answer.findAll({
+                                where: {
+                                  Question_Id: currQuestion.QuestionId
+                                }
+                              }).then(answersArr => {
+                                if (answersArr) {
+                                  wasGameStarted = !!gamePlay;
+                                  isAnsweringTime = gamePlay.isAnsweringTime;
+                                  currentQuestion = currQuestion;
+                                  answers = req.session.isRoomCreator
+                                    ? answersArr.filter(
+                                      answer => answer.Correct
+                                    )
+                                    : answersArr;
+                                  type =
+                                    answersArr.length == 1
+                                      ? "text"
+                                      : "checkbox";
+                                  isRoomCreator = req.session.isRoomCreator;
+                                  categoryName = category.CategoryName;
+                                }
+                              });
+                          })
+                          .catch(err => console.log(err));
+                    })
+                    .catch(err => console.log(err));
+              })
+              .catch(err => console.log(err));
+          }
           if (room) {
             if (req.session.passport.user == room.RoomCreatorId)
               req.session.isRoomCreator = true;
@@ -322,7 +391,6 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
               raw: true
             })
               .then(user => {
-                console.log({user});
                 RoomTeam.findOne({
                   where: { Room_Id: room.RoomId, Team_Id: user.Team_Id }
                 })
@@ -370,7 +438,6 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                           createdRoomPlayer,
                                           created
                                         ]) => {
-                                          console.log({createdRoomPlayer})
                                           req.session.roomPlayersId =
                                             createdRoomPlayer.RoomPlayersId;
                                           Team.findOne({
@@ -436,84 +503,20 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                                           roomId: room.RoomId,
                                                           online: roomOnline
                                                         });
-                                                        if (gamePlay) {
-                                                          GamePlayCategory.findOne(
-                                                            {
-                                                              where: {
-                                                                GamePlay_Id:
-                                                                  gamePlay.GamePlayId
-                                                              }
-                                                            }
-                                                          )
-                                                            .then(
-                                                              gamePlayCategory => {
-                                                                Category.findOne({
-                                                                  where: {
-                                                                    CategoryId:
-                                                                      gamePlayCategory.Category_Id
-                                                                  }
-                                                                })
-                                                                  .then(
-                                                                    category => {
-                                                                      Question.findOne({
-                                                                        where: {
-                                                                          QuestionId:
-                                                                            gamePlay.CurrentQuestionId
-                                                                        }
-                                                                      }).then(currentQuestion => {
-                                                                          Answer.findAll({
-                                                                            where: {
-                                                                              Question_Id:
-                                                                                currentQuestion.QuestionId
-                                                                            }
-                                                                          }).then(
-                                                                            answers => {
-                                                                              res.render(
-                                                                                "room",
-                                                                                {
-                                                                                  room,
-                                                                                  roomPlayer:
-                                                                                    createdRoomPlayer.dataValues,
-                                                                                  readyState:
-                                                                                    roomTeam2.ReadyState,
-                                                                                  wasGameStarted: !!gamePlay,
-                                                                                  isAnsweringTime:
-                                                                                    gamePlay.isAnsweringTime,
-                                                                                  currentQuestion,
-                                                                                  answers: req.session.isRoomCreator ? answers.filter(answer => answer.Correct) : answers,
-                                                                                  type: answers.length == 1 ? 'text' : 'checkbox',
-                                                                                  isRoomCreator: req.session.isRoomCreator,
-                                                                                  categoryName: category.CategoryName
-                                                                                }
-                                                                              );
-                                                                            }
-                                                                          ).catch(err => console.log(err))
-                                                                        }
-                                                                      ).catch(err => console.log(err))
-                                                                    }
-                                                                  )
-                                                                  .catch(err =>
-                                                                    console.log(
-                                                                      err
-                                                                    )
-                                                                  );
-                                                              }
-                                                            )
-                                                            .catch(err =>
-                                                              console.log(err)
-                                                            );
-                                                        }
-                                                        res.render(
-                                                          "room",
-                                                          {
-                                                            room,
-                                                            roomPlayer:
-                                                              createdRoomPlayer.dataValues,
-                                                            readyState:
-                                                              roomTeam2.ReadyState,
-                                                            wasGameStarted: !!gamePlay
-                                                          }
-                                                        );
+                                                        res.render("room", {
+                                                          room,
+                                                          roomPlayer:
+                                                            createdRoomPlayer.dataValues,
+                                                          readyState:
+                                                            roomTeam2.ReadyState,
+                                                          wasGameStarted,
+                                                          isAnsweringTime,
+                                                          currentQuestion,
+                                                          answers,
+                                                          type,
+                                                          isRoomCreator,
+                                                          categoryName
+                                                        });
                                                       })
                                                       .catch(err =>
                                                         console.log(err)
@@ -553,7 +556,13 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                           room: findedRoom,
                                           roomPlayer,
                                           readyState: roomTeam2.ReadyState,
-                                          wasGameStarted: !!gamePlay
+                                          wasGameStarted,
+                                          isAnsweringTime,
+                                          currentQuestion,
+                                          answers,
+                                          type,
+                                          isRoomCreator,
+                                          categoryName
                                         });
                                       });
                                     } else
@@ -592,7 +601,7 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
     .catch(err => console.log(err));
 });
 
-router.get("/leaveRoom", app.protect, async function(req, res) {
+router.get("/leaveRoom", app.protect, async function (req, res) {
   if (req.session.roomId)
     await Room.findOne({ where: { RoomId: req.session.roomId }, raw: true })
       .then(async room => {
@@ -674,7 +683,7 @@ router.get("/leaveRoom", app.protect, async function(req, res) {
   else res.redirect("/");
 });
 
-router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
+router.post("/RegisterNewUser", urlencodedParser, function (req, res) {
   if (req.body.password === req.body.confirmpassword) {
     if (req.body.password.length > 5) {
       if (validateEmail(req.body.email)) {
@@ -691,7 +700,7 @@ router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
         fs.readFile(
           `${__dirname}/../html_mail/TeamPlayVerificationEmail.html`,
           "utf-8",
-          function(err, data) {
+          function (err, data) {
             if (err) res.end(JSON.stringify(err));
             const html_mail_array = data.split("CONFIRM_NEW_USER_BUTTON");
             const confirmation_hash = crypto
@@ -700,9 +709,9 @@ router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
               .slice(0, 120);
             const html_mail = `${html_mail_array[0] + req.protocol}://${
               req.hostname
-            }/ConfirmNewUserAccount?confirmation_type=email&security_code=${confirmation_hash}${
+              }/ConfirmNewUserAccount?confirmation_type=email&security_code=${confirmation_hash}${
               html_mail_array[1]
-            }`;
+              }`;
 
             const mailOptions = {
               from: '"Teamplay info" <info@teamplay.space>', // sender address
@@ -758,7 +767,7 @@ router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
   } else res.end("incorrect_confirm_password");
 });
 
-router.get("/ConfirmNewUserAccount", function(req, res) {
+router.get("/ConfirmNewUserAccount", function (req, res) {
   if (req.query.confirmation_type == "email")
     if (req.query.security_code != "")
       User.findOne({
@@ -772,7 +781,7 @@ router.get("/ConfirmNewUserAccount", function(req, res) {
                 UserIsActive: true
               })
               .then(() => {
-                req.logIn(user, function(err) {
+                req.logIn(user, function (err) {
                   if (err) throw err;
                   else res.redirect("/");
                 });
@@ -782,16 +791,16 @@ router.get("/ConfirmNewUserAccount", function(req, res) {
         .catch(err => console.log(err));
 });
 
-router.post("/SignIn", RedirectRules, function(req, res, next) {
+router.post("/SignIn", RedirectRules, function (req, res, next) {
   passport.authenticate(
     "local",
     { failureRedirect: "/", failureFlash: true },
-    function(err, User, info) {
+    function (err, User, info) {
       if (err) return next(err);
       if (info) return res.send(info.message);
       if (!User) return res.send("USER IS NULL");
 
-      req.logIn(User, function(err) {
+      req.logIn(User, function (err) {
         if (err) {
           return next(User);
         }
@@ -805,7 +814,7 @@ router.post("/SignIn", RedirectRules, function(req, res, next) {
   )(req, res, next);
 });
 
-router.get("/Room/:GameTag", app.protect, function(req, res) {
+router.get("/Room/:GameTag", app.protect, function (req, res) {
   if (req.session.Team) {
     Game.findOne({ where: { GameTag: req.params.GameTag } })
       .then(game => {
@@ -857,7 +866,7 @@ router.get("/Room/:GameTag", app.protect, function(req, res) {
                         })
                           .then(team => {
                             if (team != null)
-                              Team.AddTeamPlayers(team, function(fullTeam) {
+                              Team.AddTeamPlayers(team, function (fullTeam) {
                                 fullTeam.GameTeamId = gameTeam.GameTeamId;
                                 res.render("game", {
                                   game,
@@ -904,7 +913,7 @@ router.get("/Room/:GameTag", app.protect, function(req, res) {
   } else res.redirect("/");
 });
 
-router.post("/ForgotPassword", urlencodedParser, function(req, res) {
+router.post("/ForgotPassword", urlencodedParser, function (req, res) {
   if (req.body.username) {
     if (validateEmail(req.body.username))
       User.findOne({ where: { UserEmail: req.body.username } })
@@ -924,7 +933,7 @@ router.post("/ForgotPassword", urlencodedParser, function(req, res) {
               fs.readFile(
                 `${__dirname}/../html_mail/TeamPlayForgotEmail.html`,
                 "utf-8",
-                function(err, data) {
+                function (err, data) {
                   if (err) res.end(JSON.stringify(err));
                   const html_mail_array = data.split("NEW_EMAILBUTTON");
                   const confirmation_hash = crypto
@@ -933,9 +942,9 @@ router.post("/ForgotPassword", urlencodedParser, function(req, res) {
                     .slice(0, 120);
                   const html_mail = `${html_mail_array[0] + req.protocol}://${
                     req.hostname
-                  }/ChangePassword?confirmation_type=email&security_code=${confirmation_hash}${
+                    }/ChangePassword?confirmation_type=email&security_code=${confirmation_hash}${
                     html_mail_array[1]
-                  }`;
+                    }`;
 
                   const mailOptions = {
                     from: '"Teamplay info" <info@teamplay.space>', // sender address
@@ -965,7 +974,7 @@ router.post("/ForgotPassword", urlencodedParser, function(req, res) {
   } else res.end("null_email");
 });
 
-router.get("/ChangePassword", function(req, res) {
+router.get("/ChangePassword", function (req, res) {
   if (req.query.security_code)
     User.findOne({ where: { UserRegistrationToken: req.query.security_code } })
       .then(user => {
@@ -978,7 +987,7 @@ router.get("/ChangePassword", function(req, res) {
   else res.end("false");
 });
 
-router.post("/ChangePassword", urlencodedParser, function(req, res) {
+router.post("/ChangePassword", urlencodedParser, function (req, res) {
   if (req.session.security_code)
     if (req.body.firstpass && req.body.secondpass)
       if (
@@ -1035,16 +1044,16 @@ function LogOut(req, res, reason = "") {
   res.redirect("/");
 }
 
-router.get("/logout", app.protect, function(req, res) {
+router.get("/logout", app.protect, function (req, res) {
   req.query.reason ? LogOut(req, res, req.query.reason) : LogOut(req, res);
 });
 
-router.get("/ControlPanel", app.protect, function(req, res) {
+router.get("/ControlPanel", app.protect, function (req, res) {
   if (req.session.Game) delete req.session.Game;
   res.render("controlPanel");
 });
 
-router.get("/ControlPanel/:GameTag", app.protect, function(req, res) {
+router.get("/ControlPanel/:GameTag", app.protect, function (req, res) {
   Game.findOne({ where: { GameTag: req.params.GameTag } })
     .then(async game => {
       if (game != null) {
@@ -1062,7 +1071,7 @@ router.get("/ControlPanel/:GameTag", app.protect, function(req, res) {
     .catch(err => console.log(err));
 });
 
-router.post("/SetStreamBackground", app.protect, urlencodedParser, function(
+router.post("/SetStreamBackground", app.protect, urlencodedParser, function (
   req,
   res
 ) {
@@ -1070,7 +1079,7 @@ router.post("/SetStreamBackground", app.protect, urlencodedParser, function(
     if (req.session.Game) {
       const form = formidable.IncomingForm();
       form.uploadDir = "./IMAGES/STREAM_IMAGES";
-      form.parse(req, function(err, fields, files) {
+      form.parse(req, function (err, fields, files) {
         if (files.StreamImage) {
           if (files.StreamImage.size < 20000000) {
             const StreamImagePath = files.StreamImage.path
