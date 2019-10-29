@@ -13,12 +13,18 @@ const Category = require("../../models/Category");
 const Question = require("../../models/Question");
 const Answer = require("../../models/Answer");
 const Room = require("../../models/Room");
+const RoomPlayer = require("../../models/RoomPlayer");
+const RoomTeam = require("../../models/RoomTeam");
 const User = require("../../models/User");
+
+const DISCONNECT_TIMERS = {};
 
 function ClientsStore() {
   const Creators = [];
   const Teams = [];
   const Users = [];
+  const Players = [];
+  const RoomUsers = [];
 
   this.pushCreator = async function(Creator) {
     for (const C in Creators) {
@@ -36,11 +42,26 @@ function ClientsStore() {
     Teams.push(Team);
   };
 
+  this.pushPlayer = function(Player) {
+    for (const P in Players) {
+      if (Players[P].Id == Player.Id) Players.splice(P, 1);
+    }
+    Players.push(Player);
+  };
+
   this.pushUser = function(User) {
     for (const U in Users) {
       if (Users[U].Id == User.Id) Users.splice(U, 1);
     }
     Users.push(User);
+  };
+
+  this.pushRoomUser = function(currentRoomUser) {
+    for (const roomUser in RoomUsers) {
+      if (RoomUsers[roomUser].Id == currentRoomUser.Id)
+        RoomUsers.splice(roomUser, 1);
+    }
+    RoomUsers.push(currentRoomUser);
   };
 
   this.removeById = function(socketId) {
@@ -72,6 +93,14 @@ function ClientsStore() {
     return Users;
   };
 
+  this.roomUsers = function() {
+    return RoomUsers;
+  };
+
+  this.players = function() {
+    return Players;
+  };
+
   this.teamById = function(teamId) {
     for (const team of Teams) {
       if (team.Id == teamId) return team;
@@ -98,7 +127,8 @@ io.emitTeam = function(teamId, eventName, data) {
   const team = io.ClientsStore.teamById(teamId);
   if (team != null)
     try {
-      if (io.sockets.connected[team.SocketId]) io.sockets.connected[team.SocketId].emit(eventName, data);
+      if (io.sockets.connected[team.SocketId])
+        io.sockets.connected[team.SocketId].emit(eventName, data);
     } catch (err) {
       console.log(err);
     }
@@ -108,7 +138,8 @@ io.emitUser = function(userId, eventName, data) {
   const user = io.ClientsStore.userById(userId);
   if (user != null)
     try {
-      if (io.sockets.connected[user.SocketId]) io.sockets.connected[user.SocketId].emit(eventName, data);
+      if (io.sockets.connected[user.SocketId])
+        io.sockets.connected[user.SocketId].emit(eventName, data);
     } catch (err) {
       console.log(err);
     }
@@ -119,7 +150,8 @@ io.emitCreator = function(creatorId, eventName, data) {
   const creator = io.ClientsStore.creatorById(creatorId);
   if (creator != null)
     try {
-      if (io.sockets.connected[creator.SocketId]) io.sockets.connected[creator.SocketId].emit(eventName, data);
+      if (io.sockets.connected[creator.SocketId])
+        io.sockets.connected[creator.SocketId].emit(eventName, data);
     } catch (err) {
       console.log(err);
     }
@@ -133,20 +165,33 @@ io.on("connection", function(socket) {
   const { session } = socket.request; // Сессия пользователя
 
   // Вход в ClientStore
-  if (session.isRoomCreator)
-    io.ClientsStore.pushCreator({
+  if (session.passport) {
+    io.ClientsStore.pushUser({
       Id: session.passport.user,
       SocketId: socket.id
     });
-  else if (session.passport)
-    if (session.passport.user)
-      io.ClientsStore.pushUser({
+    if (session.isRoomCreator)
+      io.ClientsStore.pushCreator({
         Id: session.passport.user,
         SocketId: socket.id
       });
+    else {
+      io.ClientsStore.pushPlayer({
+        Id: session.passport.user,
+        SocketId: socket.id
+      });
+    }
+    clearDisconnectTimer();
+  }
+
   // Подключение к комнате в зависимости от типа пользователя
   if (session.roomId) {
     socket.join(`RoomUsers${session.roomId}`);
+    io.ClientsStore.pushRoomUser({
+      Id: session.passport.user,
+      SocketId: socket.id,
+      RoomId: session.roomId
+    });
     if (session.isRoomCreator) {
       socket.join(`RoomCreators${session.roomId}`);
       io.to(`RoomUsers${session.roomId}`).emit("RecieveCreatorStatus", true);
@@ -155,6 +200,9 @@ io.on("connection", function(socket) {
       if (session.isGroupCoach) socket.join(`RoomTeamCoaches${session.roomId}`);
       socket.join(`RoomPlayers${session.roomId}`);
     }
+  }
+
+  if (session.passport) {
   }
   if (session.Stream) {
     socket.join(`Stream${session.Stream.GameId}`);
@@ -165,7 +213,8 @@ io.on("connection", function(socket) {
   // Запрос на добавление новой игры с указанным именем
   socket.on("AddGame", function(data) {
     if (session.passport.user) {
-      if (data.GameName.charAt(data.GameName.length - 1) == " ") data.GameName = data.GameName.substr(0, data.GameName.length - 1);
+      if (data.GameName.charAt(data.GameName.length - 1) == " ")
+        data.GameName = data.GameName.substr(0, data.GameName.length - 1);
       GameTag = data.GameName.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, "")
         .toLowerCase()
         .replace(/\s/g, "-");
@@ -203,7 +252,9 @@ io.on("connection", function(socket) {
       }).then(game => {
         if (game) {
           const categoriesIds = [];
-          Room.destroy({ where: { Game_Id: GameId } }).catch(err => console.log(err));
+          Room.destroy({ where: { Game_Id: GameId } }).catch(err =>
+            console.log(err)
+          );
 
           Category.findAll({ raw: true, where: { Game_Id: GameId } })
             .then(categories => {
@@ -218,7 +269,10 @@ io.on("connection", function(socket) {
                 })
                   .then(async questions => {
                     for (const question of questions) {
-                      await Question.RemoveQuestionImage(question.QuestionId, function(result) {});
+                      await Question.RemoveQuestionImage(
+                        question.QuestionId,
+                        function(result) { }
+                      );
                       await Answer.destroy({
                         where: { Question_Id: question.QuestionId }
                       })
@@ -229,7 +283,7 @@ io.on("connection", function(socket) {
                     Question.destroy({
                       where: { Category_Id: categoriesIds[c] }
                     })
-                      .then(questionRemoved => {})
+                      .then(questionRemoved => { })
                       .catch(err => console.log(err));
                   })
                   .catch(err => console.log(err));
@@ -272,8 +326,10 @@ io.on("connection", function(socket) {
         .then(gameTeams => {
           AddTeamsPlayers(gameTeams, function(fullTeams) {
             for (const gameTeam of gameTeams) {
-              if (gameTeam.Play == 1) return socket.emit("ReciveTeams", fullTeams, 1);
-              if (gameTeam.Play == 2) return socket.emit("ReciveTeams", fullTeams, 2);
+              if (gameTeam.Play == 1)
+                return socket.emit("ReciveTeams", fullTeams, 1);
+              if (gameTeam.Play == 2)
+                return socket.emit("ReciveTeams", fullTeams, 2);
             }
             return socket.emit("ReciveTeams", fullTeams, false);
           });
@@ -332,11 +388,34 @@ io.on("connection", function(socket) {
 
   socket.on("BroadcastTeams", function(message) {
     // Вещание из ControlPanel
-    if (socket.HasControlGame) io.to(`Teams${session.Game.Id}`).emit("Broadcast", message);
+    if (socket.HasControlGame)
+      io.to(`Teams${session.Game.Id}`).emit("Broadcast", message);
   });
 
   socket.on("disconnect", function(reason) {
-    if (session.isRoomCreator) io.to(`RoomUsers${session.roomId}`).emit("RecieveCreatorStatus", false);
+    if (session.passport)
+      if (session.roomPlayersId) {
+        const clearRoomPlayer = setTimeout(async () => {
+          await RoomPlayer.count({
+            where: { Room_Id: session.roomId, Team_Id: session.TeamId }
+          })
+            .then(async roomPlayersNum => {
+              if (roomPlayersNum == 1)
+                await RoomTeam.destroy({
+                  where: { Room_Id: session.roomId, Team_Id: session.TeamId }
+                }).catch(err => console.log(err));
+              await RoomPlayer.destroy({
+                where: { RoomPlayersId: session.roomPlayersId }
+              }).catch(err => console.log(err));
+            })
+            .catch(err => console.log(err));
+          clearDisconnectTimer();
+        }, 4 * 1000);
+        DISCONNECT_TIMERS[session.roomPlayersId] = clearRoomPlayer;
+      }
+
+    if (session.isRoomCreator)
+      io.to(`RoomUsers${session.roomId}`).emit("RecieveCreatorStatus", false);
     io.ClientsStore.removeById(socket.id);
   });
 
@@ -353,6 +432,26 @@ io.on("connection", function(socket) {
 
   /** ******************Rooms***************** */
   require("./rooms")(socket, io);
+
+  function clearDisconnectTimer() {
+    if (DISCONNECT_TIMERS[session.roomPlayersId]) {
+      clearTimeout(DISCONNECT_TIMERS[session.roomPlayersId]);
+      delete DISCONNECT_TIMERS[session.roomPlayersId];
+    }
+    if (session.roomPlayersId) {
+      RoomPlayer.findOne({
+        where: { RoomPlayersId: session.roomPlayersId }
+      }).then(roomPlayer => {
+        if (!roomPlayer) {
+          delete session.roomTeamId;
+          delete session.isGroupCoach;
+          delete session.roomId;
+          delete session.isRoomCreator;
+          delete session.roomPlayersId;
+        }
+      });
+    }
+  }
 });
 
 async function AddTeamsPlayers(teams, callback) {

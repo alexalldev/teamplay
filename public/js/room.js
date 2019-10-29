@@ -174,7 +174,6 @@ socket.on(
 socket.on(
   "sendQuestion",
   (question, answers, type, isRoomCreator, categoryName) => {
-    console.log({ question });
     startTimer(question.AnswerTime - 1);
 
     $(".QuestionArea").html(
@@ -184,7 +183,7 @@ socket.on(
       question.QuestionImagePath
         ? `<div class="row"><div class="col-md-12 text-center mb-2 QuestionImage"><img src="http://localhost/QuestionImage?QuestionId=${question.QuestionId} alt=""></div></div>}`
         : ``
-    }
+      }
   `
     );
     ClearRating();
@@ -197,16 +196,16 @@ socket.on(
         isRoomCreator
           ? `Правильный ответ: <span>${answer.AnswerText}</span>`
           : `${
-              type == "checkbox"
-                ? `<button answerId="${answer.AnswerId}" class="alert alert-info answerButton" onclick="chooseAnswer('answer-${answer.AnswerId}')">
+          type == "checkbox"
+            ? `<button answerId="${answer.AnswerId}" class="alert alert-info answerButton" onclick="chooseAnswer('answer-${answer.AnswerId}')">
                 ${answer.AnswerText}
                 </button>
          <div class="col-md-12 text-center mb-2 whoAnswered"></div>
          `
-                : `<input type="text" answerId="${answer.AnswerId}" class="form-control text-left answer">`
-            }
+            : `<input type="text" answerId="${answer.AnswerId}" class="form-control text-left answer">`
+          }
             `
-      }
+        }
 
       </div>
       </div>`
@@ -275,15 +274,15 @@ function AddPlayerToGroup(player) {
 		<div class="col-md-12 text-left">
             <img class="user_organizer" src="/public/user-icon.png" alt="">
             <span style="font-size: 30px; position:relative; top: 5%"> ${
-              player.UserFamily
-            } ${player.UserName.slice(0, 1)}.${player.UserLastName.slice(
+    player.UserFamily
+    } ${player.UserName.slice(0, 1)}.${player.UserLastName.slice(
       0,
       1
     )}.</span>
           <span class="isGroupCoach-${player.RoomPlayersId}">${
-      player.isGroupCoach
-        ? '<span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>'
-        : ""
+    player.isGroupCoach
+      ? '<span style="position: absolute; left:90%; bottom:30%"><i class="fas fa-star text-warning"></i></span>'
+      : ""
     }
         </div>
     </div>`

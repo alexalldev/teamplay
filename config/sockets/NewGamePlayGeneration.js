@@ -1,4 +1,4 @@
-const util = require('util')
+const util = require("util");
 const { Op } = require("sequelize");
 const Category = require("../../models/Category");
 const Question = require("../../models/Question");
@@ -234,31 +234,25 @@ function NewGamePlayGeneration(socket, io) {
 
               const votesAnswers = {};
               for (const roomOfferAnswer of roomOffersAnswers) {
-                votesAnswers[
-                  roomOfferAnswer.Answer_Id
-                ] = roomOffersAnswers.filter(roomOfferAnswer2 => {
-                  return (
-                    roomOfferAnswer2.Answer_Id ==
-                    roomOfferAnswer.Answer_Id
-                  );
-                }).map(roomOfferAnswer3 => roomOfferAnswer3.RoomPlayer_Id);
+                votesAnswers[roomOfferAnswer.Answer_Id] = roomOffersAnswers
+                  .filter(roomOfferAnswer2 => {
+                    return (
+                      roomOfferAnswer2.Answer_Id == roomOfferAnswer.Answer_Id
+                    );
+                  })
+                  .map(roomOfferAnswer3 => roomOfferAnswer3.RoomPlayer_Id);
               }
-              console.log("votesAnswers")
-              console.log(util.inspect(votesAnswers, false, null, true /* enable colors */))
               let maxVotedAnswer = { Answer_Id: 0, Votes: [] };
               for (const [answerId, votes] of Object.entries(votesAnswers)) {
                 if (votes.length > maxVotedAnswer.Votes.length) {
                   maxVotedAnswer = { Answer_Id: answerId, Votes: votes };
                 }
               }
-              console.log({maxVotedAnswer})
               const dominantVotesAnswers = {};
               for (const [answerId, votes] of Object.entries(votesAnswers)) {
                 if (votes.length == maxVotedAnswer.Votes.length)
                   dominantVotesAnswers[answerId] = votes;
               }
-              console.log({obj: Object.keys(dominantVotesAnswers),
-                  arr: correctAnswersIds})
               if (
                 Object.keys(dominantVotesAnswers).length ==
                 correctAnswersIds.length
@@ -284,7 +278,6 @@ function NewGamePlayGeneration(socket, io) {
         RoomTeam_Id: roomTeamId
       }
     }).catch(err => console.log(err));
-    console.log({resultOut: result, roomTeamId})
     return result;
   }
 
@@ -292,7 +285,6 @@ function NewGamePlayGeneration(socket, io) {
     const roomTeamIdsAddedPoints = {};
     for await (const roomTeam of roomTeams) {
       const isAnswerCorrect = await checkTeamAnswers(roomTeam.RoomTeamId);
-      console.log({question, isAnswerCorrect, team: roomTeam.Team_Id})
       roomTeamIdsAddedPoints[roomTeam.RoomTeamId] =
         question.QuestionCost * isAnswerCorrect;
       await roomTeam
@@ -313,7 +305,6 @@ function NewGamePlayGeneration(socket, io) {
           );
 
           const teamNamesPoints = await GetTeamsPoints();
-          console.log({roomTeamIdsAddedPoints})
           for (const roomTeam of roomTeams) {
             io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
               "BreakBetweenQuestions",
@@ -427,7 +418,6 @@ function NewGamePlayGeneration(socket, io) {
         where: { Room_Id: session.roomId, Team_Id: session.TeamId }
       })
         .then(async roomTeam => {
-          // console.log({ roomTeam });
           await RoomOfferAnswer.destroy({
             where: {
               RoomPlayer_Id: session.roomPlayersId
@@ -607,7 +597,6 @@ function NewGamePlayGeneration(socket, io) {
   }
 
   socket.on("FinishGame", () => {
-    console.log({ session });
     if (session.isRoomCreator) {
       FinishGame();
     }

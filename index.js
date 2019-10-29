@@ -11,10 +11,11 @@ const RoomPlayer = require("./models/RoomPlayer");
 
 const sessionMiddleware = session({
   secret: "TEAMPLAYCOOKIESETRETWORDFORSESSION",
-  store: new FileStore({ logFn: () => {} }),
+  store: new FileStore({ logFn: () => { } }),
   cookie: {
     path: "/",
-    httpOnly: true
+    httpOnly: true,
+    maxAge: null
   },
   resave: false,
   saveUninitialized: false
@@ -55,7 +56,6 @@ app.use((req, res, next) => {
               where: { Room_Id: room.RoomId },
               raw: true
             }).then(roomPlayer => {
-              console.log({ roomPlayer });
               if (roomPlayer)
                 return res.render("info", {
                   message: "LEAVE_ROOM",
@@ -137,7 +137,7 @@ app.get("/QuestionImage", (req, res) => {
   }
 });
 
-app.get("/StreamImage", function(req, res) {
+app.get("/StreamImage", function (req, res) {
   if (req.query.GamePlayId)
     GamePlay.findOne({ raw: true, where: { GamePlayId: req.query.GamePlayId } })
       .then(gamePlay => {
@@ -174,6 +174,6 @@ app.get("/UserImage", (req, res) => {
   fs.createReadStream(`${__dirname}/IMAGES/NULL_IMAGE`).pipe(res);
 });
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.redirect("/");
 });
