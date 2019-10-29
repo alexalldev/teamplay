@@ -393,29 +393,62 @@ function NewGamePlayGeneration(socket, io) {
             GameName: game.GameName,
             Timestamp: gamePlayResult.gamePlay.StartTime
           })
-            .then(gameResult => {
-              GameResultCategory.bulkCreate(
+            .then(async gameResult => {
+              await GameResultCategory.bulkCreate(
                 gamePlayResult.categories.map(category => {
                   return {
                     GameResultCategoryName: category.CategoryName,
+                    Category_Id: category.CategoryId,
                     GameResult_Id: gameResult.GameResultId
                   };
                 }),
-                { returning: ["GameResultCategoryId"] }
+                { returning: true }
               )
-                .then(gameResultCategoriesIds => {
-                  GameResultQuestion.bulkCreate(
-                    // [{[questions], categoryId}]
-                    gamePlayResult.questionsCategories.map(questionsCategory =>
+                .then(async gameResultCategories => {
+                  const questionsResult = [];
+                  for (const questionsCategory of gamePlayResult.questionsCategories) {
+                    questionsResult.push(
                       questionsCategory.questions.map(question => {
                         return {
                           GameResultQuestionText: question.QuestionText,
-                          QuestionImagePath: question.QuestionImagePath
-                          // GameResultCategory_Id: questionsCategory.categoryId
+                          QuestionImagePath: question.QuestionImagePath,
+                          GameResultCategory_Id: gameResultCategories.find(
+                            gameResultCategory =>
+                              gameResultCategory.Category_Id ==
+                              questionsCategory.categoryId
+                          )
                         };
                       })
-                    )
-                  );
+                    );
+                  }
+                  await GameResultQuestion.bulkCreate(questionsResult, {
+                    returning: true
+                  })
+                    .then(async gameResultQuestions => {
+                      await Answer.findAll({
+                        where: {
+                          Question_Id: gameResultQuestions.map(
+                            gameResultQuestion => gameResultQuestion.Question_Id
+                          )
+                        }
+                      }).then(answers => {
+                        GameResultAnswer.bulkCreate(
+                          answers.map(answer => {
+                            return {
+                              GameResultAnswerText: answer.AnswerText,
+                              GameResultQuestion_Id: gameResultQuestions.find(
+                                gameResultQuestion =>
+                                  gameResultQuestion.Question_Id ==
+                                  answer.Question_Id
+                              )
+                            };
+                          })
+                        )
+                          .then(gameResultsAnswers => { })
+                          .catch(err => console.log(err));
+                      });
+                    })
+                    .catch(err => console.log(err));
                 })
                 .catch(err => console.log(err));
             })
