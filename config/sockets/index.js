@@ -393,26 +393,33 @@ io.on("connection", function(socket) {
   });
 
   socket.on("disconnect", function(reason) {
-    if (session.passport)
+    if (session.passport) {
       if (session.roomPlayersId) {
         const clearRoomPlayer = setTimeout(async () => {
           await RoomPlayer.count({
             where: { Room_Id: session.roomId, Team_Id: session.TeamId }
           })
             .then(async roomPlayersNum => {
-              if (roomPlayersNum == 1)
+              if (roomPlayersNum == 1) {
+                // io.to(`RoomUsers${req.session.roomId}`).emit(
+                //   "RoomGroupRemoved",
+                //   req.session.TeamId
+                // );
                 await RoomTeam.destroy({
                   where: { Room_Id: session.roomId, Team_Id: session.TeamId }
                 }).catch(err => console.log(err));
+              }
               await RoomPlayer.destroy({
                 where: { RoomPlayersId: session.roomPlayersId }
               }).catch(err => console.log(err));
             })
             .catch(err => console.log(err));
+          // FIXME: sockets "RoomPlayerLeaved",
           clearDisconnectTimer();
-        }, 4 * 1000);
+        }, 2000);
         DISCONNECT_TIMERS[session.roomPlayersId] = clearRoomPlayer;
       }
+    }
 
     if (session.isRoomCreator)
       io.to(`RoomUsers${session.roomId}`).emit("RecieveCreatorStatus", false);
@@ -437,19 +444,6 @@ io.on("connection", function(socket) {
     if (DISCONNECT_TIMERS[session.roomPlayersId]) {
       clearTimeout(DISCONNECT_TIMERS[session.roomPlayersId]);
       delete DISCONNECT_TIMERS[session.roomPlayersId];
-    }
-    if (session.roomPlayersId) {
-      RoomPlayer.findOne({
-        where: { RoomPlayersId: session.roomPlayersId }
-      }).then(roomPlayer => {
-        if (!roomPlayer) {
-          delete session.roomTeamId;
-          delete session.isGroupCoach;
-          delete session.roomId;
-          delete session.isRoomCreator;
-          delete session.roomPlayersId;
-        }
-      });
     }
   }
 });

@@ -10,6 +10,11 @@ const GamePlay = require("../../models/GamePlay");
 const GamePlayCategory = require("../../models/GamePlayCategory");
 const GamePlayQuestion = require("../../models/GamePlayQuestion");
 const RoomOfferAnswer = require("../../models/RoomOfferAnswer");
+const GameResult = require("../../models/GameResult");
+const GameResultCategory = require("../../models/GameResultCategory");
+const GameResultQuestion = require("../../models/GameResultQuestion");
+const GameResultAnswer = require("../../models/GameResultAnswer");
+const Game = require("../../models/Game");
 const User = require("../../models/User");
 const Team = require("../../models/Team");
 
@@ -381,8 +386,42 @@ function NewGamePlayGeneration(socket, io) {
 
   socket.on("gameStarted", async () => {
     if (session.isRoomCreator) {
-      await GamePlayStructure.Create(session);
-      await NextRandomQuestion();
+      const gamePlayResult = await GamePlayStructure.Create(session);
+      Game.findOne({ where: { GameId: gamePlayResult.gamePlay.Game_Id } })
+        .then(game => {
+          GameResult.create({
+            GameName: game.GameName,
+            Timestamp: gamePlayResult.gamePlay.StartTime
+          })
+            .then(gameResult => {
+              GameResultCategory.bulkCreate(
+                gamePlayResult.categories.map(category => {
+                  return {
+                    GameResultCategoryName: category.CategoryName,
+                    GameResult_Id: gameResult.GameResultId
+                  };
+                }),
+                { returning: ["GameResultCategoryId"] }
+              )
+                .then(gameResultCategoriesIds => {
+                  GameResultQuestion.bulkCreate(
+                    // [{[questions], categoryId}]
+                    gamePlayResult.questionsCategories.map(questionsCategory =>
+                      questionsCategory.questions.map(question => {
+                        return {
+                          GameResultQuestionText: question.QuestionText,
+                          QuestionImagePath: question.QuestionImagePath
+                          // GameResultCategory_Id: questionsCategory.categoryId
+                        };
+                      })
+                    )
+                  );
+                })
+                .catch(err => console.log(err));
+            })
+            .catch(err => console.log(err));
+        })
+        .catch(err => console.log(err));
     }
   });
 

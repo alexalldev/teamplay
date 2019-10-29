@@ -25,11 +25,11 @@ const {
 const RoomPlayers = require("../models/RoomPlayer");
 const RoomTeam = require("../models/RoomTeam");
 
-router.get("/", RedirectRules, function (req, res) {
+router.get("/", RedirectRules, function(req, res) {
   res.render("index", { Code: req.query.Code, User: req.query.User });
 });
 
-router.get("/rooms", app.protect, function (req, res) {
+router.get("/rooms", app.protect, function(req, res) {
   Room.findAll({ raw: true })
     .then(async rooms => {
       const roomModels = [];
@@ -129,7 +129,7 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
     });
 });
 
-router.get("/user/:userId", app.protect, function (req, res) {
+router.get("/user/:userId", app.protect, function(req, res) {
   User.findOne({ where: { UserId: req.params.userId }, raw: true })
     .then(async user => {
       if (req.session.passport.user == user.UserId) user.canEdit = true;
@@ -170,7 +170,7 @@ router.get("/user/:userId", app.protect, function (req, res) {
     });
 });
 
-router.get("/teams", app.protect, function (req, res) {
+router.get("/teams", app.protect, function(req, res) {
   Team.findAll({ raw: true })
     .then(async teams => {
       for await (const team of teams) {
@@ -220,7 +220,7 @@ router.get("/teams", app.protect, function (req, res) {
     });
 });
 
-router.get("/users", app.protect, function (req, res) {
+router.get("/users", app.protect, function(req, res) {
   User.findAll({ where: { UserIsActive: true }, raw: true })
     .then(async users => {
       for await (const user of users) {
@@ -262,16 +262,16 @@ router.get("/users", app.protect, function (req, res) {
     });
 });
 
-router.get("/user", app.protect, function (req, res) {
+router.get("/user", app.protect, function(req, res) {
   if (req.session.passport.user)
     res.redirect(`/user/${req.session.passport.user}`);
 });
 
-router.post("/getCurrUserId", urlencodedParser, function (req, res) {
+router.post("/getCurrUserId", urlencodedParser, function(req, res) {
   res.json({ userId: req.session.passport.user });
 });
 
-router.post("/DeleteRoomPlayerSession", function (req, res) {
+router.post("/DeleteRoomPlayerSession", function(req, res) {
   console.log({ session: req.session });
   console.log({ body: req.body });
   req.session.destroy();
@@ -280,7 +280,7 @@ router.post("/DeleteRoomPlayerSession", function (req, res) {
   res.end("deleted");
 });
 
-router.get("/home", app.protect, function (req, res) {
+router.get("/home", app.protect, function(req, res) {
   Game.findAll({
     where: { QuizCreatorId: req.session.passport.user },
     raw: true
@@ -301,7 +301,7 @@ router.get("/home", app.protect, function (req, res) {
               where: { Category_Id: category.CategoryId }
             }).then(questions => {
               game.questionCount = questions.length;
-              game.averageAsnwerTime = (function () {
+              game.averageAsnwerTime = (function() {
                 let questionsTime = 0;
                 for (const question of questions) {
                   questionsTime += question.AnswerTime;
@@ -319,11 +319,13 @@ router.get("/home", app.protect, function (req, res) {
     .catch(err => console.log(err));
 });
 
-router.get("/room/:RoomTag", app.protect, function (req, res) {
+// FIXME: нормально переписать
+router.get("/room/:RoomTag", app.protect, function(req, res) {
+  console.log({ session: req.session });
   Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
     .then(room => {
       GamePlay.findOne({ where: { Room_Id: room.RoomId } })
-        .then(gamePlay => {
+        .then(async gamePlay => {
           let wasGameStarted;
           let isAnsweringTime;
           let currentQuestion;
@@ -332,7 +334,7 @@ router.get("/room/:RoomTag", app.protect, function (req, res) {
           let isRoomCreator;
           let categoryName;
           if (gamePlay) {
-            GamePlayCategory.findOne({
+            await GamePlayCategory.findOne({
               where: {
                 GamePlay_Id: gamePlay.GamePlayId
               }
@@ -383,10 +385,30 @@ router.get("/room/:RoomTag", app.protect, function (req, res) {
               .catch(err => console.log(err));
           }
           if (room) {
+            if (req.session.roomPlayersId) {
+              await RoomPlayers.findOne({
+                where: { RoomPlayersId: req.session.roomPlayersId }
+              })
+                .then(roomPlayer => {
+                  console.log({ roomPlayer });
+                  if (!roomPlayer) {
+                    delete req.session.roomTeamId;
+                    delete req.session.isGroupCoach;
+                    delete req.session.roomId;
+                    delete req.session.isRoomCreator;
+                    delete req.session.roomPlayersId;
+                    return res.render("info", {
+                      message:
+                        "Вы были отключены по причине потери соединения. Обновите Страницу"
+                    });
+                  }
+                })
+                .catch(err => console.log(err));
+            }
             if (req.session.passport.user == room.RoomCreatorId)
               req.session.isRoomCreator = true;
             else req.session.isRoomCreator = false;
-            User.findOne({
+            await User.findOne({
               where: { UserId: req.session.passport.user },
               raw: true
             })
@@ -601,7 +623,7 @@ router.get("/room/:RoomTag", app.protect, function (req, res) {
     .catch(err => console.log(err));
 });
 
-router.get("/leaveRoom", app.protect, async function (req, res) {
+router.get("/leaveRoom", app.protect, async function(req, res) {
   if (req.session.roomId)
     await Room.findOne({ where: { RoomId: req.session.roomId }, raw: true })
       .then(async room => {
@@ -683,7 +705,7 @@ router.get("/leaveRoom", app.protect, async function (req, res) {
   else res.redirect("/");
 });
 
-router.post("/RegisterNewUser", urlencodedParser, function (req, res) {
+router.post("/RegisterNewUser", urlencodedParser, function(req, res) {
   if (req.body.password === req.body.confirmpassword) {
     if (req.body.password.length > 5) {
       if (validateEmail(req.body.email)) {
@@ -700,7 +722,7 @@ router.post("/RegisterNewUser", urlencodedParser, function (req, res) {
         fs.readFile(
           `${__dirname}/../html_mail/TeamPlayVerificationEmail.html`,
           "utf-8",
-          function (err, data) {
+          function(err, data) {
             if (err) res.end(JSON.stringify(err));
             const html_mail_array = data.split("CONFIRM_NEW_USER_BUTTON");
             const confirmation_hash = crypto
@@ -767,7 +789,7 @@ router.post("/RegisterNewUser", urlencodedParser, function (req, res) {
   } else res.end("incorrect_confirm_password");
 });
 
-router.get("/ConfirmNewUserAccount", function (req, res) {
+router.get("/ConfirmNewUserAccount", function(req, res) {
   if (req.query.confirmation_type == "email")
     if (req.query.security_code != "")
       User.findOne({
@@ -781,7 +803,7 @@ router.get("/ConfirmNewUserAccount", function (req, res) {
                 UserIsActive: true
               })
               .then(() => {
-                req.logIn(user, function (err) {
+                req.logIn(user, function(err) {
                   if (err) throw err;
                   else res.redirect("/");
                 });
@@ -791,16 +813,16 @@ router.get("/ConfirmNewUserAccount", function (req, res) {
         .catch(err => console.log(err));
 });
 
-router.post("/SignIn", RedirectRules, function (req, res, next) {
+router.post("/SignIn", RedirectRules, function(req, res, next) {
   passport.authenticate(
     "local",
     { failureRedirect: "/", failureFlash: true },
-    function (err, User, info) {
+    function(err, User, info) {
       if (err) return next(err);
       if (info) return res.send(info.message);
       if (!User) return res.send("USER IS NULL");
 
-      req.logIn(User, function (err) {
+      req.logIn(User, function(err) {
         if (err) {
           return next(User);
         }
@@ -814,7 +836,7 @@ router.post("/SignIn", RedirectRules, function (req, res, next) {
   )(req, res, next);
 });
 
-router.get("/Room/:GameTag", app.protect, function (req, res) {
+router.get("/Room/:GameTag", app.protect, function(req, res) {
   if (req.session.Team) {
     Game.findOne({ where: { GameTag: req.params.GameTag } })
       .then(game => {
@@ -866,7 +888,7 @@ router.get("/Room/:GameTag", app.protect, function (req, res) {
                         })
                           .then(team => {
                             if (team != null)
-                              Team.AddTeamPlayers(team, function (fullTeam) {
+                              Team.AddTeamPlayers(team, function(fullTeam) {
                                 fullTeam.GameTeamId = gameTeam.GameTeamId;
                                 res.render("game", {
                                   game,
@@ -913,7 +935,7 @@ router.get("/Room/:GameTag", app.protect, function (req, res) {
   } else res.redirect("/");
 });
 
-router.post("/ForgotPassword", urlencodedParser, function (req, res) {
+router.post("/ForgotPassword", urlencodedParser, function(req, res) {
   if (req.body.username) {
     if (validateEmail(req.body.username))
       User.findOne({ where: { UserEmail: req.body.username } })
@@ -933,7 +955,7 @@ router.post("/ForgotPassword", urlencodedParser, function (req, res) {
               fs.readFile(
                 `${__dirname}/../html_mail/TeamPlayForgotEmail.html`,
                 "utf-8",
-                function (err, data) {
+                function(err, data) {
                   if (err) res.end(JSON.stringify(err));
                   const html_mail_array = data.split("NEW_EMAILBUTTON");
                   const confirmation_hash = crypto
@@ -974,7 +996,7 @@ router.post("/ForgotPassword", urlencodedParser, function (req, res) {
   } else res.end("null_email");
 });
 
-router.get("/ChangePassword", function (req, res) {
+router.get("/ChangePassword", function(req, res) {
   if (req.query.security_code)
     User.findOne({ where: { UserRegistrationToken: req.query.security_code } })
       .then(user => {
@@ -987,7 +1009,7 @@ router.get("/ChangePassword", function (req, res) {
   else res.end("false");
 });
 
-router.post("/ChangePassword", urlencodedParser, function (req, res) {
+router.post("/ChangePassword", urlencodedParser, function(req, res) {
   if (req.session.security_code)
     if (req.body.firstpass && req.body.secondpass)
       if (
@@ -1044,16 +1066,16 @@ function LogOut(req, res, reason = "") {
   res.redirect("/");
 }
 
-router.get("/logout", app.protect, function (req, res) {
+router.get("/logout", app.protect, function(req, res) {
   req.query.reason ? LogOut(req, res, req.query.reason) : LogOut(req, res);
 });
 
-router.get("/ControlPanel", app.protect, function (req, res) {
+router.get("/ControlPanel", app.protect, function(req, res) {
   if (req.session.Game) delete req.session.Game;
   res.render("controlPanel");
 });
 
-router.get("/ControlPanel/:GameTag", app.protect, function (req, res) {
+router.get("/ControlPanel/:GameTag", app.protect, function(req, res) {
   Game.findOne({ where: { GameTag: req.params.GameTag } })
     .then(async game => {
       if (game != null) {
@@ -1071,7 +1093,7 @@ router.get("/ControlPanel/:GameTag", app.protect, function (req, res) {
     .catch(err => console.log(err));
 });
 
-router.post("/SetStreamBackground", app.protect, urlencodedParser, function (
+router.post("/SetStreamBackground", app.protect, urlencodedParser, function(
   req,
   res
 ) {
@@ -1079,7 +1101,7 @@ router.post("/SetStreamBackground", app.protect, urlencodedParser, function (
     if (req.session.Game) {
       const form = formidable.IncomingForm();
       form.uploadDir = "./IMAGES/STREAM_IMAGES";
-      form.parse(req, function (err, fields, files) {
+      form.parse(req, function(err, fields, files) {
         if (files.StreamImage) {
           if (files.StreamImage.size < 20000000) {
             const StreamImagePath = files.StreamImage.path

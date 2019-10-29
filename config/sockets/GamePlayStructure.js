@@ -8,44 +8,10 @@ const GamePlayQuestion = require("../../models/GamePlayQuestion");
 // TODO: будет удалять каждый игрок, хотя можно сделать, чтобы удалял запрос только коуча, если коуч вышел, то следующего игрока в команде,
 // пока таковой не будет найден.
 // TODO: подумать чтобы сделать его более ассинхронным, вместо for or -> promise.all
-module.exports.Remove = async function(session) {
-  await Room.findOne({ where: { RoomId: session.roomId } })
-    .then(async room => {
-      await GamePlay.findOne({
-        where: { Game_Id: room.Game_Id, Room_Id: room.RoomId }
-      })
-        .then(async gamePlay => {
-          if (gamePlay) {
-            await GamePlayCategory.findAll({
-              where: { GamePlay_Id: gamePlay.dataValues.GamePlayId }
-            })
-              .then(async gamePlayCategories => {
-                if (gamePlayCategories.length > 0)
-                  for await (const gamePlayCategory of gamePlayCategories) {
-                    await GamePlayQuestion.destroy({
-                      where: {
-                        GamePlayCategory_Id:
-                          gamePlayCategory.dataValues.GamePlayCategoryId
-                      }
-                    });
-                    await gamePlayCategory.destroy();
-                  }
-              })
-              .catch(err => console.log(err));
-            await GamePlay.RemoveStreamImage(
-              gamePlay.dataValues.GamePlayId,
-              function() {}
-            );
-            await gamePlay.destroy();
-          }
-        })
-        .catch(err => console.log(err));
-    })
-    .catch(err => console.log(err));
-};
 
 module.exports.Create = async function(session) {
   /*                          GamePlay Structure                      */
+  let gamePlayResult;
   await Room.findOne({ where: { RoomId: session.roomId } }).then(async room => {
     await Game.findOne({ raw: true, where: { GameId: room.Game_Id } })
       .then(async game => {
@@ -62,11 +28,14 @@ module.exports.Create = async function(session) {
             }
           })
             .then(async ([gamePlay, created]) => {
+              gamePlayResult.gamePlay = gamePlay;
               await Category.findAll({
                 raw: true,
                 where: { Game_Id: game.GameId }
               })
                 .then(async categories => {
+                  gamePlayResult.categories = categories;
+                  gamePlayResult.questionsCategories = [];
                   if (categories.length > 0)
                     for await (const C of categories) {
                       await GamePlayCategory.findOrCreate({
@@ -82,6 +51,10 @@ module.exports.Create = async function(session) {
                             where: { Category_Id: C.CategoryId }
                           })
                             .then(async questions => {
+                              gamePlayResult.questionsCategories.push({
+                                questions,
+                                categoryId: C.CategoryId
+                              });
                               for await (const Q of questions) {
                                 await GamePlayQuestion.findOrCreate({
                                   raw: true,
@@ -104,6 +77,7 @@ module.exports.Create = async function(session) {
       })
       .catch(err => console.log(err));
   });
+  return createdGamePlay;
 };
 
 function getUnixTime() {
