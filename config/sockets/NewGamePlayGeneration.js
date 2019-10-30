@@ -16,7 +16,6 @@ const GameResultQuestion = require("../../models/GameResultQuestion");
 const GameResultAnswer = require("../../models/GameResultAnswer");
 const TeamResult = require("../../models/TeamResult");
 const TeamResultQuestion = require("../../models/TeamResultQuestion");
-const TeamResultAnswer = require("../../models/TeamResultAnswer");
 const Game = require("../../models/Game");
 const User = require("../../models/User");
 const Team = require("../../models/Team");
