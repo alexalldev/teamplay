@@ -19,7 +19,9 @@ const RoomTeam = db.define("room_team", {
     type: Sequelize.STRING
   },
   Team_Id: {
-    type: Sequelize.INTEGER
+    type: Sequelize.INTEGER,
+    allowNull: false,
+    foreignKey: true
   }
 });
 

@@ -14,6 +14,9 @@ const GameResult = require("../../models/GameResult");
 const GameResultCategory = require("../../models/GameResultCategory");
 const GameResultQuestion = require("../../models/GameResultQuestion");
 const GameResultAnswer = require("../../models/GameResultAnswer");
+const TeamResult = require("../../models/TeamResult");
+const TeamResultQuestion = require("../../models/TeamResultQuestion");
+const TeamResultAnswer = require("../../models/TeamResultAnswer");
 const Game = require("../../models/Game");
 const User = require("../../models/User");
 const Team = require("../../models/Team");
@@ -310,6 +313,7 @@ function NewGamePlayGeneration(socket, io) {
           );
 
           const teamNamesPoints = await GetTeamsPoints();
+          TeamResult.bulkCreate({});
           for (const roomTeam of roomTeams) {
             io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
               "BreakBetweenQuestions",
@@ -387,13 +391,53 @@ function NewGamePlayGeneration(socket, io) {
   socket.on("gameStarted", async () => {
     if (session.isRoomCreator) {
       const gamePlayResult = await GamePlayStructure.Create(session);
-      Game.findOne({ where: { GameId: gamePlayResult.gamePlay.Game_Id } })
-        .then(game => {
-          GameResult.create({
+      // занесение необходимых данных в game_results tables
+      Game.findOne({
+        where: { GameId: gamePlayResult.gamePlay.Game_Id },
+        raw: true
+      })
+        .then(async game => {
+          await GameResult.create({
             GameName: game.GameName,
             Timestamp: gamePlayResult.gamePlay.StartTime
           })
             .then(async gameResult => {
+              RoomTeam.belongsTo(Team, { foreignKey: "Team_Id" });
+              Team.hasMany(RoomTeam, { foreignKey: "Team_Id" });
+              RoomTeam.findAll({
+                where: { Room_Id: session.roomId },
+                include: [Team]
+              })
+                .then(roomTeams => {
+                  TeamResult.bulkCreate(
+                    roomTeams.map(roomTeam => {
+                      if (roomTeam.team)
+                        return {
+                          TeamName: roomTeam.team.TeamName,
+                          TeamPoints: 0,
+                          CorrectAnsweredQuestionsNum: 0,
+                          Team_Id: roomTeam.team.Team_Id,
+                          GameResult_Id: gameResult.GameResultId
+                        };
+                    }),
+                    { returning: true }
+                  )
+                    .then(teamsResult => {
+                      TeamResultQuestion.bulkCreate(
+                        teamsResult.map(teamResult => {
+                          return {
+                            TeamResult_Id: teamResult.TeamResultId
+                          };
+                        })
+                      )
+                        .then(teamResultsQuestions => {
+
+                        })
+                        .catch(err => console.log(err));
+                    })
+                    .catch(err => console.log(err));
+                })
+                .catch(err => console.log(err));
               await GameResultCategory.bulkCreate(
                 gamePlayResult.categories.map(category => {
                   return {
@@ -407,19 +451,18 @@ function NewGamePlayGeneration(socket, io) {
                 .then(async gameResultCategories => {
                   const questionsResult = [];
                   for (const questionsCategory of gamePlayResult.questionsCategories) {
-                    questionsResult.push(
-                      questionsCategory.questions.map(question => {
-                        return {
-                          GameResultQuestionText: question.QuestionText,
-                          QuestionImagePath: question.QuestionImagePath,
-                          GameResultCategory_Id: gameResultCategories.find(
-                            gameResultCategory =>
-                              gameResultCategory.Category_Id ==
-                              questionsCategory.categoryId
-                          )
-                        };
-                      })
-                    );
+                    for (const question of questionsCategory.questions) {
+                      questionsResult.push({
+                        GameResultQuestionText: question.QuestionText,
+                        QuestionImagePath: question.QuestionImagePath,
+                        Question_Id: question.QuestionId,
+                        GameResultCategory_Id: gameResultCategories.find(
+                          gameResultCategory =>
+                            gameResultCategory.Category_Id ==
+                            questionsCategory.categoryId
+                        ).GameResultCategoryId
+                      });
+                    }
                   }
                   await GameResultQuestion.bulkCreate(questionsResult, {
                     returning: true
@@ -431,22 +474,22 @@ function NewGamePlayGeneration(socket, io) {
                             gameResultQuestion => gameResultQuestion.Question_Id
                           )
                         }
-                      }).then(answers => {
-                        GameResultAnswer.bulkCreate(
-                          answers.map(answer => {
-                            return {
-                              GameResultAnswerText: answer.AnswerText,
-                              GameResultQuestion_Id: gameResultQuestions.find(
-                                gameResultQuestion =>
-                                  gameResultQuestion.Question_Id ==
-                                  answer.Question_Id
-                              )
-                            };
-                          })
-                        )
-                          .then(gameResultsAnswers => { })
-                          .catch(err => console.log(err));
-                      });
+                      })
+                        .then(answers => {
+                          GameResultAnswer.bulkCreate(
+                            answers.map(answer => {
+                              return {
+                                GameResultAnswerText: answer.AnswerText,
+                                GameResultQuestion_Id: gameResultQuestions.find(
+                                  gameResultQuestion =>
+                                    gameResultQuestion.Question_Id ==
+                                    answer.Question_Id
+                                ).GameResultQuestionId
+                              };
+                            })
+                          ).catch(err => console.log(err));
+                        })
+                        .catch(err => console.log(err));
                     })
                     .catch(err => console.log(err));
                 })

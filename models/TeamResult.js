@@ -3,7 +3,9 @@ const db = require('../config/database');
 
 const TeamResult = db.define('team_result', {
     TeamResultId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
     },
     TeamName: {
         type: Sequelize.TEXT
@@ -11,8 +13,8 @@ const TeamResult = db.define('team_result', {
     TeamPoints: {
         type: Sequelize.INTEGER
     },
-    isAnsweredCorrectly: {
-        type: Sequelize.BOOLEAN
+    CorrectAnsweredQuestionsNum: {
+        type: Sequelize.INTEGER
     },
     Team_Id: {
         type: Sequelize.INTEGER

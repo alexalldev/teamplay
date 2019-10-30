@@ -11,7 +11,7 @@ const GamePlayQuestion = require("../../models/GamePlayQuestion");
 
 module.exports.Create = async function(session) {
   /*                          GamePlay Structure                      */
-  let gamePlayResult;
+  let gamePlayResult = {};
   await Room.findOne({ where: { RoomId: session.roomId } }).then(async room => {
     await Game.findOne({ raw: true, where: { GameId: room.Game_Id } })
       .then(async game => {
@@ -77,7 +77,7 @@ module.exports.Create = async function(session) {
       })
       .catch(err => console.log(err));
   });
-  return createdGamePlay;
+  return gamePlayResult;
 };
 
 function getUnixTime() {

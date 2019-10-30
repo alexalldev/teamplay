@@ -271,15 +271,6 @@ router.post("/getCurrUserId", urlencodedParser, function(req, res) {
   res.json({ userId: req.session.passport.user });
 });
 
-router.post("/DeleteRoomPlayerSession", function(req, res) {
-  console.log({ session: req.session });
-  console.log({ body: req.body });
-  req.session.destroy();
-  console.log("post deleted");
-  console.log({ sessionAfter: req.session });
-  res.end("deleted");
-});
-
 router.get("/home", app.protect, function(req, res) {
   Game.findAll({
     where: { QuizCreatorId: req.session.passport.user },
@@ -321,7 +312,6 @@ router.get("/home", app.protect, function(req, res) {
 
 // FIXME: нормально переписать
 router.get("/room/:RoomTag", app.protect, function(req, res) {
-  console.log({ session: req.session });
   Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
     .then(room => {
       GamePlay.findOne({ where: { Room_Id: room.RoomId } })
@@ -347,7 +337,7 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                     }
                   })
                     .then(async category => {
-                      if (category)
+                      if (category) {
                         await Question.findOne({
                           where: {
                             QuestionId: gamePlay.CurrentQuestionId
@@ -360,25 +350,19 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                   Question_Id: currQuestion.QuestionId
                                 }
                               }).then(answersArr => {
-                                if (answersArr) {
-                                  wasGameStarted = !!gamePlay;
-                                  isAnsweringTime = gamePlay.isAnsweringTime;
-                                  currentQuestion = currQuestion;
-                                  answers = req.session.isRoomCreator
-                                    ? answersArr.filter(
-                                      answer => answer.Correct
-                                    )
-                                    : answersArr;
-                                  type =
-                                    answersArr.length == 1
-                                      ? "text"
-                                      : "checkbox";
-                                  isRoomCreator = req.session.isRoomCreator;
-                                  categoryName = category.CategoryName;
-                                }
+                                answers = req.session.isRoomCreator
+                                  ? answersArr.filter(answer => answer.Correct)
+                                  : answersArr;
+                                type = answersArr.length == 1 ? "text" : "checkbox";
+                                currentQuestion = currQuestion;
                               });
                           })
                           .catch(err => console.log(err));
+                      }
+                      wasGameStarted = !!gamePlay;
+                      isAnsweringTime = gamePlay.isAnsweringTime;
+                      isRoomCreator = req.session.isRoomCreator;
+                      categoryName = category.CategoryName;
                     })
                     .catch(err => console.log(err));
               })
@@ -390,17 +374,12 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                 where: { RoomPlayersId: req.session.roomPlayersId }
               })
                 .then(roomPlayer => {
-                  console.log({ roomPlayer });
                   if (!roomPlayer) {
                     delete req.session.roomTeamId;
                     delete req.session.isGroupCoach;
                     delete req.session.roomId;
                     delete req.session.isRoomCreator;
                     delete req.session.roomPlayersId;
-                    return res.render("info", {
-                      message:
-                        "Вы были отключены по причине потери соединения. Обновите Страницу"
-                    });
                   }
                 })
                 .catch(err => console.log(err));
@@ -525,6 +504,9 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                                           roomId: room.RoomId,
                                                           online: roomOnline
                                                         });
+                                                        console.log({
+                                                          wasGameStarted
+                                                        });
                                                         res.render("room", {
                                                           room,
                                                           roomPlayer:
@@ -574,6 +556,10 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                           Team_Id: req.session.TeamId
                                         }
                                       }).then(roomTeam2 => {
+                                        console.log({
+                                          wasGameStarted,
+                                          gamePlay
+                                        });
                                         res.render("room", {
                                           room: findedRoom,
                                           roomPlayer,

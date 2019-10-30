@@ -1,16 +1,25 @@
 const Sequelize = require('sequelize');
 const db = require('../config/database');
 
-const UserResultAnswer = db.define('user_results_question', {
-    UserResultQuestionId: {
+const UserResultAnswer = db.define('user_result', {
+    UserResultId: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true
     },
-    UserResult_Id: {
+    UserNickname: {
+        type: Sequelize.TEXT
+    },
+    UserFIO: {
+        type: Sequelize.TEXT
+    },
+    CorrectAnsweredQuestionsNum: {
         type: Sequelize.INTEGER
     },
-    GameResultQuestion_Id: {
+    User_Id: {
+        type: Sequelize.INTEGER
+    },
+    TeamResult_Id: {
         type: Sequelize.INTEGER
     }
 });

@@ -3,7 +3,9 @@ const db = require("../config/database");
 
 const GameResultQuestion = db.define("game_result_question", {
     GameResultQuestionId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
     },
     GameResultQuestionText: {
         type: Sequelize.TEXT

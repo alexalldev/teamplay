@@ -39,6 +39,12 @@ $(document).ready(function() {
     }
 
     function StartPreparation() {
+      $(".roomActions").append(`
+      <div class="row cancelRow">
+        <div class="col-md-12 text-center mb-2">
+        <span class="h4 startGameFrom"></span>
+        </div>
+      </div>`);
       PrepareGameTimer();
       window.PrepareGameTimer = setInterval(PrepareGameTimer, 1000);
     }

@@ -12,7 +12,7 @@
 
 <body>
   <% include blocks/loader %> <% include blocks/header %>
-  <section class="app-container">
+  <section class="app-container <%=wasGameStarted%>">
     <div class="organizer">
       <span class="organizer-connection" connection="false">•</span>
       <img class="user_organizer" src="/public/user_organizer.png" alt="" />
@@ -64,10 +64,10 @@
           <%}%>
           <%}%>
           <%if (wasGameStarted) {%>
-          <%#if (isAnsweringTime) {%>            
+          <%#if (isAnsweringTime) {%>
 
-        <%#}%>
-      <%}%>
+          <%#}%>
+          <%}%>
         <div class="row">
           <div class="col-md-12 text-center mb-2">
             <div class="QuestionArea"></div>

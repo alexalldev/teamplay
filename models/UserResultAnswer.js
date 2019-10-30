@@ -3,7 +3,9 @@ const db = require('../config/database');
 
 const UserResultAnswer = db.define('user_results_answer', {
     UserResultAnswerId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
     },
     isCorrect: {
         type: Sequelize.BOOLEAN
