@@ -391,115 +391,125 @@ function NewGamePlayGeneration(socket, io) {
   socket.on("gameStarted", async () => {
     if (session.isRoomCreator) {
       const gamePlayResult = await GamePlayStructure.Create(session);
-      await NextRandomQuestion();
+      //      await NextRandomQuestion();
       // занесение необходимых данных в game_results tables
-      // Game.findOne({
-      //   where: { GameId: gamePlayResult.gamePlay.Game_Id },
-      //   raw: true
-      // })
-      //   .then(async game => {
-      //     await GameResult.create({
-      //       GameName: game.GameName,
-      //       Timestamp: gamePlayResult.gamePlay.StartTime
-      //     })
-      //       .then(async gameResult => {
-      //         RoomTeam.belongsTo(Team, { foreignKey: "Team_Id" });
-      //         Team.hasMany(RoomTeam, { foreignKey: "Team_Id" });
-      //         RoomTeam.findAll({
-      //           where: { Room_Id: session.roomId },
-      //           include: [Team]
-      //         })
-      //           .then(roomTeams => {
-      //             TeamResult.bulkCreate(
-      //               roomTeams.map(roomTeam => {
-      //                 if (roomTeam.team)
-      //                   return {
-      //                     TeamName: roomTeam.team.TeamName,
-      //                     TeamPoints: 0,
-      //                     CorrectAnsweredQuestionsNum: 0,
-      //                     Team_Id: roomTeam.team.Team_Id,
-      //                     GameResult_Id: gameResult.GameResultId
-      //                   };
-      //               }),
-      //               { returning: true }
-      //             )
-      //               .then(async teamsResult => {
-      //                 await GameResultCategory.bulkCreate(
-      //                   gamePlayResult.categories.map(category => {
-      //                     return {
-      //                       GameResultCategoryName: category.CategoryName,
-      //                       Category_Id: category.CategoryId,
-      //                       GameResult_Id: gameResult.GameResultId
-      //                     };
-      //                   }),
-      //                   { returning: true }
-      //                 )
-      //                   .then(async gameResultCategories => {
-      //                     const questionsResult = [];
-      //                     for (const questionsCategory of gamePlayResult.questionsCategories) {
-      //                       for (const question of questionsCategory.questions) {
-      //                         questionsResult.push({
-      //                           GameResultQuestionText: question.QuestionText,
-      //                           QuestionImagePath: question.QuestionImagePath,
-      //                           Question_Id: question.QuestionId,
-      //                           GameResultCategory_Id: gameResultCategories.find(
-      //                             gameResultCategory =>
-      //                               gameResultCategory.Category_Id ==
-      //                               questionsCategory.categoryId
-      //                           ).GameResultCategoryId
-      //                         });
-      //                       }
-      //                     }
-      //                     await GameResultQuestion.bulkCreate(questionsResult, {
-      //                       returning: true
-      //                     })
-      //                       .then(async gameResultQuestions => {
-      //                         TeamResultQuestion.bulkCreate(
-      //                           teamsResult.map(teamResult => {
-      //                             return {
-      //                               TeamResult_Id: teamResult.TeamResultId,
-      //                               GameResultQuestion_Id: 123
-      //                             };
-      //                           })
-      //                         )
-      //                           .then(teamResultsQuestions => {
-
-      //                           })
-      //                           .catch(err => console.log(err));
-      //                         await Answer.findAll({
-      //                           where: {
-      //                             Question_Id: gameResultQuestions.map(
-      //                               gameResultQuestion => gameResultQuestion.Question_Id
-      //                             )
-      //                           }
-      //                         })
-      //                           .then(answers => {
-      //                             GameResultAnswer.bulkCreate(
-      //                               answers.map(answer => {
-      //                                 return {
-      //                                   GameResultAnswerText: answer.AnswerText,
-      //                                   GameResultQuestion_Id: gameResultQuestions.find(
-      //                                     gameResultQuestion =>
-      //                                       gameResultQuestion.Question_Id ==
-      //                                       answer.Question_Id
-      //                                   ).GameResultQuestionId
-      //                                 };
-      //                               })
-      //                             ).catch(err => console.log(err));
-      //                           })
-      //                           .catch(err => console.log(err));
-      //                       })
-      //                       .catch(err => console.log(err));
-      //                   })
-      //                   .catch(err => console.log(err));
-      //               })
-      //               .catch(err => console.log(err));
-      //           })
-      //           .catch(err => console.log(err));
-      //       })
-      //       .catch(err => console.log(err));
-      //   })
-      //   .catch(err => console.log(err));
+      Game.findOne({
+        where: { GameId: gamePlayResult.gamePlay.Game_Id },
+        raw: true
+      })
+        .then(async game => {
+          await GameResult.create({
+            GameName: game.GameName,
+            Timestamp: gamePlayResult.gamePlay.StartTime
+          })
+            .then(async gameResult => {
+              RoomTeam.belongsTo(Team, { foreignKey: "Team_Id" });
+              Team.hasMany(RoomTeam, { foreignKey: "Team_Id" });
+              RoomTeam.findAll({
+                where: { Room_Id: session.roomId },
+                include: [Team]
+              })
+                .then(roomTeams => {
+                  TeamResult.bulkCreate(
+                    roomTeams
+                      .filter(roomTeam => roomTeam.team)
+                      .map(roomTeam => {
+                        return {
+                          TeamName: roomTeam.team.TeamName,
+                          TeamPoints: 0,
+                          CorrectAnsweredQuestionsNum: 0,
+                          Team_Id: roomTeam.team.TeamId,
+                          GameResult_Id: gameResult.GameResultId
+                        };
+                      }),
+                    { returning: true }
+                  )
+                    .then(async teamsResults => {
+                      await GameResultCategory.bulkCreate(
+                        gamePlayResult.categories.map(category => {
+                          return {
+                            GameResultCategoryName: category.CategoryName,
+                            Category_Id: category.CategoryId,
+                            GameResult_Id: gameResult.GameResultId
+                          };
+                        }),
+                        { returning: true }
+                      )
+                        .then(async gameResultCategories => {
+                          const questionsResult = [];
+                          for (const questionsCategory of gamePlayResult.questionsCategories) {
+                            for (const question of questionsCategory.questions) {
+                              questionsResult.push({
+                                GameResultQuestionText: question.QuestionText,
+                                QuestionImagePath: question.QuestionImagePath,
+                                Question_Id: question.QuestionId,
+                                GameResultCategory_Id: gameResultCategories.find(
+                                  gameResultCategory =>
+                                    gameResultCategory.Category_Id ==
+                                    questionsCategory.categoryId
+                                ).GameResultCategoryId
+                              });
+                            }
+                          }
+                          await GameResultQuestion.bulkCreate(questionsResult, {
+                            returning: true
+                          })
+                            .then(async gameResultQuestions => {
+                              const teamResultsQuestionsArr = [];
+                              for (const teamResult of teamsResults) {
+                                for (const gameResultQuestion of gameResultQuestions) {
+                                  teamResultsQuestionsArr.push({
+                                    TeamResult_Id: teamResult.TeamResultId,
+                                    isAnsweredCorrectly: false,
+                                    GameResultQuestion_Id:
+                                      gameResultQuestion.GameResultQuestionId
+                                  });
+                                }
+                              }
+                              TeamResultQuestion.bulkCreate(
+                                teamResultsQuestionsArr,
+                                { returning: true }
+                              )
+                                .then(teamResultsQuestions => {
+                                  Answer.findAll({
+                                    where: {
+                                      Question_Id: gameResultQuestions.map(
+                                        gameResultQuestion =>
+                                          gameResultQuestion.Question_Id
+                                      )
+                                    }
+                                  })
+                                    .then(answers => {
+                                      GameResultAnswer.bulkCreate(
+                                        answers.map(answer => {
+                                          return {
+                                            GameResultAnswerText:
+                                              answer.AnswerText,
+                                            isCorrect: answer.Correct,
+                                            GameResultQuestion_Id: gameResultQuestions.find(
+                                              gameResultQuestion =>
+                                                gameResultQuestion.Question_Id ==
+                                                answer.Question_Id
+                                            ).GameResultQuestionId
+                                          };
+                                        })
+                                      ).catch(err => console.log(err));
+                                    })
+                                    .catch(err => console.log(err));
+                                })
+                                .catch(err => console.log(err));
+                            })
+                            .catch(err => console.log(err));
+                        })
+                        .catch(err => console.log(err));
+                    })
+                    .catch(err => console.log(err));
+                })
+                .catch(err => console.log(err));
+            })
+            .catch(err => console.log(err));
+        })
+        .catch(err => console.log(err));
     }
   });
 
