@@ -15,7 +15,9 @@ const GameResultCategory = require("../../models/GameResultCategory");
 const GameResultQuestion = require("../../models/GameResultQuestion");
 const GameResultAnswer = require("../../models/GameResultAnswer");
 const TeamResult = require("../../models/TeamResult");
+const UserResult = require("../../models/UserResult");
 const TeamResultQuestion = require("../../models/TeamResultQuestion");
+const UserResultQuestion = require("../../models/UserResultQuestion");
 const Game = require("../../models/Game");
 const User = require("../../models/User");
 const Team = require("../../models/Team");
@@ -312,8 +314,8 @@ function NewGamePlayGeneration(socket, io) {
           );
 
           const teamNamesPoints = await GetTeamsPoints();
-          TeamResult.bulkCreate({});
           for (const roomTeam of roomTeams) {
+            
             io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
               "BreakBetweenQuestions",
               teamNamesPoints,
@@ -390,7 +392,7 @@ function NewGamePlayGeneration(socket, io) {
   socket.on("gameStarted", async () => {
     if (session.isRoomCreator) {
       const gamePlayResult = await GamePlayStructure.Create(session);
-      //      await NextRandomQuestion();
+      await NextRandomQuestion();
       // занесение необходимых данных в game_results tables
       Game.findOne({
         where: { GameId: gamePlayResult.gamePlay.Game_Id },
@@ -469,7 +471,75 @@ function NewGamePlayGeneration(socket, io) {
                                 teamResultsQuestionsArr,
                                 { returning: true }
                               )
-                                .then(teamResultsQuestions => {
+                                .then(teamsResultsQuestions => {
+                                  RoomPlayer.belongsTo(User, {
+                                    foreignKey: "User_Id"
+                                  });
+                                  User.hasMany(RoomPlayer, {
+                                    foreignKey: "User_Id"
+                                  });
+                                  RoomPlayer.findAll({
+                                    where: { Room_Id: session.roomId },
+                                    include: [User]
+                                  })
+                                    .then(roomPlayersUsers => {
+                                      UserResult.bulkCreate(
+                                        roomPlayersUsers.map(roomPlayerUser => {
+                                          return {
+                                            UserNickname: `user${roomPlayerUser.user.UserId}`,
+                                            UserFIO: `${
+                                              roomPlayerUser.user.UserFamily
+                                              } ${roomPlayerUser.user.UserName.slice(
+                                                0,
+                                                1
+                                              )}. ${roomPlayerUser.user.UserLastName.slice(
+                                                0,
+                                                1
+                                              )}.`,
+                                            CorrectAnsweredQuestionsNum: 0,
+                                            IsCreator:
+                                              roomPlayerUser.isRoomCreator,
+                                            Timestamp: gameResult.Timestamp,
+                                            User_Id: roomPlayerUser.user.UserId,
+                                            TeamResult_Id: teamsResults.find(
+                                              teamResult =>
+                                                teamResult.Team_Id ==
+                                                roomPlayerUser.user.Team_Id &&
+                                                teamResult.GameResult_Id ==
+                                                gameResult.GameResultId
+                                            )
+                                              ? teamsResults.find(
+                                                teamResult =>
+                                                  teamResult.Team_Id ==
+                                                  roomPlayerUser.user
+                                                    .Team_Id &&
+                                                  teamResult.GameResult_Id ==
+                                                  gameResult.GameResultId
+                                              ).TeamResultId
+                                              : -1
+                                          };
+                                        })
+                                      )
+                                        .then(usersResults => {
+                                          const usersResultsQuestionsArr = [];
+                                          for (const teamResultQuestion of teamResultsQuestionsArr) {
+                                            for (const userResult of usersResults) {
+                                              usersResultsQuestionsArr.push({
+                                                isAnsweredCorrectly: false,
+                                                UserResult_Id:
+                                                  userResult.UserResultId,
+                                                GameResultQuestion_Id:
+                                                  teamResultQuestion.GameResultQuestion_Id
+                                              });
+                                            }
+                                          }
+                                          UserResultQuestion.bulkCreate(
+                                            usersResultsQuestionsArr
+                                          ).catch(err => console.log(err));
+                                        })
+                                        .catch(err => console.log(err));
+                                    })
+                                    .catch(err => console.log(err));
                                   Answer.findAll({
                                     where: {
                                       Question_Id: gameResultQuestions.map(

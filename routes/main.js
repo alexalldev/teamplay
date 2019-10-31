@@ -380,6 +380,10 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                     delete req.session.roomId;
                     delete req.session.isRoomCreator;
                     delete req.session.roomPlayersId;
+                    // return res.render("info", {
+                    //   message:
+                    //     "Вы были отключены по причине потери соединения. Обновите Страницу"
+                    // });
                   }
                 })
                 .catch(err => console.log(err));

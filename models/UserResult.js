@@ -16,6 +16,12 @@ const UserResultAnswer = db.define('user_result', {
     CorrectAnsweredQuestionsNum: {
         type: Sequelize.INTEGER
     },
+    IsCreator: {
+        type: Sequelize.BOOLEAN
+    },
+    Timestamp: {
+        type: Sequelize.INTEGER
+    },
     User_Id: {
         type: Sequelize.INTEGER
     },

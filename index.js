@@ -8,14 +8,14 @@ const Question = require("./models/Question");
 const GamePlay = require("./models/GamePlay");
 const Room = require("./models/Room");
 const RoomPlayer = require("./models/RoomPlayer");
-
+const ONE_MONTH = 1000 * 60 * 60 * 24 * 30;
 const sessionMiddleware = session({
   secret: "TEAMPLAYCOOKIESETRETWORDFORSESSION",
   store: new FileStore({ logFn: () => { } }),
   cookie: {
     path: "/",
     httpOnly: true,
-    maxAge: null
+    maxAge: ONE_MONTH
   },
   resave: false,
   saveUninitialized: false
@@ -137,7 +137,7 @@ app.get("/QuestionImage", (req, res) => {
   }
 });
 
-app.get("/StreamImage", function (req, res) {
+app.get("/StreamImage", function(req, res) {
   if (req.query.GamePlayId)
     GamePlay.findOne({ raw: true, where: { GamePlayId: req.query.GamePlayId } })
       .then(gamePlay => {
@@ -174,6 +174,6 @@ app.get("/UserImage", (req, res) => {
   fs.createReadStream(`${__dirname}/IMAGES/NULL_IMAGE`).pipe(res);
 });
 
-app.use(function (req, res, next) {
+app.use(function(req, res, next) {
   res.redirect("/");
 });
