@@ -314,8 +314,100 @@ function NewGamePlayGeneration(socket, io) {
           );
 
           const teamNamesPoints = await GetTeamsPoints();
+          // FIXME: можно сделать намного меньше обращений к базе. Сохранять в таблицу TeamResult
+          // только на дисконнекте или при конце игры. Так как эти данные не нужны на на протяжении игры
           for (const roomTeam of roomTeams) {
-            
+            GamePlay.findOne({ where: { GamePlayId: session.GamePlayId } })
+              .then(gamePlay => {
+                GameResult.findOne({
+                  where: { GamePlay_Id: gamePlay.GamePlayId }
+                })
+                  .then(gameResult => {
+                    TeamResult.findOne({
+                      where: {
+                        Team_Id: roomTeam.Team_Id,
+                        GameResult_Id: gameResult.GameResultId
+                      }
+                    })
+                      .then(teamResult => {
+                        console.log({ roomTeam });
+                        teamResult
+                          .update({ TeamPoints: roomTeam.Points })
+                          .catch(err => console.log(err));
+                        GameResultCategory.findOne({
+                          where: {
+                            GameResult_Id: gameResult.GameResultId,
+                            Category_Id: question.Category_Id
+                          }
+                        })
+                          .then(gameResultCategory => {
+                            GameResultQuestion.findOne({
+                              where: {
+                                GameResultCategory_Id:
+                                  gameResultCategory.GameResultCategoryId,
+                                Question_Id: question.QuestionId
+                              }
+                            })
+                              .then(gameResultQuestion => {
+                                TeamResultQuestion.findOne({
+                                  where: {
+                                    TeamResult_Id: teamResult.TeamResultId,
+                                    GameResultQuestion_Id:
+                                      gameResultQuestion.GameResultQuestionId
+                                  }
+                                })
+                                  .then(teamResultQuestion => {
+                                    teamResultQuestion
+                                      .update({
+                                        isAnsweredCorrectly: !!roomTeamIdsAddedPoints[
+                                          roomTeam.RoomTeamId.toString()
+                                        ]
+                                      })
+                                      .then(updatedTeamResultQuestion => {
+                                        UserResult.findAll({
+                                          where: {
+                                            TeamResult_Id:
+                                              teamResult.TeamResultId
+                                          }
+                                        })
+                                          .then(usersResults => {
+                                            UserResultQuestion.findOne({
+                                              where: {
+                                                UserResult_Id: usersResults.map(
+                                                  userResult =>
+                                                    userResult.UserResultId
+                                                ),
+                                                GameResultQuestion_Id:
+                                                  updatedTeamResultQuestion.GameResultQuestion_Id
+                                              }
+                                            })
+                                              .then(userResultQuestion => {
+                                                userResultQuestion
+                                                  .update({
+                                                    isAnsweredCorrectly:
+                                                      updatedTeamResultQuestion.isAnsweredCorrectly
+                                                  })
+                                                  .catch(err =>
+                                                    console.log(err)
+                                                  );
+                                              })
+                                              .catch(err => console.log(err));
+                                          })
+                                          .catch(err => console.log(err));
+                                      })
+                                      .catch(err => console.log(err));
+                                  })
+                                  .catch(err => console.log(err));
+                              })
+                              .catch(err => console.log(err));
+                          })
+                          .catch(err => console.log(err));
+                      })
+                      .catch(err => console.log(err));
+                  })
+                  .catch(err => console.log(err));
+              })
+              .catch(err => console.log(err));
             io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
               "BreakBetweenQuestions",
               teamNamesPoints,
@@ -401,7 +493,8 @@ function NewGamePlayGeneration(socket, io) {
         .then(async game => {
           await GameResult.create({
             GameName: game.GameName,
-            Timestamp: gamePlayResult.gamePlay.StartTime
+            Timestamp: gamePlayResult.gamePlay.StartTime,
+            GamePlay_Id: gamePlayResult.gamePlay.GamePlayId
           })
             .then(async gameResult => {
               RoomTeam.belongsTo(Team, { foreignKey: "Team_Id" });
@@ -418,7 +511,6 @@ function NewGamePlayGeneration(socket, io) {
                         return {
                           TeamName: roomTeam.team.TeamName,
                           TeamPoints: 0,
-                          CorrectAnsweredQuestionsNum: 0,
                           Team_Id: roomTeam.team.TeamId,
                           GameResult_Id: gameResult.GameResultId
                         };
@@ -496,7 +588,6 @@ function NewGamePlayGeneration(socket, io) {
                                                 0,
                                                 1
                                               )}.`,
-                                            CorrectAnsweredQuestionsNum: 0,
                                             IsCreator:
                                               roomPlayerUser.isRoomCreator,
                                             Timestamp: gameResult.Timestamp,
