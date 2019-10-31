@@ -8,6 +8,9 @@ const Hash = require("password-hash");
 const GamePlay = require("../models/GamePlay");
 const GamePlayCategory = require("../models/GamePlayCategory");
 const Answer = require("../models/Answer");
+const TeamResult = require("../models/TeamResult");
+const TeamResultQuestion = require("../models/TeamResultQuestion");
+
 const {
   router,
   passport,
@@ -76,6 +79,24 @@ router.get("/rooms", app.protect, function(req, res) {
     .catch(err => console.log(err));
 });
 
+router.get("/team/:TeamTag/results", app.protect, (req, res) => {
+  Team.findOne({ where: { TeamTag: req.params.TeamTag }, raw: true })
+    .then(team => {
+      TeamResult.findAll({
+        where: { Team_Id: team.TeamId },
+        raw: true,
+        order: ["TeamPoints", "DESC"]
+      })
+        .then(teamResults => {
+          res.render("teamResult", {
+            teamResults
+          });
+        })
+        .catch(err => console.log(err));
+    })
+    .catch(err => console.log(err));
+});
+
 router.get("/team/:TeamTag", app.protect, (req, res) => {
   const users = [];
   let counter = 0;
@@ -103,29 +124,19 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                   users[0],
                   users[members.coachInd]
                 ];
-              })
-              .catch(err => {
-                console.log({
-                  file: __filename,
-                  func: 'router.get("/team/:TeamTag"), User.findAll',
-                  err
+                res.render("teamPage", {
+                  users,
+                  isMyTeam: user.Team_Id == team.TeamId,
+                  amICoach: user.isCoach
                 });
-              });
-            res.render("teamPage", {
-              users,
-              isMyTeam: user.Team_Id == team.TeamId,
-              amICoach: user.isCoach
-            });
+              })
+              .catch(err => console.log(err));
           }
         });
       } else return res.redirect("/");
     })
     .catch(err => {
-      console.log({
-        file: __filename,
-        func: 'router.get("/team/:TeamTag"), User.findAll',
-        err
-      });
+      console.log(err);
     });
 });
 
@@ -353,7 +364,8 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                 answers = req.session.isRoomCreator
                                   ? answersArr.filter(answer => answer.Correct)
                                   : answersArr;
-                                type = answersArr.length == 1 ? "text" : "checkbox";
+                                type =
+                                  answersArr.length == 1 ? "text" : "checkbox";
                                 currentQuestion = currQuestion;
                               });
                           })
