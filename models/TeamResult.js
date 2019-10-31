@@ -17,7 +17,9 @@ const TeamResult = db.define("team_result", {
         type: Sequelize.INTEGER
     },
     GameResult_Id: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        foreignKey: true
     }
 });
 

@@ -1,6 +1,8 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable no-restricted-syntax */
 const formidable = require("formidable");
 const nodeMailer = require("nodemailer");
+const Sequelize = require("sequelize");
 const { Op } = require("sequelize");
 const fs = require("fs");
 const crypto = require("crypto");
@@ -9,8 +11,10 @@ const GamePlay = require("../models/GamePlay");
 const GamePlayCategory = require("../models/GamePlayCategory");
 const Answer = require("../models/Answer");
 const TeamResult = require("../models/TeamResult");
+const UserResult = require("../models/UserResult");
 const TeamResultQuestion = require("../models/TeamResultQuestion");
-
+const UserResultQuestion = require("../models/UserResultQuestion");
+const GameResult = require("../models/GameResult");
 const {
   router,
   passport,
@@ -84,18 +88,82 @@ router.get("/team/:TeamTag/results", app.protect, (req, res) => {
     .then(team => {
       TeamResult.findAll({
         where: { Team_Id: team.TeamId },
-        raw: true,
-        order: ["TeamPoints", "DESC"]
+        raw: true
       })
-        .then(teamResults => {
+        .then(async teamResults => {
+          // FIXME: stopped here
+          GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
+          TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
+          TeamResult.hasMany(TeamResultQuestion, {
+            foreignKey: "TeamResult_Id"
+          });
+          TeamResultQuestion.belongsTo(TeamResult, {
+            foreignKey: "TeamResult_Id"
+          });
+          const teamGamesQuestionsResults = await TeamResult.findAll({
+            where: {
+              GameResult_Id: teamResults.map(
+                teamResult => teamResult.GameResult_Id
+              )
+            },
+            include: [
+              { model: GameResult }, { model: TeamResultQuestion }
+            ],
+            order: [[GameResult, "Timestamp", "ASC"], ["TeamPoints", "DESC"]]
+          }).map(teamGameQuestionsResult => teamGameQuestionsResult.get({ plain: true }));
+
+          console.log({
+            teamGamesQuestionsResults,
+            gameResults: teamGamesQuestionsResults.map(
+              teamGameResult => teamGameResult.game_result
+            ),
+            gameQ: teamGamesQuestionsResults.map(
+              teamGameResult => teamGameResult.game_result
+            )
+          });
           res.render("teamResult", {
-            teamResults
+            teamGamesQuestionsResults
           });
         })
         .catch(err => console.log(err));
     })
     .catch(err => console.log(err));
 });
+
+// router.get("/user/:userId/results", app.protect, function(req, res) {
+//   User.findOne({ where: { TeamTag: req.params.userId }, raw: true })
+//     .then(user => {
+//       UserResult.findAll({
+//         where: { User_Id: user.UserId },
+//         raw: true
+//       })
+//         .then(async teamResults => {
+//           // FIXME: stopped here
+//           GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
+//           TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
+//           const teamsGamesResults = await TeamResult.findAll({
+//             where: {
+//               GameResult_Id: teamResults.map(
+//                 teamResult => teamResult.GameResult_Id
+//               )
+//             },
+//             include: [GameResult],
+//             order: [[GameResult, "Timestamp", "ASC"], ["TeamPoints", "DESC"]]
+//           }).map(teamGameResult => teamGameResult.get({ plain: true }));
+//           // console.log({
+//           //   teamsGamesResults,
+//           //   gameResults: teamsGamesResults.map(
+//           //     teamGameResult => teamGameResult.game_result
+//           //   )
+//           // });
+//           res.render("teamResult", {
+//             teamsGamesResults
+//           });
+//         })
+//         .catch(err => console.log(err));
+//     })
+//     .catch(err => console.log(err));
+// });
 
 router.get("/team/:TeamTag", app.protect, (req, res) => {
   const users = [];
@@ -124,6 +192,11 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                   users[0],
                   users[members.coachInd]
                 ];
+                GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
+                TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
+                // FIXME: stopped here
+                const gameTeamResults = await TeamResult.findAll({ where: { Team_Id: team.TeamId }, include: [{ model: GameResult, where: { Timestamp: { [Op.gt]: 10 } } }] }).map(gameTeamResult => gameTeamResult.get({ plain: true }));
+
                 res.render("teamPage", {
                   users,
                   isMyTeam: user.Team_Id == team.TeamId,

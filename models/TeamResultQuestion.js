@@ -11,7 +11,9 @@ const TeamResultQuestion = db.define("team_results_question", {
         type: Sequelize.BOOLEAN
     },
     TeamResult_Id: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        foreignKey: true
     },
     GameResultQuestion_Id: {
         type: Sequelize.INTEGER
