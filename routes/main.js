@@ -165,6 +165,15 @@ router.get("/team/:TeamTag/results", app.protect, (req, res) => {
 //     .catch(err => console.log(err));
 // });
 
+function timeConverter(UNIX_timestamp) {
+  var date = new Date(UNIX_timestamp * 1000);
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var year = date.getFullYear();
+  var month = months[date.getMonth()];
+  var time = `${year} ${month}`;
+  return time;
+}
+
 router.get("/team/:TeamTag", app.protect, (req, res) => {
   const users = [];
   let counter = 0;
@@ -195,12 +204,22 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                 GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
                 TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
                 // FIXME: stopped here
-                const gameTeamResults = await TeamResult.findAll({ where: { Team_Id: team.TeamId }, include: [{ model: GameResult, where: { Timestamp: { [Op.gt]: 10 } } }] }).map(gameTeamResult => gameTeamResult.get({ plain: true }));
-
+                const gamesTeamResults = await TeamResult.findAll({ where: { Team_Id: team.TeamId }, include: [GameResult] }).map(gameTeamResult => gameTeamResult.get({ plain: true }));
+                const date = new Date();
+                const datesGamesTeamResults = [];
+                let countDates = gamesTeamResults.filter(gameTeamResult => gameTeamResult.game_result.Timestamp < Date.now()).length;
+                let c = 1;
+                console.log({ gamesTeamResults })
+                while (countDates > 0) {
+                  countDates = gamesTeamResults.filter(gameTeamResult => gameTeamResult.game_result.Timestamp < date.setMonth(date.getMonth() - c)).length;
+                  datesGamesTeamResults.push({ TextDate: timeConverter(Math.floor(date.setMonth(date.getMonth() - c) / 1000)), number: countDates })
+                  c++;
+                }
                 res.render("teamPage", {
                   users,
                   isMyTeam: user.Team_Id == team.TeamId,
-                  amICoach: user.isCoach
+                  amICoach: user.isCoach,
+                  datesGamesTeamResults
                 });
               })
               .catch(err => console.log(err));

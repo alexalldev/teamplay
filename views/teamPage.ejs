@@ -30,6 +30,12 @@
                     </div>
                     <div class="row">
                         <div class="col-md-12 text-center">
+                            <span class='h1'>Статистика</span>
+                            <%# =JSON.stringify(datesGamesTeamResults)%>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center">
                             <% if(isMyTeam) {%>
                             <button class="btn btn-outline-danger ml-2 mt-2 h1 btnLeaveTeamModal">Покинуть
                                 команду</button>
@@ -89,7 +95,6 @@
                                 <button class="btn btn-danger btnLeaveTeam">Покинуть команду</button>
                             </form>
                         </div>
-
                     </div>
                 </div>
             </div>
