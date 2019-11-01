@@ -1,0 +1,39 @@
+<div class="btn btn-outline-success btnCreateTeam btnCreate">
+        <table class="centred-table">
+                <tr align="center" class="quiz-row">
+                        <td valign="center">
+                                <div class="quiz-name">
+                                        <i class="fa fa-plus"></i>
+                                </div>
+                        </td>
+                </tr>
+        </table>
+</div>
+<% teams.forEach(function(team) { %>
+<div class="team alert" teamTag="<%= team.TeamTag %>">
+        <% if (teams.userTeamId == 0) { %>
+        <div class="team-invite">
+                <button class="btn btn-outline-success ml-2 mt-2 h1"
+                        onclick="teamInvite('<%= team.coachId %>', 'Вступить')">
+                        <i class="fas fa-user-plus"></i> Вступить
+                </button>
+        </div>
+        <% } %>
+        <div class="row">
+                <div class="col-md-12">
+                        <div class="team-name h1">
+                                <a href="/team/<%=team.TeamTag%>" class="text-dark h2"><%= team.TeamName %></a>
+                        </div>
+                </div>
+        </div>
+        <div class="row">
+                <div class="col-md-6">
+                        <i class="fa fa-star text-warning mr-1 h4"></i> <a href="/user/<%=team.coachId%>"><span
+                                        class="h5"><%= team.teamCoachFIO %></span></a>
+                </div>
+                <div class="col-md-6">
+                        <span class="h2"><i class="fas fa-users"></i> <%= team.membersNum %></span>
+                </div>
+        </div>
+</div>
+<% }); %>

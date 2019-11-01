@@ -28,13 +28,6 @@ body {
     z-index: 2;
 }
 
-.user, .team
-{
-	border: solid 1.75px #eee;
-	border-radius: 5px;
-	cursor: pointer;
-}
-
 .TeamCoach {
 	left: 50%;
 	position: relative;
@@ -55,14 +48,7 @@ body {
 		margin-bottom: 5px;
 	}
 }
-/*Panel Team*/
-.teams {
-	width: 15rem;
-	margin-top: 5%;
-	border: solid 3px rgba(6, 126, 26, 0.281);
-	border-radius: 5px;
-	cursor: pointer;
-}
+
 .imgbord {
 	border: solid 2px rgba(4, 18, 48, 0.281);
 }

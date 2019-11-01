@@ -15,6 +15,12 @@
     <% if (locals.roomModels) { %>
     <link rel="stylesheet" href="/public/css/roomModel.css">
     <% }%>
+    <% if (locals.teams) { %>
+    <link rel="stylesheet" href="/public/css/team.css">
+    <% }%>
+    <% if (locals.users) { %>
+    <link rel="stylesheet" href="/public/css/user.css">
+    <% }%>
     <% include blocks/title %>
 </head>
 
@@ -39,6 +45,16 @@
             <% } else { %>
             <%- include('blocks/greetings', {btnName: 'btnCreateRoom'}) %>
             <% } %>
+            <% } else if (locals.teams) { %>
+            <% if (teams.length > 0) { %>
+            <%- include('blocks/teams', {teams: locals.teams}); %>
+            <% } else { %>
+            <%- include('blocks/greetings', {btnName: 'btnCreateTeam'}) %>
+            <% } %>
+            <% } else if (locals.users) { %>
+            <% if (users.length > 0) { %>
+            <%- include('blocks/users', {users: locals.users}); %>
+            <% } %>
             <% } %>
         </div>
     </section>
@@ -60,6 +76,9 @@
         $('.roomOnline-' + status.roomId).text(status.online);
     })
 </script>
+<% }%>
+<% if (locals.editGame || locals.teams || locals.users) { %>
+<script src="/public/js/listItemAction.js"></script>
 <% }%>
 
 </html>
