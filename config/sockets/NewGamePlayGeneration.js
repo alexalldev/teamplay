@@ -15,8 +15,9 @@ const GameResultCategory = require("../../models/GameResultCategory");
 const GameResultQuestion = require("../../models/GameResultQuestion");
 const GameResultAnswer = require("../../models/GameResultAnswer");
 const TeamResult = require("../../models/TeamResult");
+const UserResult = require("../../models/UserResult");
 const TeamResultQuestion = require("../../models/TeamResultQuestion");
-const TeamResultAnswer = require("../../models/TeamResultAnswer");
+const UserResultQuestion = require("../../models/UserResultQuestion");
 const Game = require("../../models/Game");
 const User = require("../../models/User");
 const Team = require("../../models/Team");
@@ -313,8 +314,100 @@ function NewGamePlayGeneration(socket, io) {
           );
 
           const teamNamesPoints = await GetTeamsPoints();
-          TeamResult.bulkCreate({});
+          // FIXME: можно сделать намного меньше обращений к базе. Сохранять в таблицу TeamResult
+          // только на дисконнекте или при конце игры. Так как эти данные не нужны на на протяжении игры
           for (const roomTeam of roomTeams) {
+            GamePlay.findOne({ where: { GamePlayId: session.GamePlayId } })
+              .then(gamePlay => {
+                GameResult.findOne({
+                  where: { GamePlay_Id: gamePlay.GamePlayId }
+                })
+                  .then(gameResult => {
+                    TeamResult.findOne({
+                      where: {
+                        Team_Id: roomTeam.Team_Id,
+                        GameResult_Id: gameResult.GameResultId
+                      }
+                    })
+                      .then(teamResult => {
+                        console.log({ roomTeam });
+                        teamResult
+                          .update({ TeamPoints: roomTeam.Points })
+                          .catch(err => console.log(err));
+                        GameResultCategory.findOne({
+                          where: {
+                            GameResult_Id: gameResult.GameResultId,
+                            Category_Id: question.Category_Id
+                          }
+                        })
+                          .then(gameResultCategory => {
+                            GameResultQuestion.findOne({
+                              where: {
+                                GameResultCategory_Id:
+                                  gameResultCategory.GameResultCategoryId,
+                                Question_Id: question.QuestionId
+                              }
+                            })
+                              .then(gameResultQuestion => {
+                                TeamResultQuestion.findOne({
+                                  where: {
+                                    TeamResult_Id: teamResult.TeamResultId,
+                                    GameResultQuestion_Id:
+                                      gameResultQuestion.GameResultQuestionId
+                                  }
+                                })
+                                  .then(teamResultQuestion => {
+                                    teamResultQuestion
+                                      .update({
+                                        isAnsweredCorrectly: !!roomTeamIdsAddedPoints[
+                                          roomTeam.RoomTeamId.toString()
+                                        ]
+                                      })
+                                      .then(updatedTeamResultQuestion => {
+                                        UserResult.findAll({
+                                          where: {
+                                            TeamResult_Id:
+                                              teamResult.TeamResultId
+                                          }
+                                        })
+                                          .then(usersResults => {
+                                            UserResultQuestion.findOne({
+                                              where: {
+                                                UserResult_Id: usersResults.map(
+                                                  userResult =>
+                                                    userResult.UserResultId
+                                                ),
+                                                GameResultQuestion_Id:
+                                                  updatedTeamResultQuestion.GameResultQuestion_Id
+                                              }
+                                            })
+                                              .then(userResultQuestion => {
+                                                userResultQuestion
+                                                  .update({
+                                                    isAnsweredCorrectly:
+                                                      updatedTeamResultQuestion.isAnsweredCorrectly
+                                                  })
+                                                  .catch(err =>
+                                                    console.log(err)
+                                                  );
+                                              })
+                                              .catch(err => console.log(err));
+                                          })
+                                          .catch(err => console.log(err));
+                                      })
+                                      .catch(err => console.log(err));
+                                  })
+                                  .catch(err => console.log(err));
+                              })
+                              .catch(err => console.log(err));
+                          })
+                          .catch(err => console.log(err));
+                      })
+                      .catch(err => console.log(err));
+                  })
+                  .catch(err => console.log(err));
+              })
+              .catch(err => console.log(err));
             io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
               "BreakBetweenQuestions",
               teamNamesPoints,
@@ -393,113 +486,190 @@ function NewGamePlayGeneration(socket, io) {
       const gamePlayResult = await GamePlayStructure.Create(session);
       await NextRandomQuestion();
       // занесение необходимых данных в game_results tables
-      // Game.findOne({
-      //   where: { GameId: gamePlayResult.gamePlay.Game_Id },
-      //   raw: true
-      // })
-      //   .then(async game => {
-      //     await GameResult.create({
-      //       GameName: game.GameName,
-      //       Timestamp: gamePlayResult.gamePlay.StartTime
-      //     })
-      //       .then(async gameResult => {
-      //         RoomTeam.belongsTo(Team, { foreignKey: "Team_Id" });
-      //         Team.hasMany(RoomTeam, { foreignKey: "Team_Id" });
-      //         RoomTeam.findAll({
-      //           where: { Room_Id: session.roomId },
-      //           include: [Team]
-      //         })
-      //           .then(roomTeams => {
-      //             TeamResult.bulkCreate(
-      //               roomTeams.map(roomTeam => {
-      //                 if (roomTeam.team)
-      //                   return {
-      //                     TeamName: roomTeam.team.TeamName,
-      //                     TeamPoints: 0,
-      //                     CorrectAnsweredQuestionsNum: 0,
-      //                     Team_Id: roomTeam.team.Team_Id,
-      //                     GameResult_Id: gameResult.GameResultId
-      //                   };
-      //               }),
-      //               { returning: true }
-      //             )
-      //               .then(async teamsResult => {
-      //                 await GameResultCategory.bulkCreate(
-      //                   gamePlayResult.categories.map(category => {
-      //                     return {
-      //                       GameResultCategoryName: category.CategoryName,
-      //                       Category_Id: category.CategoryId,
-      //                       GameResult_Id: gameResult.GameResultId
-      //                     };
-      //                   }),
-      //                   { returning: true }
-      //                 )
-      //                   .then(async gameResultCategories => {
-      //                     const questionsResult = [];
-      //                     for (const questionsCategory of gamePlayResult.questionsCategories) {
-      //                       for (const question of questionsCategory.questions) {
-      //                         questionsResult.push({
-      //                           GameResultQuestionText: question.QuestionText,
-      //                           QuestionImagePath: question.QuestionImagePath,
-      //                           Question_Id: question.QuestionId,
-      //                           GameResultCategory_Id: gameResultCategories.find(
-      //                             gameResultCategory =>
-      //                               gameResultCategory.Category_Id ==
-      //                               questionsCategory.categoryId
-      //                           ).GameResultCategoryId
-      //                         });
-      //                       }
-      //                     }
-      //                     await GameResultQuestion.bulkCreate(questionsResult, {
-      //                       returning: true
-      //                     })
-      //                       .then(async gameResultQuestions => {
-      //                         TeamResultQuestion.bulkCreate(
-      //                           teamsResult.map(teamResult => {
-      //                             return {
-      //                               TeamResult_Id: teamResult.TeamResultId,
-      //                               GameResultQuestion_Id: 123
-      //                             };
-      //                           })
-      //                         )
-      //                           .then(teamResultsQuestions => {
-
-      //                           })
-      //                           .catch(err => console.log(err));
-      //                         await Answer.findAll({
-      //                           where: {
-      //                             Question_Id: gameResultQuestions.map(
-      //                               gameResultQuestion => gameResultQuestion.Question_Id
-      //                             )
-      //                           }
-      //                         })
-      //                           .then(answers => {
-      //                             GameResultAnswer.bulkCreate(
-      //                               answers.map(answer => {
-      //                                 return {
-      //                                   GameResultAnswerText: answer.AnswerText,
-      //                                   GameResultQuestion_Id: gameResultQuestions.find(
-      //                                     gameResultQuestion =>
-      //                                       gameResultQuestion.Question_Id ==
-      //                                       answer.Question_Id
-      //                                   ).GameResultQuestionId
-      //                                 };
-      //                               })
-      //                             ).catch(err => console.log(err));
-      //                           })
-      //                           .catch(err => console.log(err));
-      //                       })
-      //                       .catch(err => console.log(err));
-      //                   })
-      //                   .catch(err => console.log(err));
-      //               })
-      //               .catch(err => console.log(err));
-      //           })
-      //           .catch(err => console.log(err));
-      //       })
-      //       .catch(err => console.log(err));
-      //   })
-      //   .catch(err => console.log(err));
+      Game.findOne({
+        where: { GameId: gamePlayResult.gamePlay.Game_Id },
+        raw: true
+      })
+        .then(async game => {
+          await GameResult.create({
+            GameName: game.GameName,
+            Timestamp: gamePlayResult.gamePlay.StartTime,
+            GamePlay_Id: gamePlayResult.gamePlay.GamePlayId
+          })
+            .then(async gameResult => {
+              RoomTeam.belongsTo(Team, { foreignKey: "Team_Id" });
+              Team.hasMany(RoomTeam, { foreignKey: "Team_Id" });
+              RoomTeam.findAll({
+                where: { Room_Id: session.roomId },
+                include: [Team]
+              })
+                .then(roomTeams => {
+                  TeamResult.bulkCreate(
+                    roomTeams
+                      .filter(roomTeam => roomTeam.team)
+                      .map(roomTeam => {
+                        return {
+                          TeamName: roomTeam.team.TeamName,
+                          TeamPoints: 0,
+                          Team_Id: roomTeam.team.TeamId,
+                          GameResult_Id: gameResult.GameResultId
+                        };
+                      }),
+                    { returning: true }
+                  )
+                    .then(async teamsResults => {
+                      await GameResultCategory.bulkCreate(
+                        gamePlayResult.categories.map(category => {
+                          return {
+                            GameResultCategoryName: category.CategoryName,
+                            Category_Id: category.CategoryId,
+                            GameResult_Id: gameResult.GameResultId
+                          };
+                        }),
+                        { returning: true }
+                      )
+                        .then(async gameResultCategories => {
+                          const questionsResult = [];
+                          for (const questionsCategory of gamePlayResult.questionsCategories) {
+                            for (const question of questionsCategory.questions) {
+                              questionsResult.push({
+                                GameResultQuestionText: question.QuestionText,
+                                QuestionImagePath: question.QuestionImagePath,
+                                Question_Id: question.QuestionId,
+                                GameResultCategory_Id: gameResultCategories.find(
+                                  gameResultCategory =>
+                                    gameResultCategory.Category_Id ==
+                                    questionsCategory.categoryId
+                                ).GameResultCategoryId
+                              });
+                            }
+                          }
+                          await GameResultQuestion.bulkCreate(questionsResult, {
+                            returning: true
+                          })
+                            .then(async gameResultQuestions => {
+                              const teamResultsQuestionsArr = [];
+                              for (const teamResult of teamsResults) {
+                                for (const gameResultQuestion of gameResultQuestions) {
+                                  teamResultsQuestionsArr.push({
+                                    TeamResult_Id: teamResult.TeamResultId,
+                                    isAnsweredCorrectly: false,
+                                    GameResultQuestion_Id:
+                                      gameResultQuestion.GameResultQuestionId
+                                  });
+                                }
+                              }
+                              TeamResultQuestion.bulkCreate(
+                                teamResultsQuestionsArr,
+                                { returning: true }
+                              )
+                                .then(teamsResultsQuestions => {
+                                  RoomPlayer.belongsTo(User, {
+                                    foreignKey: "User_Id"
+                                  });
+                                  User.hasMany(RoomPlayer, {
+                                    foreignKey: "User_Id"
+                                  });
+                                  RoomPlayer.findAll({
+                                    where: { Room_Id: session.roomId },
+                                    include: [User]
+                                  })
+                                    .then(roomPlayersUsers => {
+                                      UserResult.bulkCreate(
+                                        roomPlayersUsers.map(roomPlayerUser => {
+                                          return {
+                                            UserNickname: `user${roomPlayerUser.user.UserId}`,
+                                            UserFIO: `${
+                                              roomPlayerUser.user.UserFamily
+                                              } ${roomPlayerUser.user.UserName.slice(
+                                                0,
+                                                1
+                                              )}. ${roomPlayerUser.user.UserLastName.slice(
+                                                0,
+                                                1
+                                              )}.`,
+                                            IsCreator:
+                                              roomPlayerUser.isRoomCreator,
+                                            Timestamp: gameResult.Timestamp,
+                                            User_Id: roomPlayerUser.user.UserId,
+                                            TeamResult_Id: teamsResults.find(
+                                              teamResult =>
+                                                teamResult.Team_Id ==
+                                                roomPlayerUser.user.Team_Id &&
+                                                teamResult.GameResult_Id ==
+                                                gameResult.GameResultId
+                                            )
+                                              ? teamsResults.find(
+                                                teamResult =>
+                                                  teamResult.Team_Id ==
+                                                  roomPlayerUser.user
+                                                    .Team_Id &&
+                                                  teamResult.GameResult_Id ==
+                                                  gameResult.GameResultId
+                                              ).TeamResultId
+                                              : -1
+                                          };
+                                        })
+                                      )
+                                        .then(usersResults => {
+                                          const usersResultsQuestionsArr = [];
+                                          for (const teamResultQuestion of teamResultsQuestionsArr) {
+                                            for (const userResult of usersResults) {
+                                              usersResultsQuestionsArr.push({
+                                                isAnsweredCorrectly: false,
+                                                UserResult_Id:
+                                                  userResult.UserResultId,
+                                                GameResultQuestion_Id:
+                                                  teamResultQuestion.GameResultQuestion_Id
+                                              });
+                                            }
+                                          }
+                                          UserResultQuestion.bulkCreate(
+                                            usersResultsQuestionsArr
+                                          ).catch(err => console.log(err));
+                                        })
+                                        .catch(err => console.log(err));
+                                    })
+                                    .catch(err => console.log(err));
+                                  Answer.findAll({
+                                    where: {
+                                      Question_Id: gameResultQuestions.map(
+                                        gameResultQuestion =>
+                                          gameResultQuestion.Question_Id
+                                      )
+                                    }
+                                  })
+                                    .then(answers => {
+                                      GameResultAnswer.bulkCreate(
+                                        answers.map(answer => {
+                                          return {
+                                            GameResultAnswerText:
+                                              answer.AnswerText,
+                                            isCorrect: answer.Correct,
+                                            GameResultQuestion_Id: gameResultQuestions.find(
+                                              gameResultQuestion =>
+                                                gameResultQuestion.Question_Id ==
+                                                answer.Question_Id
+                                            ).GameResultQuestionId
+                                          };
+                                        })
+                                      ).catch(err => console.log(err));
+                                    })
+                                    .catch(err => console.log(err));
+                                })
+                                .catch(err => console.log(err));
+                            })
+                            .catch(err => console.log(err));
+                        })
+                        .catch(err => console.log(err));
+                    })
+                    .catch(err => console.log(err));
+                })
+                .catch(err => console.log(err));
+            })
+            .catch(err => console.log(err));
+        })
+        .catch(err => console.log(err));
     }
   });
 

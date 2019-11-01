@@ -17,7 +17,9 @@ const RoomPlayer = db.define("room_player", {
     type: Sequelize.INTEGER
   },
   User_Id: {
-    type: Sequelize.INTEGER
+    type: Sequelize.INTEGER,
+    allowNull: false,
+    foreignKey: true
   },
   Team_Id: {
     type: Sequelize.INTEGER

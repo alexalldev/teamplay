@@ -1,18 +1,23 @@
-const Sequelize = require('sequelize');
-const db = require('../config/database');
+const Sequelize = require("sequelize");
+const db = require("../config/database");
 
-const TeamResultAnswer = db.define('team_results_question', {
+const TeamResultQuestion = db.define("team_results_question", {
     TeamResultQuestionId: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true
     },
+    isAnsweredCorrectly: {
+        type: Sequelize.BOOLEAN
+    },
     TeamResult_Id: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        foreignKey: true
     },
     GameResultQuestion_Id: {
         type: Sequelize.INTEGER
-    },
+    }
 });
 
-module.exports = TeamResultAnswer;
+module.exports = TeamResultQuestion;

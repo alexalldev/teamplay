@@ -13,7 +13,10 @@ const UserResultAnswer = db.define('user_result', {
     UserFIO: {
         type: Sequelize.TEXT
     },
-    CorrectAnsweredQuestionsNum: {
+    IsCreator: {
+        type: Sequelize.BOOLEAN
+    },
+    Timestamp: {
         type: Sequelize.INTEGER
     },
     User_Id: {

@@ -7,6 +7,9 @@ const UserResultAnswer = db.define('user_results_question', {
         autoIncrement: true,
         primaryKey: true
     },
+    isAnsweredCorrectly: {
+        type: Sequelize.BOOLEAN
+    },
     UserResult_Id: {
         type: Sequelize.INTEGER
     },

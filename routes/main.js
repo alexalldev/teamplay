@@ -1,6 +1,8 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable no-restricted-syntax */
 const formidable = require("formidable");
 const nodeMailer = require("nodemailer");
+const Sequelize = require("sequelize");
 const { Op } = require("sequelize");
 const fs = require("fs");
 const crypto = require("crypto");
@@ -8,6 +10,11 @@ const Hash = require("password-hash");
 const GamePlay = require("../models/GamePlay");
 const GamePlayCategory = require("../models/GamePlayCategory");
 const Answer = require("../models/Answer");
+const TeamResult = require("../models/TeamResult");
+const UserResult = require("../models/UserResult");
+const TeamResultQuestion = require("../models/TeamResultQuestion");
+const UserResultQuestion = require("../models/UserResultQuestion");
+const GameResult = require("../models/GameResult");
 const {
   router,
   passport,
@@ -76,7 +83,8 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                 answers = req.session.isRoomCreator
                                   ? answersArr.filter(answer => answer.Correct)
                                   : answersArr;
-                                type = answersArr.length == 1 ? "text" : "checkbox";
+                                type =
+                                  answersArr.length == 1 ? "text" : "checkbox";
                                 currentQuestion = currQuestion;
                               });
                           })
@@ -103,6 +111,10 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                     delete req.session.roomId;
                     delete req.session.isRoomCreator;
                     delete req.session.roomPlayersId;
+                    // return res.render("info", {
+                    //   message:
+                    //     "Вы были отключены по причине потери соединения. Обновите Страницу"
+                    // });
                   }
                 })
                 .catch(err => console.log(err));

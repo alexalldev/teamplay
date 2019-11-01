@@ -389,6 +389,8 @@ io.on("connection", function(socket) {
   });
 
   socket.on("disconnect", function(reason) {
+    console.log("disco");
+    // при выходе команды или при конце игры обновить результаты для 
     if (session.passport) {
       if (session.roomPlayersId) {
         const clearRoomPlayer = setTimeout(async () => {
@@ -396,6 +398,7 @@ io.on("connection", function(socket) {
             where: { Room_Id: session.roomId, Team_Id: session.TeamId }
           })
             .then(async roomPlayersNum => {
+              console.log({ session });
               if (roomPlayersNum == 1) {
                 // io.to(`RoomUsers${req.session.roomId}`).emit(
                 //   "RoomGroupRemoved",
