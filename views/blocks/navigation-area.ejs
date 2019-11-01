@@ -1,14 +1,24 @@
-<div class="col-md-2 navigation-area collapse show">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="ml-2 mt-2 main-menu">
-                    <a class="btn <%= page == 'home' ? 'btn-success' : 'btn-info' %> h4" href="/home">Мои викторины</a>
-                    <a class="btn <%= page == 'rooms' ? 'btn-success' : 'btn-info' %> h4" href="/rooms">Комнаты</a>
-                    <!--a class="btn btn-info h4" disabled>Общий доступ</a-->
-                    <a class="btn h4 <%= page == 'teams' ? 'btn-success' : 'btn-info' %>" href="/teams">Команды</a>
-                    <a class="btn h4 <%= page == 'users' ? 'btn-success' : 'btn-info' %>" href="/users">Игроки</a>
-                    <!--a class="btn btn-info h4" disabled>Организаторы</a-->
-                </div>
-            </div>
-        </div>
+<div class="navigation-area">
+    <div class="menu-item <%= page == 'home' ? 'current' : '' %>" href="/home">
+        <span class="mr-1"><i class="fas fa-th-large"></i></span>
+        <span class="item-name">Мои викторины</span>
     </div>
+    <div class="menu-item <%= page == 'rooms' ? 'current' : '' %>" href="/rooms">
+        <span class="mr-1"><i class="fas fa-vector-square"></i></span>
+        <span class="item-name">Комнаты</span>
+    </div>
+    <div class="menu-item <%= page == 'teams' ? 'current' : '' %>" href="/teams">
+        <span class="mr-1"><i class="fas fa-users"></i></span>
+        <span class="item-name">Команды</span>
+    </div>
+    <div class="menu-item <%= page == 'users' ? 'current' : '' %>" href="/users">
+        <span class="mr-1"><i class="fas fa-user-friends"></i></span>
+        <span class="item-name">Игроки</span>
+    </div>
+</div>
+
+<script>
+    $('.menu-item').click(function() {
+        location.href = $(this).attr('href');
+    });
+</script>

@@ -18,11 +18,7 @@ $(document).ready(function() {
     );
   });
 
-  $(".quiz").click(function() {
-    location.href = "/EditGame/" + $(this).attr("gameTag");
-  });
-
-  $(".room").click(function() {
+  $(".btnEnterRoom").click(function() {
     location.href = "/room/" + $(this).attr("roomTag");
   });
 
@@ -47,7 +43,6 @@ $(document).ready(function() {
   });
 
   $(".btnKickUser").click(function() {
-    console.log(this);
     socket.emit("LeaveTeam", $(this).val(), true);
   });
 });

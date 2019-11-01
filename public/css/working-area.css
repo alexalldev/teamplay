@@ -1,0 +1,15 @@
+.working-area {
+    width: 80%;
+    min-height: 93.4vh;
+    display: inline-block;
+    position: absolute;
+    top: 3.5rem;
+    right: 0;
+    transition: all 0.3s;
+}
+
+@media screen and (max-width: 690px) {
+    .working-area {
+        text-align: center;
+    }
+}

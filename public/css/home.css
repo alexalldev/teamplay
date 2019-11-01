@@ -22,40 +22,10 @@ body {
 	margin-left: unset !important;
 }
 
-.navigation-area,
-.working-area {
-}
-
-.quiz,
-.room {
-	width: 15rem;
-	border: solid 1.75px #eee;
-	border-radius: 5px;
-	cursor: pointer;
-}
-
-.user, .team
-{
-	border: solid 1.75px #eee;
-	border-radius: 5px;
-	cursor: pointer;
-}
-
-.quiz-i {
-	font-size: 15px;
-}
-
-.quiz-col-40 {
-	width: 40%;
-	padding-left: 1rem;
-}
-
-.quiz-col-55 {
-	width: 55%;
-}
-
-.quiz:hover {
-	border-color: #ddd;
+.navbar {
+	position: fixed!important;
+    width: 100%!important;
+    z-index: 2;
 }
 
 .TeamCoach {
@@ -77,19 +47,12 @@ body {
 	.main-menu > .btn {
 		margin-bottom: 5px;
 	}
+}
 
-	.quiz {
-		width: 100%;
-	}
-}
-/*Panel Team*/
-.teams {
-	width: 15rem;
-	margin-top: 5%;
-	border: solid 3px rgba(6, 126, 26, 0.281);
-	border-radius: 5px;
-	cursor: pointer;
-}
 .imgbord {
 	border: solid 2px rgba(4, 18, 48, 0.281);
+}
+
+.page-header {
+	border-color: #343a40!important;
 }

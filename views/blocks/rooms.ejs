@@ -1,0 +1,63 @@
+<div class="btn btn-outline-success btnCreateRoom btnCreate">
+  <table class="centred-table">
+    <tr align="center">
+      <td valign="center">
+        <div>
+          <i class="fa fa-plus"></i>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+<% roomModels.forEach(function(room) { %>
+  <div class="room room-<%= room.roomId %> text-center" roomTag="<%= room.roomTag %>" title="Нажмите, чтобы перейти в комнату">
+    <div class="room-block room-block-top-right"></div>
+    <div class="room-block room-block-bottom-right"></div>
+    <div class="room-block room-block-top-left"></div>
+    <div class="room-block room-block-bottom-left"></div>
+    <div class="room-name room-attribute" title="<%= room.roomName %>">
+      <%= room.roomName %>
+    </div>
+    <div class="room-online room-attribute">
+      <i class="fa fa-user text-success h4 mr-1"></i><span class="roomOnline-<%= room.roomId %> h4"><%= room.usersOnline %></span><span>/</span><%= room.maxTeamPlayers %><span></span>
+    </div>
+    <div class="room-creator room-attribute">
+      <i class="fa fa-star text-warning mr-1"></i><a href='/user/<%=room.roomCreatorId%>'><%= room.roomCreator %></a>
+    </div>
+    <button class="btnEnterRoom alert alert-success room-attribute" roomTag="<%= room.roomTag %>">Войти</button>
+  </div>
+<% }); %>
+
+
+
+<!-- The Modal -->
+<div class="modal fade" id="createRoomModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h4 class="modal-title">Создать новую комнату</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="modal-body">
+        <form action="javascript:void(null)">
+          <select class="form-control mb-2" id="MyGamesSelect" name="GameId">
+            <% if (gameModels.length > 0) { %>
+            <% gameModels.forEach(function(quiz){ %>
+            <option value="<%= quiz.GameId %>"><%= quiz.GameName %></option>
+            <% }); %>
+            <% } %>
+          </select>
+          <input type="text" class="form-control mb-2" name="RoomName" id="RoomName" placeholder="Название комнаты">
+          <input type="number" class="form-control mb-2" name="RoomMaxTeamPlayers" id="RoomMaxTeamPlayers"
+            placeholder="Максимально игроков от одной команды" min="1" step="1">
+          <button class="btn btn-success">Создать</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

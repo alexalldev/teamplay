@@ -34,7 +34,6 @@ $(document).ready(function() {
     data.append("QuestionCost", dataArray[2].value);
     data.append("AnswerTime", dataArray[3].value);
     data.append("QuestionImage", $("#QuestionImage")[0].files[0]);
-
     $.ajax({
       type: "POST",
       url: "CreateQuestion",
@@ -105,6 +104,7 @@ $(document).ready(function() {
       data.append("QuestionId", id);
       data.append("QuestionText", $(".EditQuestionText").val());
       data.append("QuestionCost", $(".EditQuestionCost").val());
+      data.append("AnswerTime", $(".EditAnswerTime").val());
       data.append("QuestionImage", $(".EditQuestionImage")[0].files[0]);
 
       $.ajax({
@@ -123,9 +123,15 @@ $(document).ready(function() {
                 "src",
                 `${location.protocol}//${location.host}/QuestionImage?QuestionId=${id}`
               );
+              $(`.DeleteQuestionImageContainer-${id}`).html(`<button class="btn btn-outline-secondary btnDeleteQuestionImage" onclick="RemoveQuestionImage(${id})"><i class="fa fa-trash"></i></button>`);
+            }
+            else {
+              $(`.DeleteQuestionImageContainer-${id}`).html(``);
             }
             $(`.QuestionText-${id}`).text($(".EditQuestionText").val());
             $(`.QuestionCost-${id}`).text($(".EditQuestionCost").val());
+            $(`.AnswerTime-${id}`).text($(".EditAnswerTime").val());
+
             $(`.Question-${id}`).attr(
               "questiontext",
               $(".EditQuestionText").val()
@@ -133,6 +139,10 @@ $(document).ready(function() {
             $(`.Question-${id}`).attr(
               "questioncost",
               $(".EditQuestionCost").val()
+            );
+            $(`.Question-${id}`).attr(
+              "answertime",
+              $(".EditAnswerTime").val()
             );
 
             $("#EditModal").modal("hide");
@@ -144,26 +154,6 @@ $(document).ready(function() {
       });
     }
   });
-
-  $(".btnRemoveGame").click(function() {
-    Swal({
-      title: "Удаление викторины",
-      text: "Удалить викторину?",
-      type: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#6699FF",
-      confirmButtonText: "Yes"
-    }).then(result => {
-      if (result.value) {
-        socket.emit("RemoveGame", $(this).attr("gameId"));
-      }
-    });
-  });
-});
-
-socket.on("GameRemoved", function(GameId) {
-  location.href = "/";
 });
 
 function SetGameTime(type, time) {
@@ -269,9 +259,9 @@ function AddQuestion(question) {
           question.QuestionId
         }" onclick="OpenQuestion(${question.QuestionId})" ImgSrc="${
       question.QuestionImage ? question.QuestionImage : "/QuestionImage"
-    }" QuestionText="${question.QuestionText}" QuestionCost="${
+    }" HasImage="${question.hasImage}" QuestionText="${question.QuestionText}" QuestionCost="${
       question.QuestionCost
-    }">\
+    } " AnswerTime="${question.AnswerTime}">\
         <table style="width: 100%">\
             <tr>\
                 <td align="left">\
@@ -285,7 +275,10 @@ function AddQuestion(question) {
                 <td><span class="h2 QuestionText-${question.QuestionId}">${
       question.QuestionText
     }</span></td>\
-                <td align="right"><span class="h2 QuestionCost-${
+                <td align="right"><i class="far fa-clock mr-1"></i><span class="h2 AnswerTime-${
+                  question.QuestionId
+                }">${question.AnswerTime}</span></td>
+                <td align="right"><i class="fas fa-ticket-alt mr-1"></i><span class="h2 QuestionCost-${
                   question.QuestionId
                 }">${question.QuestionCost}</span></td>\
             </tr>\
@@ -357,10 +350,14 @@ function OpenQuestion(questionId) {
   // Сработает один раз для одного вопроса
   if (!$(".AnswersList").is(`.AnswersList-${questionId}`)) {
     const ImgSrc = $(`.Question-${questionId}`).attr("ImgSrc");
+    const HasImage = $(`.Question-${questionId}`).attr("hasImage");
     $(`.QuestionsContainer-${questionId}`).append(
       `<div class="collapse m-2 AnswersList AnswersList-${questionId}">\
             <div class="row mb-2">\
                 <div class="col-md-12 text-center">\
+                  <div class="DeleteQuestionImageContainer-${questionId}">
+                    ${HasImage == 'true' ? `<button class="btn btn-outline-secondary btnDeleteQuestionImage" onclick="RemoveQuestionImage(${questionId})"><i class="fa fa-trash"></i></button>` : ''}
+                  </div>
                     <img src="${ImgSrc}" class="QuestionImage QuestionImage-${questionId}" alt="">\
                 </div>\
             </div>\
@@ -480,6 +477,36 @@ function RemoveQuestion(questionId) {
   });
 }
 
+function RemoveQuestionImage(questionId) {
+  Swal({
+    title: "Удаление изображения",
+    text: "Удалить изображение?",
+    type: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#6699FF",
+    confirmButtonText: "Yes"
+  }).then(result => {
+    if (result.value) {
+      $.ajax({
+        type: "POST",
+        url: "RemoveQuestionImage",
+        data: { questionId: questionId },
+        dataType: "text",
+        success(data) {
+          if (data == "true") {
+            $(`.QuestionImage-${questionId}`).attr('src', '');
+            $(`.DeleteQuestionImageContainer-${questionId}`).html(``);
+          }
+        },
+        error(xhr, str) {
+          alert(`Возникла ошибка: ${xhr.responseCode}`);
+        }
+      });
+    }
+  });
+}
+
 function RemoveAnswer(answerId) {
   Swal({
     title: "Удаление ответа",
@@ -535,10 +562,11 @@ function Edit(type, Id) {
                 ).attr("QuestionText")}">\
             </div>\
             <div class="form-group">\
-                <input type="number"  min="0" step="10" class="form-control EditQuestionCost" value="${$(
+                <input type="number"  min="0" step="10" class="form-control EditQuestionCost" placeholder="Стоимость" value="${$(
                   `.Question-${Id}`
                 ).attr("QuestionCost")}">\
             </div>\
+            
             <div class="form-group text-left">\
                 <label>Изображение к вопросу</label>\
                 <label class="text-danger">2 МБ</label>\

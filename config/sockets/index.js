@@ -291,13 +291,9 @@ io.on("connection", function(socket) {
 
               Category.destroy({ where: { Game_Id: GameId } })
                 .then(categoryRemoved => {
-                  GameTeam.destroy({ where: { Game_Id: GameId } })
-                    .then(gameTeamRemoved => {
-                      Game.destroy({ where: { GameId } })
-                        .then(gameRemoved => {
-                          socket.emit("GameRemoved", GameId); // Игра удалена
-                        })
-                        .catch(err => console.log(err));
+                    Game.destroy({ where: { GameId: GameId } })
+                    .then(gameRemoved => {
+                      socket.emit("GameRemoved", GameId); //Игра удалена
                     })
                     .catch(err => console.log(err));
                 })
