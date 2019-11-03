@@ -335,7 +335,7 @@ socket.on("RecieveCreatorStatus", function(status) {
 });
 
 socket.on("roomDeleted", function(status) {
-  if (status) location.href = "/leaveRoom";
+  if (status) location.href = "/";
   else Swal.fire("Ошибка", status, "warning");
 });
 

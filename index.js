@@ -102,8 +102,6 @@ app.use("/", require("./routes/password"));
 
 app.use("/EditGame", require("./routes/editGame"));
 
-app.use("/Stream", require("./routes/stream"));
-
 app.use("/notification", require("./routes/notifications"));
 
 app.use("/teamOperation", require("./routes/team-operation"));

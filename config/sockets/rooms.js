@@ -2,6 +2,7 @@ const Room = require("../../models/Room");
 const RoomPlayer = require("../../models/RoomPlayer");
 const User = require("../../models/User");
 const Team = require("../../models/Team");
+const RoomTeam = require("../../models/RoomTeam");
 
 function roomsSocket(socket, io) {
   const { session } = socket.request;
@@ -71,15 +72,19 @@ function roomsSocket(socket, io) {
     if (session.passport.user)
       RoomPlayer.destroy({ where: { Room_Id: roomId } })
         .then(() => {
-          Room.destroy({
-            where: { RoomCreatorId: session.passport.user, RoomId: roomId }
-          })
+          RoomTeam.destroy({where: {Room_Id: roomId}})
+          .then(() => {
+            Room.destroy({
+              where: { RoomCreatorId: session.passport.user, RoomId: roomId }
+            })
             .then(room => {
               if (room)
                 io.to(`RoomUsers${session.roomId}`).emit("roomDeleted", true);
               else socket.emit("roomDeleted", "You cant delete this room");
             })
             .catch(err => console.log(err));
+          })
+          .catch(err => console.log(err));
         })
         .catch(err => console.log(err));
     else console.log("There is no roomId in session");

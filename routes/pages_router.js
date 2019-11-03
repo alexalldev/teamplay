@@ -14,6 +14,12 @@ const {
     Room,
   } = require("../config/routers-config");
 
+const TeamResult = require("../models/TeamResult");
+const UserResult = require("../models/UserResult");
+const TeamResultQuestion = require("../models/TeamResultQuestion");
+const UserResultQuestion = require("../models/UserResultQuestion");
+const GameResult = require("../models/GameResult");
+
 const RoomPlayers = require('../models/RoomPlayer');
 
 router.get("/home", app.protect, function(req, res) {
@@ -59,10 +65,9 @@ router.get("/rooms", app.protect, function(req, res) {
   Room.findAll({ raw: true })
     .then(async rooms => {
       const roomModels = [];
-      // eslint-disable-next-line node/no-unsupported-features/es-syntax
       for await (const room of rooms) {
         await RoomPlayers.count({
-          where: { Room_Id: room.RoomId }
+          where: { Room_Id: room.RoomId, isRoomCreator: false }
         })
           .then(async NumRoomPlayers => {
             await User.findOne({
@@ -171,7 +176,6 @@ router.get("/teams", app.protect, function(req, res) {
 router.get("/users", app.protect, function(req, res) {
   User.findAll({ where: { UserIsActive: true }, raw: true })
     .then(async users => {
-      // eslint-disable-next-line node/no-unsupported-features/es-syntax
       for await (const user of users) {
         user.userFIO = `${user.UserFamily} ${user.UserName.slice(
           0,
@@ -238,29 +242,34 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                   users[0],
                   users[members.coachInd]
                 ];
-              })
-              .catch(err => {
-                console.log({
-                  file: __filename,
-                  func: 'router.get("/team/:TeamTag"), User.findAll',
-                  err
+                GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
+                TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
+                // FIXME: stopped here
+                const gamesTeamResults = await TeamResult.findAll({ where: { Team_Id: team.TeamId }, include: [GameResult] }).map(gameTeamResult => gameTeamResult.get({ plain: true }));
+                const date = new Date();
+                const datesGamesTeamResults = [];
+                let countDates = gamesTeamResults.filter(gameTeamResult => gameTeamResult.game_result.Timestamp < Date.now()).length;
+                let c = 1;
+                console.log({ gamesTeamResults })
+                while (countDates > 0) {
+                  countDates = gamesTeamResults.filter(gameTeamResult => gameTeamResult.game_result.Timestamp < date.setMonth(date.getMonth() - c)).length;
+                  datesGamesTeamResults.push({ TextDate: timeConverter(Math.floor(date.setMonth(date.getMonth() - c) / 1000)), number: countDates })
+                  c++;
+                }
+                res.render("teamPage", {
+                  users,
+                  isMyTeam: user.Team_Id == team.TeamId,
+                  amICoach: user.isCoach,
+                  datesGamesTeamResults
                 });
-              });
-            res.render("teamPage", {
-              users,
-              isMyTeam: user.Team_Id == team.TeamId,
-              amICoach: user.isCoach
-            });
+              })
+              .catch(err => console.log(err));
           }
         });
       } else return res.redirect("/");
     })
     .catch(err => {
-      console.log({
-        file: __filename,
-        func: 'router.get("/team/:TeamTag"), User.findAll',
-        err
-      });
+      console.log(err);
     });
 });
 
@@ -305,9 +314,100 @@ router.get("/user/:userId", app.protect, function(req, res) {
     });
 });
 
+router.get("/team/:TeamTag/results", app.protect, (req, res) => {
+  Team.findOne({ where: { TeamTag: req.params.TeamTag }, raw: true })
+    .then(team => {
+      TeamResult.findAll({
+        where: { Team_Id: team.TeamId },
+        raw: true
+      })
+        .then(async teamResults => {
+          // FIXME: stopped here
+          GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
+          TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
+          TeamResult.hasMany(TeamResultQuestion, {
+            foreignKey: "TeamResult_Id"
+          });
+          TeamResultQuestion.belongsTo(TeamResult, {
+            foreignKey: "TeamResult_Id"
+          });
+          const teamGamesQuestionsResults = await TeamResult.findAll({
+            where: {
+              GameResult_Id: teamResults.map(
+                teamResult => teamResult.GameResult_Id
+              )
+            },
+            include: [
+              { model: GameResult }, { model: TeamResultQuestion }
+            ],
+            order: [[GameResult, "Timestamp", "ASC"], ["TeamPoints", "DESC"]]
+          }).map(teamGameQuestionsResult => teamGameQuestionsResult.get({ plain: true }));
+
+          console.log({
+            teamGamesQuestionsResults,
+            gameResults: teamGamesQuestionsResults.map(
+              teamGameResult => teamGameResult.game_result
+            ),
+            gameQ: teamGamesQuestionsResults.map(
+              teamGameResult => teamGameResult.game_result
+            )
+          });
+          res.render("teamResult", {
+            teamGamesQuestionsResults
+          });
+        })
+        .catch(err => console.log(err));
+    })
+    .catch(err => console.log(err));
+});
+
+// router.get("/user/:userId/results", app.protect, function(req, res) {
+//   User.findOne({ where: { TeamTag: req.params.userId }, raw: true })
+//     .then(user => {
+//       UserResult.findAll({
+//         where: { User_Id: user.UserId },
+//         raw: true
+//       })
+//         .then(async teamResults => {
+//           // FIXME: stopped here
+//           GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
+//           TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
+//           const teamsGamesResults = await TeamResult.findAll({
+//             where: {
+//               GameResult_Id: teamResults.map(
+//                 teamResult => teamResult.GameResult_Id
+//               )
+//             },
+//             include: [GameResult],
+//             order: [[GameResult, "Timestamp", "ASC"], ["TeamPoints", "DESC"]]
+//           }).map(teamGameResult => teamGameResult.get({ plain: true }));
+//           // console.log({
+//           //   teamsGamesResults,
+//           //   gameResults: teamsGamesResults.map(
+//           //     teamGameResult => teamGameResult.game_result
+//           //   )
+//           // });
+//           res.render("teamResult", {
+//             teamsGamesResults
+//           });
+//         })
+//         .catch(err => console.log(err));
+//     })
+//     .catch(err => console.log(err));
+// });
+
 router.get("/user", app.protect, function(req, res) {
   if (req.session.passport.user)
     res.redirect(`/user/${req.session.passport.user}`);
 });
+
+function timeConverter(UNIX_timestamp) {
+  var date = new Date(UNIX_timestamp * 1000);
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var year = date.getFullYear();
+  var month = months[date.getMonth()];
+  var time = `${year} ${month}`;
+  return time;
+}
 
 module.exports = router;
