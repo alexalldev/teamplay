@@ -1,18 +1,18 @@
 /* eslint-disable no-restricted-syntax */
 const {
-    router,
-    passport,
-    Team,
-    Game,
-    GameTeam,
-    app,
-    urlencodedParser,
-    io,
-    Category,
-    Question,
-    User,
-    Room,
-  } = require("../config/routers-config");
+  router,
+  passport,
+  Team,
+  Game,
+  GameTeam,
+  app,
+  urlencodedParser,
+  io,
+  Category,
+  Question,
+  User,
+  Room
+} = require("../config/routers-config");
 
 const TeamResult = require("../models/TeamResult");
 const UserResult = require("../models/UserResult");
@@ -20,7 +20,7 @@ const TeamResultQuestion = require("../models/TeamResultQuestion");
 const UserResultQuestion = require("../models/UserResultQuestion");
 const GameResult = require("../models/GameResult");
 
-const RoomPlayers = require('../models/RoomPlayer');
+const RoomPlayers = require("../models/RoomPlayer");
 
 router.get("/home", app.protect, function(req, res) {
   Game.findAll({
@@ -56,7 +56,7 @@ router.get("/home", app.protect, function(req, res) {
           }
         });
       }
-      res.render("view", { games, page: 'home' });
+      res.render("view", { games, page: "home" });
     })
     .catch(err => console.log(err));
 });
@@ -65,6 +65,10 @@ router.get("/rooms", app.protect, function(req, res) {
   Room.findAll({ raw: true })
     .then(async rooms => {
       const roomModels = [];
+      // FIXME: stopped here
+      // Promise.all(rooms.map(room => {
+
+      // }))
       for await (const room of rooms) {
         await RoomPlayers.count({
           where: { Room_Id: room.RoomId, isRoomCreator: false }
@@ -74,50 +78,37 @@ router.get("/rooms", app.protect, function(req, res) {
               where: { UserId: room.RoomCreatorId },
               raw: true
             })
-              .then(userCreator => {
+              .then(async userCreator => {
                 if (userCreator) {
-                  RoomPlayers.findOne({
-                    where: { User_Id: room.RoomCreatorId },
-                    raw: true
-                  }).then(roomCreator => {
-                    roomModels.push({
-                      roomId: room.RoomId,
-                      roomName: room.RoomName,
-                      roomCreator: `${
-                        userCreator.UserFamily
-                      } ${userCreator.UserName.slice(
-                        0,
-                        1
-                      )}. ${userCreator.UserLastName.slice(0, 1)}.`,
-                      roomCreatorId: userCreator.UserId,
-                      roomTag: room.RoomTag,
-                      maxTeamPlayers: room.RoomMaxTeamPlayers,
-                      usersOnline: NumRoomPlayers - roomCreator ? 1 : 0
-                    });
+                  roomModels.push({
+                    roomId: room.RoomId,
+                    roomName: room.RoomName,
+                    roomCreator: `${
+                      userCreator.UserFamily
+                    } ${userCreator.UserName.slice(
+                      0,
+                      1
+                    )}. ${userCreator.UserLastName.slice(0, 1)}.`,
+                    roomCreatorId: userCreator.UserId,
+                    roomTag: room.RoomTag,
+                    maxTeamPlayers: room.RoomMaxTeamPlayers,
+                    usersOnline: NumRoomPlayers
                   });
                 }
               })
               .catch(err => {
-                console.log({
-                  file: __filename,
-                  func: 'router.get("/rooms"), User.findOne',
-                  err
-                });
+                console.log(err);
               });
           })
           .catch(err => {
-            console.log({
-              file: __filename,
-              func: 'router.get("/rooms"), RoomPlayers.findAll',
-              err
-            });
+            console.log(err);
           });
       }
       Game.findAll({
         where: { QuizCreatorId: req.session.passport.user },
         raw: true
       }).then(gameModels => {
-        res.render("view", { roomModels, gameModels, page: 'rooms' });
+        res.render("view", { roomModels, gameModels, page: "rooms" });
       });
     })
     .catch(err => console.log(err));
@@ -162,7 +153,7 @@ router.get("/teams", app.protect, function(req, res) {
           teams.userTeamId = user.Team_Id;
         }
       );
-      res.render("view", { teams, page: 'teams' });
+      res.render("view", { teams, page: "teams" });
     })
     .catch(err => {
       console.log({
@@ -204,7 +195,7 @@ router.get("/users", app.protect, function(req, res) {
         }
       );
 
-      res.render("view", { users, page: 'users' });
+      res.render("view", { users, page: "users" });
     })
     .catch(err => {
       console.log({
@@ -243,17 +234,34 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                   users[members.coachInd]
                 ];
                 GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
-                TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
+                TeamResult.belongsTo(GameResult, {
+                  foreignKey: "GameResult_Id"
+                });
                 // FIXME: stopped here
-                const gamesTeamResults = await TeamResult.findAll({ where: { Team_Id: team.TeamId }, include: [GameResult] }).map(gameTeamResult => gameTeamResult.get({ plain: true }));
+                const gamesTeamResults = await TeamResult.findAll({
+                  where: { Team_Id: team.TeamId },
+                  include: [GameResult]
+                }).map(gameTeamResult => gameTeamResult.get({ plain: true }));
                 const date = new Date();
                 const datesGamesTeamResults = [];
-                let countDates = gamesTeamResults.filter(gameTeamResult => gameTeamResult.game_result.Timestamp < Date.now()).length;
+                let countDates = gamesTeamResults.filter(
+                  gameTeamResult =>
+                    gameTeamResult.game_result.Timestamp < Date.now()
+                ).length;
                 let c = 1;
-                console.log({ gamesTeamResults })
+                console.log({ gamesTeamResults });
                 while (countDates > 0) {
-                  countDates = gamesTeamResults.filter(gameTeamResult => gameTeamResult.game_result.Timestamp < date.setMonth(date.getMonth() - c)).length;
-                  datesGamesTeamResults.push({ TextDate: timeConverter(Math.floor(date.setMonth(date.getMonth() - c) / 1000)), number: countDates })
+                  countDates = gamesTeamResults.filter(
+                    gameTeamResult =>
+                      gameTeamResult.game_result.Timestamp <
+                      date.setMonth(date.getMonth() - c)
+                  ).length;
+                  datesGamesTeamResults.push({
+                    TextDate: timeConverter(
+                      Math.floor(date.setMonth(date.getMonth() - c) / 1000)
+                    ),
+                    number: countDates
+                  });
                   c++;
                 }
                 res.render("teamPage", {
@@ -337,11 +345,11 @@ router.get("/team/:TeamTag/results", app.protect, (req, res) => {
                 teamResult => teamResult.GameResult_Id
               )
             },
-            include: [
-              { model: GameResult }, { model: TeamResultQuestion }
-            ],
+            include: [{ model: GameResult }, { model: TeamResultQuestion }],
             order: [[GameResult, "Timestamp", "ASC"], ["TeamPoints", "DESC"]]
-          }).map(teamGameQuestionsResult => teamGameQuestionsResult.get({ plain: true }));
+          }).map(teamGameQuestionsResult =>
+            teamGameQuestionsResult.get({ plain: true })
+          );
 
           console.log({
             teamGamesQuestionsResults,
@@ -403,7 +411,20 @@ router.get("/user", app.protect, function(req, res) {
 
 function timeConverter(UNIX_timestamp) {
   var date = new Date(UNIX_timestamp * 1000);
-  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
+  ];
   var year = date.getFullYear();
   var month = months[date.getMonth()];
   var time = `${year} ${month}`;
