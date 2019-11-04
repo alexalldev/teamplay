@@ -103,7 +103,6 @@ router.get("/rooms", app.protect, function(req, res) {
           };
         })
       );
-      console.log({ roomModels });
       Game.findAll({
         where: { QuizCreatorId: req.session.passport.user },
         raw: true
