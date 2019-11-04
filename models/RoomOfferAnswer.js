@@ -1,27 +1,21 @@
 const Sequelize = require("sequelize");
 const db = require("../config/database");
 
-const Room = db.define("room", {
-  RoomId: {
+const RoomOfferAnswer = db.define("room_offer_answers", {
+  RoomOfferAnswerId: {
     type: Sequelize.INTEGER,
     autoIncrement: true,
     primaryKey: true
   },
-  RoomTag: {
+  Answer_Id: {
     type: Sequelize.STRING
   },
-  RoomName: {
-    type: Sequelize.STRING
-  },
-  RoomMaxTeamPlayers: {
+  RoomPlayer_Id: {
     type: Sequelize.INTEGER
   },
-  Game_Id: {
-    type: Sequelize.INTEGER
-  },
-  RoomCreatorId: {
+  RoomTeam_Id: {
     type: Sequelize.INTEGER
   }
 });
 
-module.exports = Room;
+module.exports = RoomOfferAnswer;

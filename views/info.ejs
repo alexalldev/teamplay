@@ -12,20 +12,23 @@
     <table style="height: 98vh; width: 100%;">
       <tr align="center">
         <td valign="center">
-          <span class="h1"><%= message == 'ADMIN_KICK' ? 'Ваша команда исключена Администратором' : message == 'LEAVE_ROOM' ? 'Вы хотите покинуть комнату ' + room.RoomName + '?' : message %></span>
+          <span
+            class="h1"><%= message == 'ADMIN_KICK' ? 'Ваша команда исключена Администратором' : message == 'LEAVE_ROOM' ? 'Вы хотите покинуть комнату ' + room.RoomName + '?' : message %></span>
         </td>
       </tr>
       <tr align="center">
         <td valign="center">
-            <% if (message == 'LEAVE_ROOM') {%>
-              <a class="btn btn-success mr-2" href="/leaveRoom">Да</a> <a class="btn btn-info" href="/room/<%= room.RoomTag %>">Нет</a>
-              <%} else {%>
-                <a href="/">Home</a>
-              <%}%>
+          <% if (message == 'LEAVE_ROOM') {%>
+          <a class="btn btn-success mr-2" href="/leaveRoom">Да</a> <a class="btn btn-info"
+            href="/room/<%= room.RoomTag %>">Нет</a>
+          <%} else {%>
+          <a href="/">Home</a>
+          <%}%>
         </td>
       </tr>
     </table>
   </section>
 </body>
+<% include blocks/socket %>
 
 </html>

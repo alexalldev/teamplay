@@ -1,44 +1,76 @@
-.groups-list
-{
-    padding: 1rem;
+.groups-list {
+  padding: 1rem;
 }
 
-.user_organizer
-{
-    width: 3rem;
+.user_organizer {
+  width: 3rem;
 }
 
-.organizer-connection
-{
-    position: absolute;
-    top: 3.3rem;
-    left: 2.4rem;
-    font-size: 4rem;
-    transition: 0.3s all;
+.organizer-connection {
+  position: absolute;
+  top: 3.3rem;
+  left: 2.4rem;
+  font-size: 4rem;
+  transition: 0.3s all;
 }
 
-.group
-{
-    border: dashed rgb(36, 102, 163);
-    border-radius: 10px;
-    border-width:3px;
+.group {
+  border: dashed rgb(36, 102, 163);
+  border-radius: 10px;
+  border-width: 3px;
 }
 
-.organizer-connection[connection="true"]
-{
-    color: #28a745!important
+.organizer-connection[connection="true"] {
+  color: #28a745 !important;
 }
 
-.organizer-connection[connection="false"]
-{
-    color: #dc3545!important;
+.organizer-connection[connection="false"] {
+  color: #dc3545 !important;
 }
 
-.Player
-{
-    border: solid 1.75px #ccc;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-left: 0.67rem!important;
-    margin-right: 0.67rem!important;
+.chosen-answer {
+  border: solid 2px darkblue;
+  transform: scale(1.05);
+}
+
+.team-readyState {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 3rem;
+}
+
+.team-readyState[ReadyState="true"] {
+  color: #28a745 !important;
+}
+
+.team-readyState[ReadyState="false"] {
+  color: #dc3545 !important;
+}
+
+.Player {
+  border: solid 1.75px #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 0.67rem !important;
+  margin-right: 0.67rem !important;
+}
+.AddPoints {
+  opacity: 0;
+  position: fixed;
+  right: 40px;
+  z-index: 1000;
+}
+
+.Points {
+  position: fixed;
+  right: 0;
+  z-index: 1000;
+}
+
+.Info {
+  position: absolute;
+  top: 51px;
+  right: 0;
+  padding-bottom: 6rem;
 }

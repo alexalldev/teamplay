@@ -41,7 +41,6 @@ router.get("/notificationAction", function(req, res) {
                         userReceiver.Team_Id == 0
                       )
                         userReceiver.update({ Team_Id: team.TeamId });
-                      console.log({ sender: notification.senderId });
                       io.emitUser(notification.senderId, "sendAnswer", {
                         // sender full name при join team в notificationSocket
                         senderFullName: `${

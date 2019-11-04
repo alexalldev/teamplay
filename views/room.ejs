@@ -2,39 +2,111 @@
 <html lang="en" dir="ltr">
 
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>TeamPlay Room</title>
-  <link rel="stylesheet" href="/public/css/room.css">
+  <link rel="stylesheet" href="/public/css/animate.css">
+  <link rel="stylesheet" href="/public/css/animated_timer.css">
+  <link rel="stylesheet" href="/public/css/room.css" />
   <% include blocks/title %>
 </head>
 
 <body>
-  <% include blocks/loader %>
-  <% include blocks/header %>
-  <section class="app-container">
+  <% include blocks/loader %> <% include blocks/header %>
+  <section class="app-container <%=wasGameStarted%>">
     <div class="organizer">
       <span class="organizer-connection" connection="false">•</span>
-      <img class="user_organizer" src="/public/user_organizer.png" alt="">
+      <img class="user_organizer" src="/public/user_organizer.png" alt="" />
       <span class="organizer_name"></span>
     </div>
     <div class="container">
       <div class="row">
         <div class="col-md-12 text-center">
           <h1 id="RoomName"><%= room.RoomName %></h1>
-          <% if(roomPlayer.isRoomCreator == true) {%>
-          <label class="h5">Удалить комнату</label>
-          <button class="btn btn-danger btnRemoveRoom" roomId="<%= room.RoomId %>"><i class="fa fa-trash text-white"></i></button>
-          <%} %>
         </div>
       </div>
-      <div class="row group-list text-center">
-        
+      <% if(roomPlayer.isRoomCreator == true) {%>
+      <div class="row">
+        <div class="col-md-12 text-center mb-2 roomActions">
+          <% if (!wasGameStarted) {%>
+          <button class="btn btn-success btnStartGame mr-sm-5 mr-2 mb-2" roomId="<%= room.RoomId %>">
+            <i class="fas fa-flag-checkered mr-2"></i><span class="h5">Начать игру</span>
+          </button>
+          <button class="btn btn-danger btnRemoveRoom mb-2" roomId="<%= room.RoomId %>">
+            <i class="fa fa-trash text-white mr-2"></i><span class="h5">Удалить комнату</span>
+          </button>
+          <% } else if (wasGameStarted) {%>
+          <button class="btn btn-danger btnFinishGame mb-2" onclick="FinishGame()" roomId="<%= room.RoomId %>">
+            <i class="fas fa-ban mr-1"></i><span class="h5">Завершить игру</span>
+          </button>
+          <%}%>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12 text-center"></div>
+        </div>
+        <%} else if (roomPlayer.isGroupCoach) { %>
+          <%if (!wasGameStarted) {%>
+          <div class="row">
+            <div class="col-md-12 text-center mb-2">
+              <%if (readyState == true) {%>
+              <button class="btn btn-danger btnGroupReady" teamId="<%= roomPlayer.Team_Id%>">
+                <i class="far fa-times-circle pr-1"></i>
+                <span>Отмена</span>
+              </button>
+            </div>
+          </div>
+          <%} else {%>
+          <button class="btn btn-success btnGroupReady" teamId="<%= roomPlayer.Team_Id %>">
+            <i class="far fa-check-circle pr-1"></i>
+            <span>Команда готова!</span>
+          </button>
+          <%}%> 
+          <%}%>
+          <%}%>
+          <%if (wasGameStarted) {%>
+          <%#if (isAnsweringTime) {%>
+
+          <%#}%>
+          <%}%>
+        <div class="row">
+          <div class="col-md-12 text-center mb-2">
+            <div class="QuestionArea"></div>
+          </div>
+        </div>
+        <div class="answers-form"></div>
+        <table class="table table-hover">
+          <tbody class="table-teams-rating">
+            <!--Строки нужно вывести шалонизатором. Use ClearRating(), SelectTeam(teamId) to select with success color and AddRowTeam(team) where team = {TeamId: int(), TeamName: str(), Points: int()}-->
+          </tbody>
+        </table>
+        <%if (!wasGameStarted || roomPlayer.isRoomCreator) {%>
+          <div class="row group-list text-center"></div>
+          <%} else if (wasGameStarted) {%> <%# выводить сюда только одну команду
+        пользователя%> <%}%>
       </div>
-    </div>
-  </section>
-  <% include blocks/footer %>
+    </section>
+    <% include blocks/footer %>
+          <div class="Info">
+            <div class="animated_timer">
+              <h2 class="animated_timer_value">0</h2>
+              <svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+                <g>
+                  <title>Layer 1</title>
+                  <circle id="circle" class="circle_animation" r="25" cy="40" cx="40" stroke-width="5" stroke="#6fdb6f"
+                    fill="none" />
+                </g>
+              </svg>
+            </div>
+            <div class="Points">
+              <span class="h2 AddPoints text-success">+ 10</span>
+              <span class="h2 PointsCount">0</span>
+              <i class="fas fa-ticket-alt"></i>
+            </div>
+          </div>
 </body>
 <% include blocks/socket %>
+<script src="/public/js/animated_timer.js"></script>
 <script src="/public/js/animateCSS.js"></script>
 <script src="/public/js/room.js"></script>
+
 </html>

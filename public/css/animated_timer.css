@@ -1,0 +1,24 @@
+.animated_timer {
+    position: relative;
+    float: right;
+    top: 25px;
+}
+
+.animated_timer h2 {
+    text-align:center;
+    position: absolute;
+    line-height: 80px;
+    width: 100%;
+    font-size: 1rem;
+}
+
+svg {
+   -webkit-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+}
+
+.circle_animation {
+  stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
+  stroke-dashoffset: 440;
+  transition: all 1s linear;
+}

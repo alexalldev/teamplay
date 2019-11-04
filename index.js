@@ -8,13 +8,14 @@ const Question = require("./models/Question");
 const GamePlay = require("./models/GamePlay");
 const Room = require("./models/Room");
 const RoomPlayer = require("./models/RoomPlayer");
-
+const ONE_MONTH = 1000 * 60 * 60 * 24 * 30;
 const sessionMiddleware = session({
   secret: "TEAMPLAYCOOKIESETRETWORDFORSESSION",
-  store: new FileStore({ logFn: () => {} }),
+  store: new FileStore({ logFn: () => { } }),
   cookie: {
     path: "/",
-    httpOnly: true
+    httpOnly: true,
+    maxAge: ONE_MONTH
   },
   resave: false,
   saveUninitialized: false
@@ -100,8 +101,6 @@ app.use("/", require("./routes/registration"));
 app.use("/", require("./routes/password"));
 
 app.use("/EditGame", require("./routes/editGame"));
-
-app.use("/Stream", require("./routes/stream"));
 
 app.use("/notification", require("./routes/notifications"));
 
