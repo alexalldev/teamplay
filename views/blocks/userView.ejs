@@ -11,14 +11,14 @@
                     <% if(user.TeamName) {%>
             <h3>Моя команда</h3>
             <h2 id="TeamName">
-                    <% if(user.isCoach) {%>
-                        <i class="fas fa-star text-warning"></i>
-                    <%} else {%>
-                        <i class="fas fa-user"></i>
-                    <%}%>
+                <% if(user.isCoach) {%>
+                <i class="fas fa-star text-warning"></i>
+                <%} else {%>
+                <i class="fas fa-user"></i>
+                <%}%>
                 <a
                 href="/team/<%= user.TeamTag %>"><%= user.TeamName %></a> <i class="fas fa-users"></i>
-                    <%}%>
+                <%}%>
                 <%= user.teamPlayersCount %></h2>
         </div>
     </div>

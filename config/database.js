@@ -1,14 +1,14 @@
-const Sequelize = require('sequelize');
-module.exports = new Sequelize('alexallr_teamplay_temp', 'alexallr_teamplay_temp', 'LC4l7[sgWbQL', {
-  host: 'alexall.dev',
-  dialect: 'mysql',
+const Sequelize = require("sequelize");
+module.exports = new Sequelize("teamplay", "root", "", {
+  host: "localhost",
+  dialect: "mysql",
   logging: false,
   define: {
     underscored: false,
     freezeTableName: false,
-    charset: 'utf8',
+    charset: "utf8",
     dialectOptions: {
-      collate: 'utf8_general_ci'
+      collate: "utf8_general_ci"
     },
     timestamps: false
   },
@@ -18,4 +18,4 @@ module.exports = new Sequelize('alexallr_teamplay_temp', 'alexallr_teamplay_temp
     acquire: 30000,
     idle: 10000
   }
-})
+});
