@@ -860,16 +860,17 @@ function NewGamePlayGeneration(socket, io) {
   function FinishGame() {
     GamePlay.findAll({ where: { Room_Id: session.roomId } })
       .then(gamePlays => {
+        const gamePlayIds = gamePlays.map(gamePlay => gamePlay.GamePlayId);
         GamePlayCategory.findAll({
-          where: { GamePlay_Id: gamePlays.map(gamePlay => gamePlay.GamePlayId) }
+          where: { GamePlay_Id: gamePlayIds }
         })
           .then(gamePlayCategories => {
-            const answerTimers = ANSWERING_TIMERS.map(
+            const answerTimers = ANSWERING_TIMERS.filter(
               answeringTimer => answeringTimer.RoomId == session.roomId
             );
             if (answerTimers.length > 0)
               answerTimers.map(answerTimer => clearTimeout(answerTimer.timer));
-            const checkTimers = CHECKING_TIMERS.map(
+            const checkTimers = CHECKING_TIMERS.filter(
               checkingTimer => checkingTimer.RoomId == session.roomId
             );
             if (checkTimers.length > 0)
@@ -883,14 +884,14 @@ function NewGamePlayGeneration(socket, io) {
             }).catch(err => console.log(err));
             GamePlayCategory.destroy({
               where: {
-                GamePlay_Id: gamePlays.map(gamePlay => gamePlay.GamePlayId)
+                GamePlay_Id: gamePlayIds
               }
             }).catch(err => console.log(err));
 
             if (gamePlays.length > 0) {
               GamePlay.destroy({
                 where: {
-                  GamePlayId: gamePlays.map(gamePlay => gamePlay.GamePlayId)
+                  GamePlayId: gamePlayIds
                 }
               }).catch(err => console.log(err));
             }
