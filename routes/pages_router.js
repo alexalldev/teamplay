@@ -64,46 +64,46 @@ router.get("/home", app.protect, function(req, res) {
 router.get("/rooms", app.protect, function(req, res) {
   Room.findAll({ raw: true })
     .then(async rooms => {
-      const roomModels = [];
-      // FIXME: stopped here
-      // Promise.all(rooms.map(room => {
-
-      // }))
-      for await (const room of rooms) {
-        await RoomPlayers.count({
-          where: { Room_Id: room.RoomId, isRoomCreator: false }
-        })
-          .then(async NumRoomPlayers => {
-            await User.findOne({
-              where: { UserId: room.RoomCreatorId },
-              raw: true
+      const roomModels = await Promise.all(
+        rooms.map(async room => {
+          const [numRoomPlayers, roomCreator] = await Promise.all([
+            RoomPlayers.count({
+              where: { Room_Id: room.RoomId, isRoomCreator: false }
             })
-              .then(async userCreator => {
-                if (userCreator) {
-                  roomModels.push({
-                    roomId: room.RoomId,
-                    roomName: room.RoomName,
-                    roomCreator: `${
-                      userCreator.UserFamily
-                    } ${userCreator.UserName.slice(
-                      0,
-                      1
-                    )}. ${userCreator.UserLastName.slice(0, 1)}.`,
-                    roomCreatorId: userCreator.UserId,
-                    roomTag: room.RoomTag,
-                    maxTeamPlayers: room.RoomMaxTeamPlayers,
-                    usersOnline: NumRoomPlayers
-                  });
-                }
+              .then(numRoomPlayers => {
+                return numRoomPlayers;
               })
               .catch(err => {
                 console.log(err);
-              });
-          })
-          .catch(err => {
-            console.log(err);
-          });
-      }
+              }),
+            User.findOne({
+              where: { UserId: room.RoomCreatorId },
+              raw: true
+            })
+              .then(roomCreator => {
+                return roomCreator;
+              })
+              .catch(err => {
+                console.log(err);
+              })
+          ]);
+          return {
+            roomId: room.RoomId,
+            roomName: room.RoomName,
+            roomCreator: `${
+              roomCreator.UserFamily
+            } ${roomCreator.UserName.slice(
+              0,
+              1
+            )}. ${roomCreator.UserLastName.slice(0, 1)}.`,
+            roomCreatorId: roomCreator.UserId,
+            roomTag: room.RoomTag,
+            maxTeamPlayers: room.RoomMaxTeamPlayers,
+            usersOnline: numRoomPlayers
+          };
+        })
+      );
+      console.log({ roomModels });
       Game.findAll({
         where: { QuizCreatorId: req.session.passport.user },
         raw: true
@@ -237,7 +237,6 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                 TeamResult.belongsTo(GameResult, {
                   foreignKey: "GameResult_Id"
                 });
-                // FIXME: stopped here
                 const gamesTeamResults = await TeamResult.findAll({
                   where: { Team_Id: team.TeamId },
                   include: [GameResult]
@@ -330,7 +329,6 @@ router.get("/team/:TeamTag/results", app.protect, (req, res) => {
         raw: true
       })
         .then(async teamResults => {
-          // FIXME: stopped here
           GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
           TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
           TeamResult.hasMany(TeamResultQuestion, {
@@ -377,7 +375,6 @@ router.get("/team/:TeamTag/results", app.protect, (req, res) => {
 //         raw: true
 //       })
 //         .then(async teamResults => {
-//           // FIXME: stopped here
 //           GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
 //           TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
 //           const teamsGamesResults = await TeamResult.findAll({
@@ -410,8 +407,8 @@ router.get("/user", app.protect, function(req, res) {
 });
 
 function timeConverter(UNIX_timestamp) {
-  var date = new Date(UNIX_timestamp * 1000);
-  var months = [
+  const date = new Date(UNIX_timestamp * 1000);
+  const months = [
     "Jan",
     "Feb",
     "Mar",
@@ -425,9 +422,9 @@ function timeConverter(UNIX_timestamp) {
     "Nov",
     "Dec"
   ];
-  var year = date.getFullYear();
-  var month = months[date.getMonth()];
-  var time = `${year} ${month}`;
+  const year = date.getFullYear();
+  const month = months[date.getMonth()];
+  const time = `${year} ${month}`;
   return time;
 }
 
