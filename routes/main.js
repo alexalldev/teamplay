@@ -40,65 +40,72 @@ router.post("/getCurrUserId", urlencodedParser, function(req, res) {
   res.json({ userId: req.session.passport.user });
 });
 
+async function checkGamePlay(gamePlay) {
+  const gamePlayData = {};
+  if (gamePlay) {
+    await GamePlayCategory.findOne({
+      where: {
+        GamePlay_Id: gamePlay.GamePlayId
+      }
+    })
+      .then(async gamePlayCategory => {
+        if (gamePlayCategory)
+          await Category.findOne({
+            where: {
+              CategoryId: gamePlayCategory.Category_Id
+            }
+          })
+            .then(async category => {
+              if (category) {
+                await Question.findOne({
+                  where: {
+                    QuestionId: gamePlay.CurrentQuestionId
+                  }
+                })
+                  .then(async currQuestion => {
+                    if (currQuestion)
+                      await Answer.findAll({
+                        where: {
+                          Question_Id: currQuestion.QuestionId
+                        }
+                      }).then(answersArr => {
+                        gamePlayData.answers = req.session.isRoomCreator
+                          ? answersArr.filter(answer => answer.Correct)
+                          : answersArr;
+                        gamePlayData.type =
+                          answersArr.length == 1 ? "text" : "checkbox";
+                        gamePlayData.currentQuestion = currQuestion;
+                      });
+                  })
+                  .catch(err => console.log(err));
+              }
+              gamePlayData.wasGameStarted = !!gamePlay;
+              gamePlayData.isAnsweringTime = gamePlay.isAnsweringTime;
+              gamePlayData.isRoomCreator = req.session.isRoomCreator;
+              gamePlayData.categoryName = category.CategoryName;
+            })
+            .catch(err => console.log(err));
+      })
+      .catch(err => console.log(err));
+  }
+  return gamePlayData;
+}
+
 // FIXME: нормально переписать
 router.get("/room/:RoomTag", app.protect, function(req, res) {
   Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
     .then(room => {
-      GamePlay.findOne({ where: { Room_Id: room.RoomId } })
+      GamePlay.findOne({ where: { Room_Id: room.RoomId }, raw: true })
         .then(async gamePlay => {
-          let wasGameStarted;
-          let isAnsweringTime;
-          let currentQuestion;
-          let answers;
-          let type;
-          let isRoomCreator;
-          let categoryName;
-          if (gamePlay) {
-            await GamePlayCategory.findOne({
-              where: {
-                GamePlay_Id: gamePlay.GamePlayId
-              }
-            })
-              .then(async gamePlayCategory => {
-                if (gamePlayCategory)
-                  await Category.findOne({
-                    where: {
-                      CategoryId: gamePlayCategory.Category_Id
-                    }
-                  })
-                    .then(async category => {
-                      if (category) {
-                        await Question.findOne({
-                          where: {
-                            QuestionId: gamePlay.CurrentQuestionId
-                          }
-                        })
-                          .then(async currQuestion => {
-                            if (currQuestion)
-                              await Answer.findAll({
-                                where: {
-                                  Question_Id: currQuestion.QuestionId
-                                }
-                              }).then(answersArr => {
-                                answers = req.session.isRoomCreator
-                                  ? answersArr.filter(answer => answer.Correct)
-                                  : answersArr;
-                                type =
-                                  answersArr.length == 1 ? "text" : "checkbox";
-                                currentQuestion = currQuestion;
-                              });
-                          })
-                          .catch(err => console.log(err));
-                      }
-                      wasGameStarted = !!gamePlay;
-                      isAnsweringTime = gamePlay.isAnsweringTime;
-                      isRoomCreator = req.session.isRoomCreator;
-                      categoryName = category.CategoryName;
-                    })
-                    .catch(err => console.log(err));
-              })
-              .catch(err => console.log(err));
-          }
+          const {
+            wasGameStarted,
+            isAnsweringTime,
+            currentQuestion,
+            answers,
+            type,
+            isRoomCreator,
+            categoryName
+          } = await checkGamePlay(gamePlay);
           if (room) {
             if (req.session.roomPlayersId) {
               await RoomPlayers.findOne({

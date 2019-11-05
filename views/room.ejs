@@ -24,6 +24,13 @@
           <h1 id="RoomName"><%= room.RoomName %></h1>
         </div>
       </div>
+      wasGameStarted: <%=wasGameStarted%>
+      isAnsweringTime: <%=isAnsweringTime%>
+      currentQuestion: <%=currentQuestion%>
+      answers: <%=answers%>
+      type: <%=type%>
+      isRoomCreator: <%=isRoomCreator%>
+      categoryName: <%=categoryName%>
       <% if(roomPlayer.isRoomCreator == true) {%>
       <div class="row">
         <div class="col-md-12 text-center mb-2 roomActions">

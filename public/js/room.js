@@ -31,22 +31,24 @@ $(document).ready(function() {
         socket.emit("gameStarted", roomId);
         $(".roomActions").empty()
           .append(`<button class="btn btn-danger btnFinishGame" onclick="FinishGame()" roomId="<%= room.RoomId %>">
-        <i class="fas fa-ban mr-1"></i><span class="h5">Завершить игру</span>
-      </button>`);
+          <i class="fas fa-ban mr-1"></i><span class="h5">Завершить игру</span>
+        </button>`);
         clearInterval(window.PrepareGameTimer);
       }
       current--;
     }
 
     function StartPreparation() {
-      $(".roomActions").append(`
-      <div class="row cancelRow">
-        <div class="col-md-12 text-center mb-2">
-        <span class="h4 startGameFrom"></span>
-        </div>
-      </div>`);
-      PrepareGameTimer();
-      window.PrepareGameTimer = setInterval(PrepareGameTimer, 1000);
+      if (!window.PrepareGameTimer) {
+        $(".roomActions").append(`
+        <div class="row cancelRow">
+          <div class="col-md-12 text-center mb-2">
+          <span class="h4 startGameFrom"></span>
+          </div>
+        </div>`);
+        PrepareGameTimer();
+        window.PrepareGameTimer = setInterval(PrepareGameTimer, 1000);
+      }
     }
 
     socket.on("receiveCanStartGame", function(message) {
