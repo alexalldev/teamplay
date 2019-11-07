@@ -215,7 +215,7 @@ async function Answer(questionId) {
 
 function AddPoints(count, set = false) {
   $(".AddPoints").css("opacity", 1);
-  $(".AddPoints").text("+" + count);
+  $(".AddPoints").text(`+${count}`);
   animateCSS(".AddPoints", "slideInUp", function() {
     $(".AddPoints").css("opacity", 0);
     $(".PointsCount").text(

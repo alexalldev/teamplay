@@ -17,12 +17,14 @@ module.exports = async function GetTeamNamesPoints(roomId) {
           // .filter заодно убирает команду -1 создателя, тк такой не существует
           sortedTeamNamesPoints = teams
             .map(team => {
+              const myRoomTeam = roomTeams.find(
+                roomTeam => roomTeam.Team_Id == team.TeamId
+              );
               return {
                 TeamId: team.TeamId,
+                RoomTeam_Id: myRoomTeam.RoomTeamId,
                 TeamName: team.TeamName,
-                Points: roomTeams.find(
-                  roomTeam => roomTeam.Team_Id == team.TeamId
-                ).Points
+                Points: myRoomTeam.Points
               };
             })
             .sort(function(a, b) {

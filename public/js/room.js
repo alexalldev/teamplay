@@ -336,10 +336,9 @@ socket.on("GamePreparationTick", current => {
   }
 });
 
-socket.on("StopGamePreparationTick", () => {
-  clearInterval(window.PrepareGameTimer);
-  $(".btnGroupReady").remove();
-  $(".GamePreparationTimer").remove();
+socket.on("sendTeamPoints", points => {
+  $(".PointsCount").html(points);
+  $(".points-ticket").html('<i class="fas fa-ticket-alt"></i>');
 });
 
 socket.on("RecieveCreatorStatus", function(status) {

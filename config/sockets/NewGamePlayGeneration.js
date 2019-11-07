@@ -658,6 +658,13 @@ function NewGamePlayGeneration(socket, io) {
       await GamePlay.findOne({ where: { Room_Id: session.roomId } }).then(
         async gamePlay => {
           if (!gamePlay) {
+            const teamNamesPoints = await GetTeamNamesPoints(session.roomId);
+            for (const teamNamePoints of teamNamesPoints) {
+              io.to(`RoomTeam${teamNamePoints.RoomTeam_Id}`).emit(
+                "sendTeamPoints",
+                teamNamePoints.Points
+              );
+            }
             const gamePlayResult = await GamePlayStructure.Create(session);
             await NextRandomQuestion();
             // занесение необходимых данных в game_results tables
@@ -725,11 +732,6 @@ function NewGamePlayGeneration(socket, io) {
 
   socket.on("GamePreparation", current => {
     io.to(`RoomPlayers${session.roomId}`).emit("GamePreparationTick", current);
-  });
-
-  socket.on("StopGamePreparation", () => {
-    if (session.isRoomCreator)
-      io.to(`RoomPlayers${session.roomId}`).emit("StopGamePreparationTick");
   });
 
   socket.on("getGroupStatus", player => {
