@@ -271,7 +271,7 @@ io.on("connection", function(socket) {
                     for (const question of questions) {
                       await Question.RemoveQuestionImage(
                         question.QuestionId,
-                        function(result) { }
+                        function(result) {}
                       );
                       await Answer.destroy({
                         where: { Question_Id: question.QuestionId }
@@ -283,7 +283,7 @@ io.on("connection", function(socket) {
                     Question.destroy({
                       where: { Category_Id: categoriesIds[c] }
                     })
-                      .then(questionRemoved => { })
+                      .then(questionRemoved => {})
                       .catch(err => console.log(err));
                   })
                   .catch(err => console.log(err));
@@ -291,7 +291,7 @@ io.on("connection", function(socket) {
 
               Category.destroy({ where: { Game_Id: GameId } })
                 .then(categoryRemoved => {
-                    Game.destroy({ where: { GameId: GameId } })
+                  Game.destroy({ where: { GameId: GameId } })
                     .then(gameRemoved => {
                       socket.emit("GameRemoved", GameId); //Игра удалена
                     })
@@ -388,42 +388,44 @@ io.on("connection", function(socket) {
       io.to(`Teams${session.Game.Id}`).emit("Broadcast", message);
   });
 
-  socket.on("disconnect", function(reason) {
-    console.log("disco");
-    // при выходе команды или при конце игры обновить результаты для 
-    if (session.passport) {
-      if (session.roomPlayersId) {
-        const clearRoomPlayer = setTimeout(async () => {
-          await RoomPlayer.count({
-            where: { Room_Id: session.roomId, Team_Id: session.TeamId }
-          })
-            .then(async roomPlayersNum => {
-              console.log({ session });
-              if (roomPlayersNum == 1) {
-                // io.to(`RoomUsers${req.session.roomId}`).emit(
-                //   "RoomGroupRemoved",
-                //   req.session.TeamId
-                // );
-                await RoomTeam.destroy({
-                  where: { Room_Id: session.roomId, Team_Id: session.TeamId }
-                }).catch(err => console.log(err));
-              }
-              await RoomPlayer.destroy({
-                where: { RoomPlayersId: session.roomPlayersId }
-              }).catch(err => console.log(err));
-            })
-            .catch(err => console.log(err));
-          // FIXME: sockets "RoomPlayerLeaved",
-          clearDisconnectTimer();
-        }, 2000);
-        DISCONNECT_TIMERS[session.roomPlayersId] = clearRoomPlayer;
-      }
-    }
+  // socket.on("disconnect", function(reason) {
+  //   console.log("disco");
+  //   // при выходе команды или при конце игры обновить результаты для
+  //   if (session.passport) {
+  //     if (session.roomPlayersId) {
+  //       const clearRoomPlayer = setTimeout(async () => {
+  //         await RoomPlayer.count({
+  //           where: { Room_Id: session.roomId, Team_Id: session.TeamId }
+  //         })
+  //           .then(async roomPlayersNum => {
+  //             console.log({ session });
+  //             if (roomPlayersNum < 2) {
+  //               // io.to(`RoomUsers${req.session.roomId}`).emit(
+  //               //   "RoomGroupRemoved",
+  //               //   req.session.TeamId
+  //               // );
+  //               await RoomTeam.destroy({
+  //                 where: { Room_Id: session.roomId, Team_Id: session.TeamId }
+  //               }).catch(err => console.log(err));
+  //             }
+  //             await RoomPlayer.destroy({
+  //               where: { RoomPlayersId: session.roomPlayersId }
+  //             }).catch(err => console.log(err));
+  //           })
+  //           .catch(err => console.log(err));
+  //         console.log(`${session.roomPlayersId} was deleted from db`);
+  //         console.log({ DISCONNECT_TIMERS });
+  //         // FIXME: sockets "RoomPlayerLeaved",
+  //         clearDisconnectTimer();
+  //       }, 10000);
+  //       DISCONNECT_TIMERS[session.roomPlayersId] = clearRoomPlayer;
+  //     }
+  //   }
 
-    if (session.isRoomCreator)
-      io.to(`RoomUsers${session.roomId}`).emit("RecieveCreatorStatus", false);
-    io.ClientsStore.removeById(socket.id);
-  });
+  //   if (session.isRoomCreator)
+  //     io.to(`RoomUsers${session.roomId}`).emit("RecieveCreatorStatus", false);
+  //   io.ClientsStore.removeById(socket.id);
+  // });
 
   /** ******************GamePlay***************** */
   // require('./GamePlaySockets')(socket, io);
@@ -441,6 +443,7 @@ io.on("connection", function(socket) {
 
   function clearDisconnectTimer() {
     if (DISCONNECT_TIMERS[session.roomPlayersId]) {
+      console.log(`clear timer ${session.roomPlayersId}`);
       clearTimeout(DISCONNECT_TIMERS[session.roomPlayersId]);
       delete DISCONNECT_TIMERS[session.roomPlayersId];
     }
