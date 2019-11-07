@@ -21,14 +21,15 @@ const UserResultQuestion = require("../../models/UserResultQuestion");
 const Game = require("../../models/Game");
 const User = require("../../models/User");
 const Team = require("../../models/Team");
+const GetTeamNamesPoints = require("../../modules/getTeamNamesPoints");
+const GetOffersUsersFIOs = require("../../modules/getOffersUsersFIOs");
 
 const ANSWERING_TIMERS = [];
 const CHECKING_TIMERS = [];
 
 function NewGamePlayGeneration(socket, io) {
-  const { session } = socket.request;
   const GamePlayStructure = require("./GamePlayStructure");
-
+  const { session } = socket.request;
   async function GetRandomQuestion() {
     let result = {};
     await Room.findOne({ where: { RoomId: session.roomId }, raw: true })
@@ -186,40 +187,6 @@ function NewGamePlayGeneration(socket, io) {
     );
   }
 
-  async function GetTeamsPoints() {
-    let sortedTeamNamesPoints = [];
-    await RoomTeam.findAll({
-      where: { Room_Id: session.roomId },
-      raw: true
-    })
-      .then(async roomTeams => {
-        await Team.findAll({
-          where: {
-            TeamId: roomTeams.map(roomTeam => roomTeam.Team_Id)
-          }
-        })
-          .then(teams => {
-            // .filter заодно убирает команду -1 создателя, тк такой не существует
-            sortedTeamNamesPoints = teams
-              .map(team => {
-                return {
-                  TeamId: team.TeamId,
-                  TeamName: team.TeamName,
-                  Points: roomTeams
-                    .filter(roomTeam => roomTeam.Team_Id == team.TeamId)
-                    .map(roomTeam => roomTeam.Points)[0]
-                };
-              })
-              .sort(function(a, b) {
-                return b.Points - a.Points;
-              });
-          })
-          .catch(err => console.log(err));
-      })
-      .catch(err => console.log(err));
-    return sortedTeamNamesPoints;
-  }
-
   async function checkTeamAnswers(roomTeamId) {
     let result = false;
     await RoomOfferAnswer.findAll({
@@ -282,11 +249,6 @@ function NewGamePlayGeneration(socket, io) {
       })
       .catch(err => console.log(err));
 
-    await RoomOfferAnswer.destroy({
-      where: {
-        RoomTeam_Id: roomTeamId
-      }
-    }).catch(err => console.log(err));
     return result;
   }
 
@@ -313,12 +275,22 @@ function NewGamePlayGeneration(socket, io) {
             question
           );
 
-          const teamNamesPoints = await GetTeamsPoints();
+          const teamNamesPoints = await GetTeamNamesPoints(session.roomId);
           // FIXME: можно сделать намного меньше обращений к базе. Сохранять в таблицу TeamResult
           // только на дисконнекте или при конце игры. Так как эти данные не нужны на на протяжении игры
-          for (const roomTeam of roomTeams) {
-            GamePlay.findOne({ where: { GamePlayId: session.GamePlayId } })
-              .then(gamePlay => {
+          // и незачем их так часто обновлять
+          for await (const roomTeam of roomTeams) {
+            await GamePlay.findOne({
+              where: { GamePlayId: session.GamePlayId }
+            })
+              .then(async gamePlay => {
+                await gamePlay
+                  .update({
+                    isAnsweredCorrectly: !!roomTeamIdsAddedPoints[
+                      roomTeam.RoomTeamId.toString()
+                    ]
+                  })
+                  .catch(err => console.log(err));
                 GameResult.findOne({
                   where: { GamePlay_Id: gamePlay.GamePlayId }
                 })
@@ -407,15 +379,29 @@ function NewGamePlayGeneration(socket, io) {
                   .catch(err => console.log(err));
               })
               .catch(err => console.log(err));
+            await RoomOfferAnswer.destroy({
+              where: {
+                Room_Id: roomId
+              }
+            }).catch(err => console.log(err));
             io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
               "BreakBetweenQuestions",
               teamNamesPoints,
               teamNamesPoints.find(
                 teamNamePoints => teamNamePoints.TeamId == roomTeam.Team_Id
               ),
-              roomTeamIdsAddedPoints[roomTeam.RoomTeamId.toString()]
+              roomTeamIdsAddedPoints[roomTeam.RoomTeamId.toString()],
+              false
             );
           }
+
+          io.to(`RoomCreators${session.roomId}`).emit(
+            "BreakBetweenQuestions",
+            teamNamesPoints,
+            null,
+            0,
+            true
+          );
         }
       })
       .catch(err => console.log(err));
@@ -706,10 +692,9 @@ function NewGamePlayGeneration(socket, io) {
   });
 
   socket.on("writeOffers", async offerIds => {
-    let usersFioOffers = [];
     if (offerIds) {
       await RoomTeam.findOne({
-        where: { Room_Id: session.roomId, Team_Id: session.TeamId }
+        where: { RoomTeamId: session.roomTeamId }
       })
         .then(async roomTeam => {
           await RoomOfferAnswer.destroy({
@@ -722,78 +707,17 @@ function NewGamePlayGeneration(socket, io) {
                 await RoomOfferAnswer.create({
                   RoomPlayer_Id: session.roomPlayersId,
                   RoomTeam_Id: roomTeam.RoomTeamId,
+                  Room_Id: session.roomId,
                   Answer_Id: offerId
                 }).catch(err => console.log(err));
               }
-              await RoomOfferAnswer.findAll({
-                where: {
-                  RoomTeam_Id: roomTeam.RoomTeamId
-                },
-                raw: true
-              }).then(async roomOfferAnswers => {
-                let usersOffers = [];
-
-                const roomPlayersOffers = await roomOfferAnswers.map(
-                  roomOfferAnswer => {
-                    return {
-                      RoomPlayerId: roomOfferAnswer.RoomPlayer_Id,
-                      Offers: roomOfferAnswers
-                        .filter(
-                          roomOfferAnswer2 =>
-                            roomOfferAnswer2.RoomPlayer_Id ==
-                            roomOfferAnswer.RoomPlayer_Id
-                        )
-                        .map(roomOfferAnswer3 => roomOfferAnswer3.Answer_Id)
-                    };
-                  }
-                );
-
-                await RoomPlayer.findAll({
-                  where: {
-                    RoomPlayersId: roomPlayersOffers.map(
-                      roomPlayerOffer => roomPlayerOffer.RoomPlayerId
-                    )
-                  },
-                  raw: true
-                }).then(roomPlayers => {
-                  usersOffers = roomPlayers.map(roomPlayer => {
-                    return {
-                      UserId: roomPlayer.User_Id,
-                      Offers: roomPlayersOffers.filter(
-                        roomPlayerOffer =>
-                          roomPlayerOffer.RoomPlayerId ==
-                          roomPlayer.RoomPlayersId
-                      )[0].Offers
-                    };
-                  });
-                });
-                await User.findAll({
-                  where: {
-                    UserId: usersOffers.map(userOffer => userOffer.UserId)
-                  },
-                  raw: true
-                }).then(async users => {
-                  usersFioOffers = users.map(user => {
-                    return {
-                      UserFIO: `${user.UserFamily} ${user.UserName.slice(
-                        0,
-                        1
-                      )}. ${user.UserLastName.slice(0, 1)}.`,
-                      Offers: usersOffers.filter(
-                        userOffers => userOffers.UserId == user.UserId
-                      )[0].Offers
-                    };
-                  });
-                });
-              });
+              console.log(`session emit to RoomTeam ${roomTeam.RoomTeamId}`);
+              io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
+                "sendOffersChanges",
+                await GetOffersUsersFIOs(roomTeam.RoomTeamId)
+              );
             })
             .catch(err => console.log(err));
-
-          console.log(`session emit to RoomTeam ${roomTeam.RoomTeamId}`);
-          io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
-            "sendOffersChanges",
-            usersFioOffers
-          );
         })
         .catch(err => console.log(err));
     }

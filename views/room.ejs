@@ -24,13 +24,6 @@
           <h1 id="RoomName"><%= room.RoomName %></h1>
         </div>
       </div>
-      wasGameStarted: <%=wasGameStarted%>
-      isAnsweringTime: <%=isAnsweringTime%>
-      currentQuestion: <%=currentQuestion%>
-      answers: <%=answers%>
-      type: <%=type%>
-      isRoomCreator: <%=isRoomCreator%>
-      categoryName: <%=categoryName%>
       <% if(roomPlayer.isRoomCreator == true) {%>
       <div class="row">
         <div class="col-md-12 text-center mb-2 roomActions">
@@ -70,32 +63,62 @@
           <%}%> 
           <%}%>
           <%}%>
+          <div class="row">
+            <div class="col-md-12 text-center mb-2">
+              <div class="QuestionArea">
           <%if (wasGameStarted) {%>
-          <%#if (isAnsweringTime) {%>
-
-          <%#}%>
+          <% include blocks/question %>
           <%}%>
-        <div class="row">
-          <div class="col-md-12 text-center mb-2">
-            <div class="QuestionArea"></div>
+              </div>
+            </div>
           </div>
+          <div class="answers-form">
+          <%if (wasGameStarted) { %>
+          <%if (isAnsweringTime) {%>
+          <% answers.forEach(function(answer){ %>
+          <%- include("blocks/answer", { answer, type, isRoomCreator: roomPlayer.isRoomCreator, usersFIOs: offersUsersFIOs.filter(offerUserFIO => offerUserFIO.Answer_Id == answer.AnswerId).map(correctOfferUserFIO => correctOfferUserFIO.UserFIO)  }) %>
+          <% }); %>
+          <%} else if(!isRoomCreator){%>
+          <div class="row">
+            <div class="col-md-12 text-center mb-2">
+              <%=isAnsweredCorrectly == 1 ? 'ВЕРНО' : 'НЕВЕРНО'%>
+            </div>
+          </div>
+          <%}%>
+          <%}%>
         </div>
-        <div class="answers-form"></div>
         <table class="table table-hover">
-          <tbody class="table-teams-rating">
-            <!--Строки нужно вывести шалонизатором. Use ClearRating(), SelectTeam(teamId) to select with success color and AddRowTeam(team) where team = {TeamId: int(), TeamName: str(), Points: int()}-->
-          </tbody>
-        </table>
-        <%if (!wasGameStarted || roomPlayer.isRoomCreator) {%>
+          <%if (wasGameStarted && !isAnsweringTime) {%>
+          <thead>
+            <th>
+              Команда
+            </th>
+            <th>
+              Очки
+            </th>
+          </thead>
+          <%}%>
+            <tbody class="table-teams-rating">
+          <%if (wasGameStarted && !isAnsweringTime) {%>
+          <% teamNamesPoints.forEach(function(teamNamePoints){ %>
+          <% if (teamNamePoints.TeamId == myTeamId) {%>
+          <% teamNamePoints.isMyTeam = true; %>
+          <%}%>
+          <%- include("blocks/resultsTableRow", { teamNamePoints })%>
+          <% }); %>
+          <%}%>
+        </tbody>
+          </table>
+          <%if (!wasGameStarted) {%>
           <div class="row group-list text-center"></div>
-          <%} else if (wasGameStarted) {%> <%# выводить сюда только одну команду
-        пользователя%> <%}%>
+          <%}%>
       </div>
     </section>
     <% include blocks/footer %>
           <div class="Info">
             <div class="animated_timer">
-              <h2 class="animated_timer_value">0</h2>
+              <h2 class="animated_timer_value"></h2>
+              <%if (isAnsweringTime && wasGameStarted) {%>
               <svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
                 <g>
                   <title>Layer 1</title>
@@ -103,17 +126,26 @@
                     fill="none" />
                 </g>
               </svg>
+              <%}%>
             </div>
-            <div class="Points">
-              <span class="h2 AddPoints text-success">+ 10</span>
-              <span class="h2 PointsCount">0</span>
+              <div class="Points">
+              <span class="h2 AddPoints text-success"></span>
+              <span class="h2 PointsCount">
+                <%if (!isRoomCreator && wasGameStarted) {%>
+              <%const myTeamNamePoints = teamNamesPoints.find(teamNamePoints => teamNamePoints.TeamId == myTeamId)%>
+              <%=myTeamNamePoints ? myTeamNamePoints.Points : 0%>
+              <%}%>
+              </span>
+              <%if (!isRoomCreator && wasGameStarted) {%>
               <i class="fas fa-ticket-alt"></i>
+              <%}%>
+              </div>
+
             </div>
-          </div>
 </body>
 <% include blocks/socket %>
-<script src="/public/js/animated_timer.js"></script>
-<script src="/public/js/animateCSS.js"></script>
-<script src="/public/js/room.js"></script>
+              <script src="/public/js/animated_timer.js"></script>
+              <script src="/public/js/animateCSS.js"></script>
+              <script src="/public/js/room.js"></script>
 
 </html>

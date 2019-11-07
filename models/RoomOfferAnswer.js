@@ -10,6 +10,9 @@ const RoomOfferAnswer = db.define("room_offer_answers", {
   Answer_Id: {
     type: Sequelize.STRING
   },
+  Room_Id: {
+    type: Sequelize.INTEGER
+  },
   RoomPlayer_Id: {
     type: Sequelize.INTEGER
   },

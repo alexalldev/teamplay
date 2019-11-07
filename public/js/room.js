@@ -29,6 +29,7 @@ $(document).ready(function() {
       $(".startGameFrom").html(`Начало игры через ${current} c.`);
       if (current < 1) {
         socket.emit("gameStarted", roomId);
+        $(".group-list").remove();
         $(".roomActions").empty()
           .append(`<button class="btn btn-danger btnFinishGame" onclick="FinishGame()" roomId="<%= room.RoomId %>">
           <i class="fas fa-ban mr-1"></i><span class="h5">Завершить игру</span>
@@ -88,8 +89,10 @@ $(document).ready(function() {
   });
 });
 
-function AddPoints(count, set = false) {
+function AddPoints(count, userTeamNamePoints, set = false) {
   $(".AddPoints").css("opacity", 1);
+  // для тех, кто зашел во время игры
+  $(".PointsCount").text(`${userTeamNamePoints.Points - count}`);
   $(".AddPoints").text(`+${count}`);
   animateCSS(".AddPoints", "slideInUp", function() {
     $(".AddPoints").css("opacity", 0);
@@ -112,6 +115,7 @@ function SelectTeam(teamId) {
     $(this).removeClass("table-success");
   });
   $(`.row-team-${teamId}`).addClass("table-success");
+  console.log($(`.row-team-${teamId}`));
 }
 function AddRowTeam(team) {
   $(".table-teams-rating").append(
@@ -137,19 +141,10 @@ function CreateGroup(player) {
 
 socket.on(
   "BreakBetweenQuestions",
-  (teamNamesPoints, userTeamNamePoints, addedPoints) => {
-    ClearRating();
+  (teamNamesPoints, userTeamNamePoints, addedPoints, isRoomCreator) => {
+    $(".animated_timer_value").empty();
     $(".answers-form").empty();
-    $(".answers-form").append(
-      `<div class="row">
-        <div class="col-md-12 text-center mb-2">
-        ${addedPoints ? "ВЕРНО" : "НЕВЕРНО"}
-        </div>
-      </div>`
-    );
-    if (addedPoints) {
-      AddPoints(addedPoints);
-    }
+    ClearRating();
     $(".table-hover").append(`<thead>
     <th>
       Команда
@@ -159,19 +154,39 @@ socket.on(
     </th>
   </thead>
   <tbody class="table-teams-rating"></tbody>`);
-
     for (const teamNamePoints of teamNamesPoints) {
       AddRowTeam(teamNamePoints);
     }
-    SelectTeam(userTeamNamePoints.TeamId);
+    if (!isRoomCreator) {
+      $(".answers-form").append(
+        `<div class="row">
+          <div class="col-md-12 text-center mb-2">
+          ${addedPoints ? "ВЕРНО" : "НЕВЕРНО"}
+          </div>
+        </div>`
+      );
+      if (addedPoints) {
+        AddPoints(addedPoints, userTeamNamePoints);
+      }
+      console.log("do select team");
+      SelectTeam(userTeamNamePoints.TeamId);
+    }
   }
 );
 
 socket.on(
   "sendQuestion",
   (question, answers, type, isRoomCreator, categoryName) => {
+    $(".animated_timer")
+      .html(`<h2 class="animated_timer_value">${question.AnswerTime}</h2>
+    <svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        <title>Layer 1</title>
+        <circle id="circle" class="circle_animation" r="25" cy="40" cx="40" stroke-width="5" stroke="#6fdb6f"
+          fill="none" />
+      </g>
+    </svg>`);
     startTimer(question.AnswerTime - 1);
-
     $(".QuestionArea").html(
       `<div class="row"><div class="col-md-12 text-center mb-2 CategoryName">${categoryName}</div></div> 
     ${question.QuestionText}
@@ -190,7 +205,7 @@ socket.on(
       <div class="col-md-12 text-center mb-2 answer answer-${answer.AnswerId}">
       ${
         isRoomCreator
-          ? `Правильный ответ: <span>${answer.AnswerText}</span>`
+          ? `Правильный ответ: ${answer.AnswerText}`
           : `${
               type == "checkbox"
                 ? `<button answerId="${answer.AnswerId}" class="alert alert-info answerButton" onclick="chooseAnswer('answer-${answer.AnswerId}')">
@@ -228,7 +243,7 @@ async function chooseAnswer(answerIdClass) {
   socket.emit("writeOffers", offerAnswerIds);
 }
 
-socket.on("sendOffersChanges", usersFioOffers => {
+socket.on("sendOffersChanges", offersUsersFIOs => {
   // TODO: при определенном большом количестве пользователей не делать append
   // и после последнего такого пользователя выводить три точки, и добавить
   // подсказку для этого блока при наведению на которую будут показываться все пользователи
@@ -237,12 +252,11 @@ socket.on("sendOffersChanges", usersFioOffers => {
   $(".whoAnswered").each(function(index) {
     $(this).empty();
   });
-
   // Добавляем все новые
-  for (const user of usersFioOffers) {
-    for (const offerAnswerId of user.Offers) {
-      $(`.answer-${offerAnswerId} > .whoAnswered`).append(`${user.UserFIO}`);
-    }
+  for (const offerUserFIO of offersUsersFIOs) {
+    $(`.answer-${offerUserFIO.Answer_Id} > .whoAnswered`).append(
+      `${offerUserFIO.UserFIO}`
+    );
   }
 });
 
@@ -315,7 +329,8 @@ socket.on("GamePreparationTick", current => {
   $(".GamePreparationTimer").remove();
   $("body").append(`<div class="GamePreparationTimer"></div>`);
   $(".GamePreparationTimer").html(`Игра начнется через ${current} с.`);
-  if (current == 0) {
+  if (current < 1) {
+    $(".group-list").remove();
     $(".btnGroupReady").remove();
     $(".GamePreparationTimer").remove();
   }
@@ -372,6 +387,5 @@ socket.on("GameFinished", () => {
 });
 
 function FinishGame() {
-  console.log("emit works");
   socket.emit("FinishGame");
 }

@@ -1,26 +1,13 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable no-restricted-syntax */
-const formidable = require("formidable");
-const nodeMailer = require("nodemailer");
-const Sequelize = require("sequelize");
-const { Op } = require("sequelize");
-const fs = require("fs");
-const crypto = require("crypto");
-const Hash = require("password-hash");
 const GamePlay = require("../models/GamePlay");
 const GamePlayCategory = require("../models/GamePlayCategory");
 const Answer = require("../models/Answer");
-const TeamResult = require("../models/TeamResult");
-const UserResult = require("../models/UserResult");
-const TeamResultQuestion = require("../models/TeamResultQuestion");
-const UserResultQuestion = require("../models/UserResultQuestion");
-const GameResult = require("../models/GameResult");
+const GetTeamNamesPoints = require("../modules/getTeamNamesPoints");
+const RoomOfferAnswer = require("../models/RoomOfferAnswer");
+const GetOffersUsersFIOs = require("../modules/getOffersUsersFIOs");
 const {
   router,
   passport,
   Team,
-  Game,
-  GameTeam,
   app,
   urlencodedParser,
   io,
@@ -40,51 +27,71 @@ router.post("/getCurrUserId", urlencodedParser, function(req, res) {
   res.json({ userId: req.session.passport.user });
 });
 
-async function checkGamePlay(gamePlay) {
-  const gamePlayData = {};
-  if (gamePlay) {
-    await GamePlayCategory.findOne({
-      where: {
-        GamePlay_Id: gamePlay.GamePlayId
-      }
-    })
-      .then(async gamePlayCategory => {
-        if (gamePlayCategory)
-          await Category.findOne({
-            where: {
-              CategoryId: gamePlayCategory.Category_Id
-            }
-          })
-            .then(async category => {
-              if (category) {
-                await Question.findOne({
-                  where: {
-                    QuestionId: gamePlay.CurrentQuestionId
+async function GetGamePlayQuestionData(gamePlay, session) {
+  const gamePlayQuestionData = {};
+  await GamePlayCategory.findOne({
+    where: {
+      GamePlay_Id: gamePlay.GamePlayId
+    },
+    raw: true
+  })
+    .then(async gamePlayCategory => {
+      if (gamePlayCategory)
+        await Category.findOne({
+          where: {
+            CategoryId: gamePlayCategory.Category_Id
+          },
+          raw: true
+        })
+          .then(async category => {
+            if (category) {
+              await Question.findOne({
+                where: {
+                  QuestionId: gamePlay.CurrentQuestionId
+                },
+                raw: true
+              })
+                .then(async currQuestion => {
+                  if (currQuestion) {
+                    const answers = await Answer.findAll({
+                      where: {
+                        Question_Id: currQuestion.QuestionId
+                      }
+                    })
+                      .catch(err => console.log(err))
+                      .map(answer => answer.get({ plain: true }));
+                    gamePlayQuestionData.answers = session.isRoomCreator
+                      ? answers.filter(answer => answer.Correct)
+                      : answers;
+                    gamePlayQuestionData.type =
+                      answers.length == 1 ? "text" : "checkbox";
+                    gamePlayQuestionData.currentQuestion = currQuestion;
                   }
                 })
-                  .then(async currQuestion => {
-                    if (currQuestion)
-                      await Answer.findAll({
-                        where: {
-                          Question_Id: currQuestion.QuestionId
-                        }
-                      }).then(answersArr => {
-                        gamePlayData.answers = req.session.isRoomCreator
-                          ? answersArr.filter(answer => answer.Correct)
-                          : answersArr;
-                        gamePlayData.type =
-                          answersArr.length == 1 ? "text" : "checkbox";
-                        gamePlayData.currentQuestion = currQuestion;
-                      });
-                  })
-                  .catch(err => console.log(err));
-              }
-              gamePlayData.wasGameStarted = !!gamePlay;
-              gamePlayData.isAnsweringTime = gamePlay.isAnsweringTime;
-              gamePlayData.isRoomCreator = req.session.isRoomCreator;
-              gamePlayData.categoryName = category.CategoryName;
-            })
-            .catch(err => console.log(err));
+                .catch(err => console.log(err));
+            }
+            gamePlayQuestionData.isAnsweredCorrectly =
+              gamePlay.isAnsweredCorrectly;
+            gamePlayQuestionData.wasGameStarted = !!gamePlay;
+            gamePlayQuestionData.isAnsweringTime = gamePlay.isAnsweringTime;
+            gamePlayQuestionData.isRoomCreator = session.isRoomCreator;
+            gamePlayQuestionData.categoryName = category.CategoryName;
+          })
+          .catch(err => console.log(err));
+    })
+    .catch(err => console.log(err));
+  return gamePlayQuestionData;
+}
+
+async function checkGamePlay(gamePlay, session) {
+  let gamePlayData = {};
+  if (gamePlay) {
+    await Promise.all([
+      GetTeamNamesPoints(gamePlay.Room_Id),
+      GetGamePlayQuestionData(gamePlay, session)
+    ])
+      .then(([teamsResultsData, questionData]) => {
+        gamePlayData = { teamNamesPoints: teamsResultsData, ...questionData };
       })
       .catch(err => console.log(err));
   }
@@ -97,6 +104,8 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
     .then(room => {
       GamePlay.findOne({ where: { Room_Id: room.RoomId }, raw: true })
         .then(async gamePlay => {
+          console.log("checkGamePlayText");
+          console.log(await checkGamePlay(gamePlay, req.session));
           const {
             wasGameStarted,
             isAnsweringTime,
@@ -104,8 +113,11 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
             answers,
             type,
             isRoomCreator,
-            categoryName
-          } = await checkGamePlay(gamePlay);
+            categoryName,
+            teamNamesPoints,
+            isAnsweredCorrectly
+          } = await checkGamePlay(gamePlay, req.session);
+          console.log({ isAnsweredCorrectly });
           if (room) {
             if (req.session.roomPlayersId) {
               await RoomPlayers.findOne({
@@ -235,6 +247,7 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                                         "AddUserToRoom",
                                                         player
                                                       );
+
                                                     RoomPlayers.count({
                                                       where: {
                                                         Room_Id: room.RoomId,
@@ -242,27 +255,62 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                                       }
                                                     })
                                                       .then(roomOnline => {
-                                                        io.emit("RoomOnline", {
-                                                          roomId: room.RoomId,
-                                                          online: roomOnline
-                                                        });
-                                                        console.log({
-                                                          wasGameStarted
-                                                        });
-                                                        res.render("room", {
-                                                          room,
-                                                          roomPlayer:
-                                                            createdRoomPlayer.dataValues,
-                                                          readyState:
-                                                            roomTeam2.ReadyState,
-                                                          wasGameStarted,
-                                                          isAnsweringTime,
-                                                          currentQuestion,
-                                                          answers,
-                                                          type,
-                                                          isRoomCreator,
-                                                          categoryName
-                                                        });
+                                                        RoomOfferAnswer.findAll(
+                                                          {
+                                                            where: {
+                                                              RoomTeam_Id:
+                                                                roomTeam2.RoomTeamId
+                                                            }
+                                                          }
+                                                        )
+                                                          .then(
+                                                            roomOffersAnswers => {
+                                                              io.emit(
+                                                                "RoomOnline",
+                                                                {
+                                                                  roomId:
+                                                                    room.RoomId,
+                                                                  online: roomOnline
+                                                                }
+                                                              );
+                                                              console.log({
+                                                                wasGameStarted
+                                                              });
+                                                              res.render(
+                                                                "room",
+                                                                {
+                                                                  room,
+                                                                  roomPlayer:
+                                                                    createdRoomPlayer.dataValues,
+                                                                  readyState:
+                                                                    roomTeam2.ReadyState,
+                                                                  wasGameStarted,
+                                                                  isAnsweringTime,
+                                                                  currentQuestion,
+                                                                  answers,
+                                                                  type,
+                                                                  isRoomCreator,
+                                                                  categoryName,
+                                                                  teamNamesPoints,
+                                                                  myTeamId:
+                                                                    req.session
+                                                                      .TeamId,
+                                                                  isAnsweredCorrectly,
+                                                                  roomOffersAnswers: roomOffersAnswers.map(
+                                                                    roomOfferAnswer =>
+                                                                      roomOfferAnswer.get(
+                                                                        {
+                                                                          plain: true
+                                                                        }
+                                                                      )
+                                                                  )
+                                                                }
+                                                              );
+                                                            }
+                                                          )
+                                                          .catch(err =>
+                                                            console.log(err)
+                                                          );
                                                       })
                                                       .catch(err =>
                                                         console.log(err)
@@ -297,7 +345,11 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                           Room_Id: findedRoom.RoomId,
                                           Team_Id: req.session.TeamId
                                         }
-                                      }).then(roomTeam2 => {
+                                      }).then(async roomTeam2 => {
+                                        console.log({
+                                          Room_Id: findedRoom.RoomId,
+                                          Team_Id: req.session.TeamId
+                                        });
                                         console.log({
                                           wasGameStarted,
                                           gamePlay
@@ -312,7 +364,13 @@ router.get("/room/:RoomTag", app.protect, function(req, res) {
                                           answers,
                                           type,
                                           isRoomCreator,
-                                          categoryName
+                                          categoryName,
+                                          teamNamesPoints,
+                                          myTeamId: req.session.TeamId,
+                                          isAnsweredCorrectly,
+                                          offersUsersFIOs: await GetOffersUsersFIOs(
+                                            roomTeam2.RoomTeamId
+                                          )
                                         });
                                       });
                                     } else
