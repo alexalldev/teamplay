@@ -240,26 +240,45 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                   where: { Team_Id: team.TeamId },
                   include: [GameResult]
                 }).map(gameTeamResult => gameTeamResult.get({ plain: true }));
-                const date = new Date();
                 const datesGamesTeamResults = [];
-                let countDates = gamesTeamResults.filter(
-                  gameTeamResult =>
-                    gameTeamResult.game_result.Timestamp < Date.now()
-                ).length;
-                let c = 1;
-                console.log({ gamesTeamResults });
-                while (countDates > 0) {
-                  countDates = gamesTeamResults.filter(
-                    gameTeamResult =>
-                      gameTeamResult.game_result.Timestamp <
-                      date.setMonth(date.getMonth() - c)
-                  ).length;
-                  datesGamesTeamResults.push({
-                    TextDate: timeConverter(
-                      Math.floor(date.setMonth(date.getMonth() - c) / 1000)
-                    ),
-                    number: countDates
-                  });
+                let countDates = gamesTeamResults.length;
+                const minTimestamp = Math.min(
+                  ...gamesTeamResults.map(
+                    gameTeamResult => gameTeamResult.game_result.Timestamp
+                  )
+                );
+                let c = 0;
+                const date = new Date();
+                const ONE_MONTH = 31 * 24 * 60 * 60 * 1000;
+                let flag = true;
+                while (flag) {
+                  const monthDate = new Date(date - ONE_MONTH * c);
+                  const firstDayMonth =
+                    new Date(
+                      Date.UTC(monthDate.getFullYear(), monthDate.getMonth(), 1)
+                    ).getTime() / 1000;
+                  const lastDayMonth =
+                    new Date(
+                      Date.UTC(
+                        monthDate.getFullYear(),
+                        monthDate.getMonth() + 1,
+                        0
+                      )
+                    ).getTime() / 1000;
+                  // console.log({ firstDayMonth, lastDayMonth });
+                  countDates = gamesTeamResults.filter(gameTeamResult => {
+                    return (
+                      gameTeamResult.game_result.Timestamp >= firstDayMonth &&
+                      gameTeamResult.game_result.Timestamp <= lastDayMonth
+                    );
+                  }).length;
+                  if (lastDayMonth > minTimestamp) {
+                    if (countDates > 0)
+                      datesGamesTeamResults.push({
+                        TextDate: timeConverter(firstDayMonth),
+                        number: countDates
+                      });
+                  } else flag = false;
                   c++;
                 }
                 res.render("teamPage", {
@@ -347,16 +366,6 @@ router.get("/team/:TeamTag/results", app.protect, (req, res) => {
           }).map(teamGameQuestionsResult =>
             teamGameQuestionsResult.get({ plain: true })
           );
-
-          console.log({
-            teamGamesQuestionsResults,
-            gameResults: teamGamesQuestionsResults.map(
-              teamGameResult => teamGameResult.game_result
-            ),
-            gameQ: teamGamesQuestionsResults.map(
-              teamGameResult => teamGameResult.game_result
-            )
-          });
           res.render("teamResult", {
             teamGamesQuestionsResults
           });
@@ -408,22 +417,22 @@ router.get("/user", app.protect, function(req, res) {
 function timeConverter(UNIX_timestamp) {
   const date = new Date(UNIX_timestamp * 1000);
   const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec"
+    "Январь",
+    "Февраль",
+    "Март",
+    "Апрель",
+    "Май",
+    "Июнь",
+    "Июль",
+    "Август",
+    "Сентябрь",
+    "Октябрь",
+    "Ноябрь",
+    "Декабрь"
   ];
   const year = date.getFullYear();
   const month = months[date.getMonth()];
-  const time = `${year} ${month}`;
+  const time = { month, year };
   return time;
 }
 
