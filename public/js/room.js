@@ -328,8 +328,10 @@ socket.on("MyGroupReadyState", function(status) {
 socket.on("GamePreparationTick", current => {
   $(".GamePreparationTimer").remove();
   $("body").append(`<div class="GamePreparationTimer"></div>`);
+  Swal.fire("", `Игра начинается через ${current}`, "success");
   $(".GamePreparationTimer").html(`Игра начнется через ${current} с.`);
   if (current < 1) {
+    Swal.close();
     $(".group-list").remove();
     $(".btnGroupReady").remove();
     $(".GamePreparationTimer").remove();
