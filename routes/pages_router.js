@@ -1,4 +1,5 @@
 /* eslint-disable no-restricted-syntax */
+const util = require("util");
 const {
   router,
   passport,
@@ -13,12 +14,13 @@ const {
   User,
   Room
 } = require("../config/routers-config");
-
 const TeamResult = require("../models/TeamResult");
 const UserResult = require("../models/UserResult");
 const TeamResultQuestion = require("../models/TeamResultQuestion");
 const UserResultQuestion = require("../models/UserResultQuestion");
 const GameResult = require("../models/GameResult");
+const GameResultQuestion = require("../models/GameResultQuestion");
+const GameResultAnswer = require("../models/GameResultAnswer");
 
 const RoomPlayers = require("../models/RoomPlayer");
 
@@ -265,7 +267,6 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                         0
                       )
                     ).getTime() / 1000;
-                  // console.log({ firstDayMonth, lastDayMonth });
                   countDates = gamesTeamResults.filter(gameTeamResult => {
                     return (
                       gameTeamResult.game_result.Timestamp >= firstDayMonth &&
@@ -275,7 +276,7 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                   if (lastDayMonth > minTimestamp) {
                     if (countDates > 0)
                       datesGamesTeamResults.push({
-                        TextDate: timeConverter(firstDayMonth),
+                        date: timeConverter(firstDayMonth),
                         number: countDates
                       });
                   } else flag = false;
@@ -313,29 +314,17 @@ router.get("/user/:userId", app.protect, function(req, res) {
                   user.teamPlayersCount = result.count;
                 })
                 .catch(err => {
-                  console.log({
-                    file: __filename,
-                    func: 'router.get("/user/:userId"), User.findAndCountAll',
-                    err
-                  });
+                  console.log(err);
                 });
             }
           })
           .catch(err => {
-            console.log({
-              file: __filename,
-              func: 'router.get("/user/:userId"), User.findOne TeamId',
-              err
-            });
+            console.log(err);
           });
       res.render("user", { user });
     })
     .catch(err => {
-      console.log({
-        file: __filename,
-        func: 'router.get("/user/:userId"), User.findOne UserId',
-        err
-      });
+      console.log(err);
     });
 });
 
@@ -375,39 +364,72 @@ router.get("/team/:TeamTag/results", app.protect, (req, res) => {
     .catch(err => console.log(err));
 });
 
-// router.get("/user/:userId/results", app.protect, function(req, res) {
-//   User.findOne({ where: { TeamTag: req.params.userId }, raw: true })
-//     .then(user => {
-//       UserResult.findAll({
-//         where: { User_Id: user.UserId },
-//         raw: true
-//       })
-//         .then(async teamResults => {
-//           GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
-//           TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
-//           const teamsGamesResults = await TeamResult.findAll({
-//             where: {
-//               GameResult_Id: teamResults.map(
-//                 teamResult => teamResult.GameResult_Id
-//               )
-//             },
-//             include: [GameResult],
-//             order: [[GameResult, "Timestamp", "ASC"], ["TeamPoints", "DESC"]]
-//           }).map(teamGameResult => teamGameResult.get({ plain: true }));
-//           // console.log({
-//           //   teamsGamesResults,
-//           //   gameResults: teamsGamesResults.map(
-//           //     teamGameResult => teamGameResult.game_result
-//           //   )
-//           // });
-//           res.render("teamResult", {
-//             teamsGamesResults
-//           });
-//         })
-//         .catch(err => console.log(err));
-//     })
-//     .catch(err => console.log(err));
-// });
+router.get("/user/:userId/results", app.protect, async (req, res) => {
+  TeamResult.hasMany(UserResult, { foreignKey: "TeamResult_Id" });
+  UserResult.belongsTo(TeamResult, { foreignKey: "TeamResult_Id" });
+  GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
+  TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
+  UserResult.hasMany(UserResultQuestion, {
+    foreignKey: "UserResult_Id"
+  });
+  UserResultQuestion.belongsTo(UserResult, {
+    foreignKey: "UserResult_Id"
+  });
+
+  GameResultQuestion.hasMany(GameResultAnswer, {
+    foreignKey: "GameResultQuestion_Id"
+  });
+
+  UserResultQuestion.belongsTo(GameResultQuestion, {
+    foreignKey: "GameResultQuestion_Id"
+  });
+
+  GameResultAnswer.belongsTo(GameResultQuestion, {
+    foreignKey: "GameResultQuestion_Id"
+  });
+
+  const usersTeamsGamesResults = await UserResult.findAll({
+    where: {
+      User_Id: req.params.userId
+    },
+    include: [
+      { model: TeamResult, include: [GameResult] },
+      {
+        model: UserResultQuestion,
+        include: [{ model: GameResultQuestion, include: GameResultAnswer }]
+      }
+    ],
+    order: [
+      ["Timestamp", "ASC"],
+      [UserResultQuestion, "isAnsweredCorrectly", "ASC"]
+    ]
+  }).map(userGameResult => {
+    return {
+      GameName: userGameResult.team_result.game_result.GameName,
+      questions: userGameResult.user_results_questions.map(
+        userResultQuestion => {
+          return {
+            questionText:
+              userResultQuestion.game_result_question.GameResultQuestionText,
+            isAnsweredCorrectly: userResultQuestion.isAnsweredCorrectly,
+            answers: userResultQuestion.game_result_question.game_result_answers.map(
+              answer => {
+                return {
+                  answerText: answer.GameResultAnswerText,
+                  isCorrect: answer.isCorrect
+                };
+              }
+            )
+          };
+        }
+      )
+    };
+  });
+
+  res.render("userResults", {
+    usersTeamsGamesResults
+  });
+});
 
 router.get("/user", app.protect, function(req, res) {
   if (req.session.passport.user)
