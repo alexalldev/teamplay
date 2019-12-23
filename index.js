@@ -11,7 +11,7 @@ const RoomPlayer = require("./models/RoomPlayer");
 const ONE_MONTH = 1000 * 60 * 60 * 24 * 30;
 const sessionMiddleware = session({
   secret: "TEAMPLAYCOOKIESETRETWORDFORSESSION",
-  store: new FileStore({ logFn: () => { } }),
+  store: new FileStore({ logFn: () => {} }),
   cookie: {
     path: "/",
     httpOnly: true,

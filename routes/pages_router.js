@@ -21,7 +21,6 @@ const UserResultQuestion = require("../models/UserResultQuestion");
 const GameResult = require("../models/GameResult");
 const GameResultQuestion = require("../models/GameResultQuestion");
 const GameResultAnswer = require("../models/GameResultAnswer");
-
 const RoomPlayers = require("../models/RoomPlayer");
 
 router.get("/home", app.protect, function(req, res) {
@@ -338,12 +337,15 @@ router.get("/team/:TeamTag/results", app.protect, (req, res) => {
         .then(async teamResults => {
           GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
           TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
+
           TeamResult.hasMany(TeamResultQuestion, {
             foreignKey: "TeamResult_Id"
           });
           TeamResultQuestion.belongsTo(TeamResult, {
             foreignKey: "TeamResult_Id"
           });
+
+          // Надо найти Для определенной команды
           const teamGamesQuestionsResults = await TeamResult.findAll({
             where: {
               GameResult_Id: teamResults.map(
@@ -364,11 +366,14 @@ router.get("/team/:TeamTag/results", app.protect, (req, res) => {
     .catch(err => console.log(err));
 });
 
+// похожее надо и для команд
 router.get("/user/:userId/results", app.protect, async (req, res) => {
-  TeamResult.hasMany(UserResult, { foreignKey: "TeamResult_Id" });
-  UserResult.belongsTo(TeamResult, { foreignKey: "TeamResult_Id" });
   GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
   TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
+
+  TeamResult.hasMany(UserResult, { foreignKey: "TeamResult_Id" });
+  UserResult.belongsTo(TeamResult, { foreignKey: "TeamResult_Id" });
+
   UserResult.hasMany(UserResultQuestion, {
     foreignKey: "UserResult_Id"
   });
@@ -379,11 +384,9 @@ router.get("/user/:userId/results", app.protect, async (req, res) => {
   GameResultQuestion.hasMany(GameResultAnswer, {
     foreignKey: "GameResultQuestion_Id"
   });
-
   UserResultQuestion.belongsTo(GameResultQuestion, {
     foreignKey: "GameResultQuestion_Id"
   });
-
   GameResultAnswer.belongsTo(GameResultQuestion, {
     foreignKey: "GameResultQuestion_Id"
   });
@@ -403,28 +406,30 @@ router.get("/user/:userId/results", app.protect, async (req, res) => {
       ["Timestamp", "ASC"],
       [UserResultQuestion, "isAnsweredCorrectly", "ASC"]
     ]
-  }).map(userGameResult => {
-    return {
-      GameName: userGameResult.team_result.game_result.GameName,
-      questions: userGameResult.user_results_questions.map(
-        userResultQuestion => {
-          return {
-            questionText:
-              userResultQuestion.game_result_question.GameResultQuestionText,
-            isAnsweredCorrectly: userResultQuestion.isAnsweredCorrectly,
-            answers: userResultQuestion.game_result_question.game_result_answers.map(
-              answer => {
-                return {
-                  answerText: answer.GameResultAnswerText,
-                  isCorrect: answer.isCorrect
-                };
-              }
-            )
-          };
-        }
-      )
-    };
-  });
+  })
+    .catch(err => console.log(err))
+    .map(userGameResult => {
+      return {
+        GameName: userGameResult.team_result.game_result.GameName,
+        questions: userGameResult.user_results_questions.map(
+          userResultQuestion => {
+            return {
+              questionText:
+                userResultQuestion.game_result_question.GameResultQuestionText,
+              isAnsweredCorrectly: userResultQuestion.isAnsweredCorrectly,
+              answers: userResultQuestion.game_result_question.game_result_answers.map(
+                answer => {
+                  return {
+                    answerText: answer.GameResultAnswerText,
+                    isCorrect: answer.isCorrect
+                  };
+                }
+              )
+            };
+          }
+        )
+      };
+    });
 
   res.render("userResults", {
     usersTeamsGamesResults

@@ -1,7 +1,7 @@
 const Sequelize = require("sequelize");
 const db = require("../config/database");
 
-const UserResultAnswer = db.define("user_result", {
+const UserResult = db.define("user_result", {
   UserResultId: {
     type: Sequelize.INTEGER,
     autoIncrement: true,
@@ -28,4 +28,4 @@ const UserResultAnswer = db.define("user_result", {
   }
 });
 
-module.exports = UserResultAnswer;
+module.exports = UserResult;
