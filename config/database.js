@@ -1,4 +1,5 @@
 const Sequelize = require("sequelize");
+
 module.exports = new Sequelize("teamplay", "root", "", {
   host: "localhost",
   dialect: "mysql",
