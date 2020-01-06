@@ -441,6 +441,8 @@ io.on("connection", function(socket) {
   /** ******************Rooms***************** */
   require("./rooms")(socket, io);
 
+  require("./Statistics")(socket, io);
+
   function clearDisconnectTimer() {
     if (DISCONNECT_TIMERS[session.roomPlayersId]) {
       console.log(`clear timer ${session.roomPlayersId}`);
