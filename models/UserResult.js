@@ -19,6 +19,10 @@ const UserResult = db.define("user_result", {
   Timestamp: {
     type: Sequelize.INTEGER
   },
+  IsReflection: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false
+  },
   User_Id: {
     type: Sequelize.INTEGER
   },
