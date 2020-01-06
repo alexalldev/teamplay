@@ -1,12 +1,14 @@
 $(".btnUserResults").click(() => {
-  const ptrn = /user\/\d$/i;
-  userUrl = ptrn.exec(window.location.href)[0];
-  socket.emit("GetUserResults", userUrl[userUrl.length - 1]);
+  if ($("#GameResults").is(":empty")) {
+    const ptrn = /user\/\d$/i;
+    userUrl = ptrn.exec(window.location.href)[0];
+    socket.emit("GetUserResults", userUrl[userUrl.length - 1]);
+  }
 });
 
 socket.on("SendUserResults", gameResults => {
   $.each(gameResults, (i, vi) => {
-    $(".GameResult").append(`
+    $("#GameResults").append(`
     <div class="row alert alert-info" data-toggle="collapse"
       data-target="#GameCollapse-${i}" style="cursor: pointer">
         <div class="col-md-12">
@@ -47,7 +49,7 @@ socket.on("SendUserResults", gameResults => {
           </div>
       </th>
       <th>
-        <span>${vj.isAnsweredCorrectly == true ? "✓" : "☓"}</span>
+        <span>${vj.isAnsweredCorrectly ? "✓" : "☓"}</span>
       </th>
   </tr>
 `);
@@ -59,7 +61,7 @@ socket.on("SendUserResults", gameResults => {
               ${vk.answerText}
             </th>
             <th>
-             ${vk.isCorrect}
+             ${vk.isCorrect ? "✓" : "☓"}
             </th>
           </tr>
       `);
