@@ -71,19 +71,16 @@ router.get("/rooms", app.protect, function(req, res) {
             RoomPlayers.count({
               where: { Room_Id: room.RoomId, isRoomCreator: false }
             })
-              .then(numRoomPlayers => {
-                return numRoomPlayers;
-              })
+              .then(numRoomPlayers => numRoomPlayers)
               .catch(err => {
                 console.log(err);
               }),
+
             User.findOne({
               where: { UserId: room.RoomCreatorId },
               raw: true
             })
-              .then(roomCreator => {
-                return roomCreator;
-              })
+              .then(roomCreator => roomCreator)
               .catch(err => {
                 console.log(err);
               })
@@ -206,6 +203,28 @@ router.get("/users", app.protect, function(req, res) {
     });
 });
 
+function timeConverter(unixTimestamp) {
+  const date = new Date(unixTimestamp * 1000);
+  const months = [
+    "Январь",
+    "Февраль",
+    "Март",
+    "Апрель",
+    "Май",
+    "Июнь",
+    "Июль",
+    "Август",
+    "Сентябрь",
+    "Октябрь",
+    "Ноябрь",
+    "Декабрь"
+  ];
+  const year = date.getFullYear();
+  const month = months[date.getMonth()];
+  const time = { month, year };
+  return time;
+}
+
 router.get("/team/:TeamTag", app.protect, (req, res) => {
   const users = [];
   let counter = 0;
@@ -285,7 +304,8 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                   users,
                   isMyTeam: user.Team_Id == team.TeamId,
                   amICoach: user.isCoach,
-                  datesGamesTeamResults
+                  datesGamesTeamResults,
+                  gamesTeamResults
                 });
               })
               .catch(err => console.log(err));
@@ -301,166 +321,38 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
 router.get("/user/:userId", app.protect, function(req, res) {
   User.findOne({ where: { UserId: req.params.userId }, raw: true })
     .then(async user => {
-      if (req.session.passport.user == user.UserId) user.canEdit = true;
-      if (user.Team_Id > 0)
-        await Team.findOne({ where: { TeamId: user.Team_Id }, raw: true })
-          .then(async team => {
-            if (team) {
-              user.TeamName = team.TeamName;
-              user.TeamTag = team.TeamTag;
-              await User.findAndCountAll({ where: { Team_Id: team.TeamId } })
-                .then(result => {
-                  user.teamPlayersCount = result.count;
-                })
-                .catch(err => {
-                  console.log(err);
-                });
+      let canEdit = false;
+      if (req.session.passport.user == user.UserId) canEdit = true;
+      await Team.findOne({ where: { TeamId: user.Team_Id }, raw: true })
+        .then(async team => {
+          res.render("user", {
+            user: {
+              UserId: user.UserId,
+              UserName: user.UserName,
+              UserFamily: user.UserFamily,
+              UserLastName: user.UserLastName,
+              canEdit,
+              TeamId: user.TeamId,
+              TeamName: team.TeamName,
+              teamTag: team.TeamTag,
+              teamPlayersCount: await User.count({
+                where: { Team_Id: team.TeamId }
+              }).then(result => result)
             }
-          })
-          .catch(err => {
-            console.log(err);
           });
-      res.render("user", { user });
+        })
+        .catch(err => {
+          console.log(err);
+        });
     })
     .catch(err => {
       console.log(err);
     });
 });
 
-router.get("/team/:TeamTag/results", app.protect, (req, res) => {
-  Team.findOne({ where: { TeamTag: req.params.TeamTag }, raw: true })
-    .then(team => {
-      TeamResult.findAll({
-        where: { Team_Id: team.TeamId },
-        raw: true
-      })
-        .then(async teamResults => {
-          GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
-          TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
-
-          TeamResult.hasMany(TeamResultQuestion, {
-            foreignKey: "TeamResult_Id"
-          });
-          TeamResultQuestion.belongsTo(TeamResult, {
-            foreignKey: "TeamResult_Id"
-          });
-
-          // Надо найти Для определенной команды
-          const teamGamesQuestionsResults = await TeamResult.findAll({
-            where: {
-              GameResult_Id: teamResults.map(
-                teamResult => teamResult.GameResult_Id
-              )
-            },
-            include: [{ model: GameResult }, { model: TeamResultQuestion }],
-            order: [[GameResult, "Timestamp", "ASC"], ["TeamPoints", "DESC"]]
-          }).map(teamGameQuestionsResult =>
-            teamGameQuestionsResult.get({ plain: true })
-          );
-          res.render("teamResult", {
-            teamGamesQuestionsResults
-          });
-        })
-        .catch(err => console.log(err));
-    })
-    .catch(err => console.log(err));
-});
-
-// похожее надо и для команд
-router.get("/user/:userId/results", app.protect, async (req, res) => {
-  GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
-  TeamResult.belongsTo(GameResult, { foreignKey: "GameResult_Id" });
-
-  TeamResult.hasMany(UserResult, { foreignKey: "TeamResult_Id" });
-  UserResult.belongsTo(TeamResult, { foreignKey: "TeamResult_Id" });
-
-  UserResult.hasMany(UserResultQuestion, {
-    foreignKey: "UserResult_Id"
-  });
-  UserResultQuestion.belongsTo(UserResult, {
-    foreignKey: "UserResult_Id"
-  });
-
-  GameResultQuestion.hasMany(GameResultAnswer, {
-    foreignKey: "GameResultQuestion_Id"
-  });
-  UserResultQuestion.belongsTo(GameResultQuestion, {
-    foreignKey: "GameResultQuestion_Id"
-  });
-  GameResultAnswer.belongsTo(GameResultQuestion, {
-    foreignKey: "GameResultQuestion_Id"
-  });
-
-  const usersTeamsGamesResults = await UserResult.findAll({
-    where: {
-      User_Id: req.params.userId
-    },
-    include: [
-      { model: TeamResult, include: [GameResult] },
-      {
-        model: UserResultQuestion,
-        include: [{ model: GameResultQuestion, include: GameResultAnswer }]
-      }
-    ],
-    order: [
-      ["Timestamp", "ASC"],
-      [UserResultQuestion, "isAnsweredCorrectly", "ASC"]
-    ]
-  })
-    .catch(err => console.log(err))
-    .map(userGameResult => {
-      return {
-        GameName: userGameResult.team_result.game_result.GameName,
-        questions: userGameResult.user_results_questions.map(
-          userResultQuestion => {
-            return {
-              questionText:
-                userResultQuestion.game_result_question.GameResultQuestionText,
-              isAnsweredCorrectly: userResultQuestion.isAnsweredCorrectly,
-              answers: userResultQuestion.game_result_question.game_result_answers.map(
-                answer => {
-                  return {
-                    answerText: answer.GameResultAnswerText,
-                    isCorrect: answer.isCorrect
-                  };
-                }
-              )
-            };
-          }
-        )
-      };
-    });
-
-  res.render("userResults", {
-    usersTeamsGamesResults
-  });
-});
-
 router.get("/user", app.protect, function(req, res) {
   if (req.session.passport.user)
     res.redirect(`/user/${req.session.passport.user}`);
 });
-
-function timeConverter(UNIX_timestamp) {
-  const date = new Date(UNIX_timestamp * 1000);
-  const months = [
-    "Январь",
-    "Февраль",
-    "Март",
-    "Апрель",
-    "Май",
-    "Июнь",
-    "Июль",
-    "Август",
-    "Сентябрь",
-    "Октябрь",
-    "Ноябрь",
-    "Декабрь"
-  ];
-  const year = date.getFullYear();
-  const month = months[date.getMonth()];
-  const time = { month, year };
-  return time;
-}
 
 module.exports = router;
