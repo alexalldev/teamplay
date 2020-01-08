@@ -90,10 +90,11 @@ module.exports = function(socket, io) {
               gameUserResult.team_result.game_result.Timestamp <= lastDayMonth
           ).length;
           if (lastDayMonth > minTimestamp) {
-            datesGamesTeamResults.push({
-              date: firstDayMonth,
-              number: countMonthGames
-            });
+            if (countMonthGames > 0)
+              datesGamesTeamResults.push({
+                date: firstDayMonth,
+                number: countMonthGames
+              });
           } else flag = false;
           c++;
         }
