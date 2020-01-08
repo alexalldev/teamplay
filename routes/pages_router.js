@@ -333,11 +333,13 @@ router.get("/user/:userId", app.protect, function(req, res) {
               UserLastName: user.UserLastName,
               canEdit,
               TeamId: user.TeamId,
-              TeamName: team.TeamName,
-              teamTag: team.TeamTag,
-              teamPlayersCount: await User.count({
-                where: { Team_Id: team.TeamId }
-              }).then(result => result)
+              TeamName: team ? team.TeamName : null,
+              teamTag: team ? team.TeamTag : null,
+              teamPlayersCount: team
+                ? await User.count({
+                    where: { Team_Id: team.TeamId }
+                  }).then(result => result)
+                : null
             }
           });
         })
