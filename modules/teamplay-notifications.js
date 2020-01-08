@@ -178,45 +178,47 @@ module.exports = function(notificationData, req, callback) {
               raw: true
             })
             .then(async notifications => {
-              /* eslint-disable no-restricted-syntax */
-              // eslint-disable-next-line node/no-unsupported-features/es-syntax
-              for await (const notification of notifications) {
-                await User.findOne({
-                  where: { UserId: notification.senderId },
-                  raw: true
-                })
-                  .then(async userSender => {
-                    if (userSender) {
-                      notification.senderFIO = `${
-                        userSender.UserFamily
-                      } ${userSender.UserName.slice(
-                        0,
-                        1
-                      )}. ${userSender.UserLastName.slice(0, 1)}.`;
-                      await Team.findOne({
-                        where: { TeamId: userSender.Team_Id }
-                      })
-                        .then(team => {
-                          notification.userTeam = team ? team.TeamName : 0;
-                        })
-                        .catch(err => {
-                          console.log(
-                            `${__filename} Team.FindOne in loop	 ${err}`
-                          );
-                        });
-                    } else notification.senderFIO = "Пользователь удален";
-                    io.emitUser(receiverId, "receiveNotification", {
-                      createdNotification: {
-                        notification,
-                        shouldAdd: true,
-                        addToStart: false
-                      },
-                      actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
-                    });
+              if (notifications.length > 0) {
+                for await (const notification of notifications) {
+                  await User.findOne({
+                    where: { UserId: notification.senderId },
+                    raw: true
                   })
-                  .catch(err => {
-                    console.log(`${__filename} for of loop ${err}`);
-                  });
+                    .then(async userSender => {
+                      if (userSender) {
+                        notification.senderFIO = `${
+                          userSender.UserFamily
+                        } ${userSender.UserName.slice(
+                          0,
+                          1
+                        )}. ${userSender.UserLastName.slice(0, 1)}.`;
+                        await Team.findOne({
+                          where: { TeamId: userSender.Team_Id }
+                        })
+                          .then(team => {
+                            notification.userTeam = team ? team.TeamName : 0;
+                          })
+                          .catch(err => {
+                            console.log(
+                              `${__filename} Team.FindOne in loop	 ${err}`
+                            );
+                          });
+                      } else notification.senderFIO = "Пользователь удален";
+                      io.emitUser(receiverId, "receiveNotification", {
+                        createdNotification: {
+                          notification,
+                          shouldAdd: true,
+                          addToStart: false
+                        },
+                        actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
+                      });
+                    })
+                    .catch(err => {
+                      console.log(`${__filename} for of loop ${err}`);
+                    });
+                }
+              } else {
+                io.emitUser(receiverId, "receiveNotification", null);
               }
             })
             .catch(err => {

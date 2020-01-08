@@ -92,7 +92,7 @@ router.post("/invite", urlencodedParser, async function(req, res) {
         header: req.body.header,
         mainText: req.body.mainText,
         isInfoNotification: req.body.isInfoNotification,
-        invitationType: invitationType
+        invitationType
       },
       req,
       function(err) {
