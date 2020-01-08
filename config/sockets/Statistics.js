@@ -30,7 +30,6 @@ function timeConverter(unixTimestamp) {
 
 module.exports = function(socket, io) {
   socket.on("GetStatData", async userId => {
-    console.log({ userId });
     await User.findOne({ where: { UserId: userId }, raw: true }).then(
       async user => {
         GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
