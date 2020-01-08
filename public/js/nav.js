@@ -5,7 +5,7 @@ $(document).ready(function() {
     switch (state) {
       case 1:
       case undefined:
-        $(".notifications-menu").html("");
+        $(".notifications").html("");
         $("#nav-ring").replaceWith(
           '<i id="nav-ring" class="far fa-bell text-white">'
         );

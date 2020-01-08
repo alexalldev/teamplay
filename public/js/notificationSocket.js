@@ -1,5 +1,6 @@
 socket.on("receiveNotification", function(result) {
   if (result !== null) {
+    $(".no-new-notifications").empty();
     const { notification } = result.createdNotification;
     if (result.createdNotification.shouldAdd) {
       let submitBtns;
@@ -37,8 +38,8 @@ socket.on("receiveNotification", function(result) {
       </div>
     </div>`;
       if (result.createdNotification.addToStart)
-        $(".notifications-menu").prepend(ringNotification);
-      else $(".notifications-menu").append(ringNotification);
+        $(".notifications").prepend(ringNotification);
+      else $(".notifications").append(ringNotification);
     } else {
       const { answer, type } = getAnswer(
         "sentBefore",
@@ -47,7 +48,7 @@ socket.on("receiveNotification", function(result) {
       Swal.fire("", answer, type);
     }
   } else {
-    $(".notifications-menu").html(
+    $(".no-new-notifications").html(
       "<div class='text-center'>Нет новых уведомлений</div>"
     );
   }
