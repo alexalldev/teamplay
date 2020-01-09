@@ -14,7 +14,6 @@ module.exports = async function GetTeamNamesPoints(roomId) {
         }
       })
         .then(teams => {
-          // .filter заодно убирает команду -1 создателя, тк такой не существует
           sortedTeamNamesPoints = teams
             .map(team => {
               const myRoomTeam = roomTeams.find(

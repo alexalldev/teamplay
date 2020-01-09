@@ -280,110 +280,129 @@ function NewGamePlayGeneration(socket, io) {
           // только на дисконнекте или при конце игры. Так как эти данные не нужны на на протяжении игры
           // и незачем их так часто обновлять
           for await (const roomTeam of roomTeams) {
-            await GamePlay.findOne({
-              where: { GamePlayId: session.GamePlayId }
-            })
-              .then(async gamePlay => {
-                await gamePlay
-                  .update({
-                    isAnsweredCorrectly: !!roomTeamIdsAddedPoints[
-                      roomTeam.RoomTeamId.toString()
-                    ]
+            await GamePlay.update(
+              {
+                isAnsweredCorrectly: !!roomTeamIdsAddedPoints[
+                  roomTeam.RoomTeamId.toString()
+                ]
+              },
+              {
+                where: {
+                  GamePlayId: session.GamePlayId
+                }
+              }
+            ).catch(err => console.log(err));
+            await Promise.all([
+              GamePlay.findOne({
+                where: { GamePlayId: session.GamePlayId },
+                raw: true
+              })
+                .then(async gamePlay => {
+                  await GameResult.findOne({
+                    where: { GamePlay_Id: gamePlay.GamePlayId },
+                    raw: true
                   })
-                  .catch(err => console.log(err));
-                GameResult.findOne({
-                  where: { GamePlay_Id: gamePlay.GamePlayId }
-                })
-                  .then(gameResult => {
-                    TeamResult.findOne({
-                      where: {
-                        Team_Id: roomTeam.Team_Id,
-                        GameResult_Id: gameResult.GameResultId
-                      }
-                    })
-                      .then(teamResult => {
-                        teamResult
-                          .update({ TeamPoints: roomTeam.Points })
-                          .catch(err => console.log(err));
-                        GameResultCategory.findOne({
-                          where: {
-                            GameResult_Id: gameResult.GameResultId,
-                            Category_Id: question.Category_Id
-                          }
-                        })
-                          .then(gameResultCategory => {
-                            GameResultQuestion.findOne({
-                              where: {
-                                GameResultCategory_Id:
-                                  gameResultCategory.GameResultCategoryId,
-                                Question_Id: question.QuestionId
-                              }
-                            })
-                              .then(gameResultQuestion => {
-                                TeamResultQuestion.findOne({
-                                  where: {
-                                    TeamResult_Id: teamResult.TeamResultId,
-                                    GameResultQuestion_Id:
-                                      gameResultQuestion.GameResultQuestionId
-                                  }
-                                })
-                                  .then(teamResultQuestion => {
-                                    teamResultQuestion
-                                      .update({
-                                        isAnsweredCorrectly: !!roomTeamIdsAddedPoints[
-                                          roomTeam.RoomTeamId.toString()
-                                        ]
-                                      })
-                                      .then(updatedTeamResultQuestion => {
-                                        UserResult.findAll({
-                                          where: {
-                                            TeamResult_Id:
-                                              teamResult.TeamResultId
-                                          }
+                    .then(async gameResult => {
+                      await TeamResult.findOne({
+                        where: {
+                          Team_Id: roomTeam.Team_Id,
+                          GameResult_Id: gameResult.GameResultId
+                        }
+                      })
+                        .then(async teamResult => {
+                          await teamResult
+                            .update({ TeamPoints: roomTeam.Points })
+                            .catch(err => console.log(err));
+                          await GameResultCategory.findOne({
+                            where: {
+                              GameResult_Id: gameResult.GameResultId,
+                              Category_Id: question.Category_Id
+                            },
+                            raw: true
+                          })
+                            .then(async gameResultCategory => {
+                              await GameResultQuestion.findOne({
+                                where: {
+                                  GameResultCategory_Id:
+                                    gameResultCategory.GameResultCategoryId,
+                                  Question_Id: question.QuestionId
+                                },
+                                raw: true
+                              })
+                                .then(async gameResultQuestion => {
+                                  await TeamResultQuestion.findOne({
+                                    where: {
+                                      TeamResult_Id: teamResult.TeamResultId,
+                                      GameResultQuestion_Id:
+                                        gameResultQuestion.GameResultQuestionId
+                                    }
+                                  })
+                                    .then(async teamResultQuestion => {
+                                      await teamResultQuestion
+                                        .update({
+                                          isAnsweredCorrectly: !!roomTeamIdsAddedPoints[
+                                            roomTeam.RoomTeamId.toString()
+                                          ]
                                         })
-                                          .then(usersResults => {
-                                            UserResultQuestion.findOne({
+                                        .then(
+                                          async updatedTeamResultQuestion => {
+                                            await UserResult.findAll({
                                               where: {
-                                                UserResult_Id: usersResults.map(
-                                                  userResult =>
-                                                    userResult.UserResultId
-                                                ),
-                                                GameResultQuestion_Id:
-                                                  updatedTeamResultQuestion.GameResultQuestion_Id
+                                                TeamResult_Id:
+                                                  teamResult.TeamResultId
                                               }
                                             })
-                                              .then(userResultQuestion => {
-                                                userResultQuestion
-                                                  .update({
-                                                    isAnsweredCorrectly:
-                                                      updatedTeamResultQuestion.isAnsweredCorrectly
-                                                  })
+                                              .then(async usersResults => {
+                                                await UserResultQuestion.findOne(
+                                                  {
+                                                    where: {
+                                                      UserResult_Id: usersResults.map(
+                                                        userResult =>
+                                                          userResult.UserResultId
+                                                      ),
+                                                      GameResultQuestion_Id:
+                                                        updatedTeamResultQuestion.GameResultQuestion_Id
+                                                    }
+                                                  }
+                                                )
+                                                  .then(
+                                                    async userResultQuestion => {
+                                                      await userResultQuestion
+                                                        .update({
+                                                          isAnsweredCorrectly:
+                                                            updatedTeamResultQuestion.isAnsweredCorrectly
+                                                        })
+                                                        .catch(err =>
+                                                          console.log(err)
+                                                        );
+                                                    }
+                                                  )
                                                   .catch(err =>
                                                     console.log(err)
                                                   );
                                               })
                                               .catch(err => console.log(err));
-                                          })
-                                          .catch(err => console.log(err));
-                                      })
-                                      .catch(err => console.log(err));
-                                  })
-                                  .catch(err => console.log(err));
-                              })
-                              .catch(err => console.log(err));
-                          })
-                          .catch(err => console.log(err));
-                      })
-                      .catch(err => console.log(err));
-                  })
-                  .catch(err => console.log(err));
-              })
-              .catch(err => console.log(err));
-            await RoomOfferAnswer.destroy({
-              where: {
-                Room_Id: roomId
-              }
-            }).catch(err => console.log(err));
+                                          }
+                                        )
+                                        .catch(err => console.log(err));
+                                    })
+                                    .catch(err => console.log(err));
+                                })
+                                .catch(err => console.log(err));
+                            })
+                            .catch(err => console.log(err));
+                        })
+                        .catch(err => console.log(err));
+                    })
+                    .catch(err => console.log(err));
+                })
+                .catch(err => console.log(err)),
+              RoomOfferAnswer.destroy({
+                where: {
+                  Room_Id: roomId
+                }
+              }).catch(err => console.log(err))
+            ]);
             io.to(`RoomTeam${roomTeam.RoomTeamId}`).emit(
               "BreakBetweenQuestions",
               teamNamesPoints,
