@@ -58,10 +58,9 @@ module.exports = function(socket, io) {
         });
 
         const gamesUserResults = await UserResult.findAll({
-          where: { User_Id: user.UserId },
+          where: { User_Id: user.UserId, isCreator: false },
           include: [{ model: TeamResult, include: GameResult }]
         }).map(gameUserResult => gameUserResult.get({ plain: true }));
-
         const minTimestamp = Math.min(
           ...gamesUserResults.map(
             gameUserResult => gameUserResult.team_result.game_result.Timestamp
@@ -144,7 +143,8 @@ module.exports = function(socket, io) {
 
       const usersTeamsGamesResults = await UserResult.findAll({
         where: {
-          User_Id: user.UserId
+          User_Id: user.UserId,
+          isCreator: false
         },
         include: [
           { model: TeamResult, include: [GameResult] },
