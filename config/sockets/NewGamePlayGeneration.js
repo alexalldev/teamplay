@@ -845,6 +845,15 @@ function NewGamePlayGeneration(socket, io) {
           .catch(err => console.log(err));
       })
       .catch(err => console.log(err));
+    RoomTeam.findAll({
+      where: {
+        Room_Id: session.roomId
+      }
+    }).then(roomTeams => {
+      Promise.all(
+        roomTeams.map(async roomTeam => roomTeam.update({ Points: 0 }))
+      );
+    });
   }
 
   socket.on("FinishGame", () => {
