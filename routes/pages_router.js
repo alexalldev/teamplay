@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-syntax */
-const util = require("util");
 const {
   router,
   passport,
@@ -14,13 +12,6 @@ const {
   User,
   Room
 } = require("../config/routers-config");
-const TeamResult = require("../models/TeamResult");
-const UserResult = require("../models/UserResult");
-const TeamResultQuestion = require("../models/TeamResultQuestion");
-const UserResultQuestion = require("../models/UserResultQuestion");
-const GameResult = require("../models/GameResult");
-const GameResultQuestion = require("../models/GameResultQuestion");
-const GameResultAnswer = require("../models/GameResultAnswer");
 const RoomPlayers = require("../models/RoomPlayer");
 
 router.get("/home", app.protect, function(req, res) {
@@ -126,24 +117,12 @@ router.get("/teams", app.protect, function(req, res) {
               1
             )}. ${coach.UserLastName.slice(0, 1)}.`;
           })
-          .catch(err => {
-            console.log({
-              file: __filename,
-              func: 'router.get("/teams"), User.findOne',
-              err
-            });
-          });
+          .catch(err => console.log(err));
         await User.count({ where: { Team_Id: team.TeamId } })
           .then(membersNum => {
             team.membersNum = membersNum;
           })
-          .catch(err => {
-            console.log({
-              file: __filename,
-              func: 'router.get("/teams"), User.count',
-              err
-            });
-          });
+          .catch(err => console.log(err));
       }
       await User.findOne({ where: { UserId: req.session.passport.user } }).then(
         user => {
@@ -152,13 +131,7 @@ router.get("/teams", app.protect, function(req, res) {
       );
       res.render("view", { teams, page: "teams" });
     })
-    .catch(err => {
-      console.log({
-        file: __filename,
-        func: 'router.get("/teams"), Team.findAll',
-        err
-      });
-    });
+    .catch(err => console.log(err));
 });
 
 router.get("/users", app.protect, function(req, res) {
@@ -177,13 +150,7 @@ router.get("/users", app.protect, function(req, res) {
               user.userTeamTag = team.TeamTag;
             }
           })
-          .catch(err => {
-            console.log({
-              file: __filename,
-              func: 'router.get("/users"), Team.findOne',
-              err
-            });
-          });
+          .catch(err => console.log(err));
       }
 
       await User.findOne({ where: { UserId: req.session.passport.user } }).then(
@@ -194,36 +161,8 @@ router.get("/users", app.protect, function(req, res) {
 
       res.render("view", { users, page: "users" });
     })
-    .catch(err => {
-      console.log({
-        file: __filename,
-        func: 'router.get("/users"), User.FindAll',
-        err
-      });
-    });
+    .catch(err => console.log(err));
 });
-
-function timeConverter(unixTimestamp) {
-  const date = new Date(unixTimestamp * 1000);
-  const months = [
-    "Январь",
-    "Февраль",
-    "Март",
-    "Апрель",
-    "Май",
-    "Июнь",
-    "Июль",
-    "Август",
-    "Сентябрь",
-    "Октябрь",
-    "Ноябрь",
-    "Декабрь"
-  ];
-  const year = date.getFullYear();
-  const month = months[date.getMonth()];
-  const time = { month, year };
-  return time;
-}
 
 router.get("/team/:TeamTag", app.protect, (req, res) => {
   const users = [];
