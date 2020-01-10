@@ -252,60 +252,10 @@ router.get("/team/:TeamTag", app.protect, (req, res) => {
                   users[0],
                   users[members.coachInd]
                 ];
-                GameResult.hasMany(TeamResult, { foreignKey: "GameResult_Id" });
-                TeamResult.belongsTo(GameResult, {
-                  foreignKey: "GameResult_Id"
-                });
-                const gamesTeamResults = await TeamResult.findAll({
-                  where: { Team_Id: team.TeamId },
-                  include: [GameResult]
-                }).map(gameTeamResult => gameTeamResult.get({ plain: true }));
-                const datesGamesTeamResults = [];
-                let countDates = gamesTeamResults.length;
-                const minTimestamp = Math.min(
-                  ...gamesTeamResults.map(
-                    gameTeamResult => gameTeamResult.game_result.Timestamp
-                  )
-                );
-                let c = 0;
-                const date = new Date();
-                const ONE_MONTH = 31 * 24 * 60 * 60 * 1000;
-                let flag = true;
-                while (flag) {
-                  const monthDate = new Date(date - ONE_MONTH * c);
-                  const firstDayMonth =
-                    new Date(
-                      Date.UTC(monthDate.getFullYear(), monthDate.getMonth(), 1)
-                    ).getTime() / 1000;
-                  const lastDayMonth =
-                    new Date(
-                      Date.UTC(
-                        monthDate.getFullYear(),
-                        monthDate.getMonth() + 1,
-                        0
-                      )
-                    ).getTime() / 1000;
-                  countDates = gamesTeamResults.filter(gameTeamResult => {
-                    return (
-                      gameTeamResult.game_result.Timestamp >= firstDayMonth &&
-                      gameTeamResult.game_result.Timestamp <= lastDayMonth
-                    );
-                  }).length;
-                  if (lastDayMonth > minTimestamp) {
-                    if (countDates > 0)
-                      datesGamesTeamResults.push({
-                        date: timeConverter(firstDayMonth),
-                        number: countDates
-                      });
-                  } else flag = false;
-                  c++;
-                }
                 res.render("teamPage", {
                   users,
                   isMyTeam: user.Team_Id == team.TeamId,
-                  amICoach: user.isCoach,
-                  datesGamesTeamResults,
-                  gamesTeamResults
+                  amICoach: user.isCoach
                 });
               })
               .catch(err => console.log(err));

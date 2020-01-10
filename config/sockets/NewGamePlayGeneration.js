@@ -1,4 +1,3 @@
-const util = require("util");
 const { Op } = require("sequelize");
 const Category = require("../../models/Category");
 const Question = require("../../models/Question");
@@ -23,12 +22,12 @@ const User = require("../../models/User");
 const Team = require("../../models/Team");
 const GetTeamNamesPoints = require("../../modules/getTeamNamesPoints");
 const GetOffersUsersFIOs = require("../../modules/getOffersUsersFIOs");
+const GamePlayStructure = require("./GamePlayStructure");
 
 const ANSWERING_TIMERS = [];
 const CHECKING_TIMERS = [];
 
 function NewGamePlayGeneration(socket, io) {
-  const GamePlayStructure = require("./GamePlayStructure");
   const { session } = socket.request;
   async function GetRandomQuestion() {
     let result = {};
