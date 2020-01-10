@@ -214,7 +214,6 @@ router.get("/user/:userId", app.protect, function(req, res) {
       if (req.session.passport.user == user.UserId) canEdit = true;
       await Team.findOne({ where: { TeamId: user.Team_Id }, raw: true })
         .then(async team => {
-          console.log(team);
           res.render("user", {
             user: {
               UserId: user.UserId,
