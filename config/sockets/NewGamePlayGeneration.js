@@ -194,55 +194,66 @@ function NewGamePlayGeneration(socket, io) {
     })
       .then(async roomOffersAnswers => {
         if (roomOffersAnswers.length > 0)
-          await Answer.findAll({
+          await GamePlay.findOne({
             where: {
-              AnswerId: roomOffersAnswers.map(
-                roomOfferAnswer => roomOfferAnswer.Answer_Id
-              )
-            },
-            raw: true
+              GamePlayId: session.GamePlayId
+            }
           })
-            .then(async answers => {
-              const correctAnswersIds = answers
-                .filter(answer => answer.Correct)
-                .map(answer => answer.AnswerId);
-
-              const votesAnswers = {};
-              for (const roomOfferAnswer of roomOffersAnswers) {
-                votesAnswers[roomOfferAnswer.Answer_Id] = roomOffersAnswers
-                  .filter(roomOfferAnswer2 => {
-                    return (
-                      roomOfferAnswer2.Answer_Id == roomOfferAnswer.Answer_Id
-                    );
-                  })
-                  .map(roomOfferAnswer3 => roomOfferAnswer3.RoomPlayer_Id);
-              }
-              let maxVotedAnswer = { Answer_Id: 0, Votes: [] };
-              for (const [answerId, votes] of Object.entries(votesAnswers)) {
-                if (votes.length > maxVotedAnswer.Votes.length) {
-                  maxVotedAnswer = { Answer_Id: answerId, Votes: votes };
-                }
-              }
-              const dominantVotesAnswers = {};
-              for (const [answerId, votes] of Object.entries(votesAnswers)) {
-                if (votes.length == maxVotedAnswer.Votes.length)
-                  dominantVotesAnswers[answerId] = votes;
-              }
-              if (
-                Object.keys(dominantVotesAnswers).length ==
-                correctAnswersIds.length
-              ) {
-                result = true;
-                for (const [answerId, votes] of Object.entries(
-                  dominantVotesAnswers
-                )) {
-                  if (!correctAnswersIds.includes(parseInt(answerId, 10))) {
-                    console.log("result false");
-                    result = false;
-                    break;
+            .then(async gamePlay => {
+              await Answer.findAll({
+                where: {
+                  Question_Id: gamePlay.CurrentQuestionId
+                },
+                raw: true
+              })
+                .then(currQuestionAnswers => {
+                  const rightAnswersIds = currQuestionAnswers
+                    .filter(answer => {
+                      return answer.Correct;
+                    })
+                    .map(answer => answer.AnswerId);
+                  const votesAnswers = Array.from(
+                    new Set(
+                      roomOffersAnswers.map(
+                        roomOfferAnswer => roomOfferAnswer.Answer_Id
+                      )
+                    )
+                  ).map(answerIdToFind => {
+                    return {
+                      answerId: answerIdToFind,
+                      count: roomOffersAnswers.filter(
+                        roomOfferAnswer =>
+                          answerIdToFind == roomOfferAnswer.Answer_Id
+                      ).length
+                    };
+                  });
+                  let max = votesAnswers[0];
+                  for (let i = 1; i < votesAnswers.length; i++) {
+                    if (votesAnswers[i].count > max.count) {
+                      max = votesAnswers[i];
+                    }
                   }
-                }
-              }
+                  const maxVotedAnswerIds = [];
+                  for (let i = 0; i < votesAnswers.length; i++) {
+                    if (votesAnswers[i].count == max.count) {
+                      maxVotedAnswerIds.push(votesAnswers[i].answerId);
+                    }
+                  }
+                  if (rightAnswersIds.length == maxVotedAnswerIds.length) {
+                    result = true;
+                    for (
+                      let i = 0, len = rightAnswersIds.length;
+                      i < len;
+                      i++
+                    ) {
+                      if (!maxVotedAnswerIds.includes(rightAnswersIds[i])) {
+                        result = false;
+                        break;
+                      }
+                    }
+                  }
+                })
+                .catch(err => console.log(err));
             })
             .catch(err => console.log(err));
       })
