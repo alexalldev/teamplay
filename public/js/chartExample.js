@@ -39,7 +39,6 @@ socket.on("SendStatData", datesGamesTeamResults => {
           {
             ticks: {
               min: 0,
-              stepSize: 1.0,
               stacked: true
             }
           }
