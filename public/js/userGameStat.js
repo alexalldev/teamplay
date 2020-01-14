@@ -7,6 +7,7 @@ $(".btnUserResults").click(() => {
 });
 
 socket.on("SendUserResults", gameResults => {
+  $(".loading").empty();
   if (gameResults.length == 0) {
     $("#GameResults").append("Нет игр");
   } else {
