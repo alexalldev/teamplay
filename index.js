@@ -65,7 +65,7 @@ app.use((req, res, next) => {
             });
           else {
             delete req.session.roomId;
-            // return res.render("info", { message: "Комната удалена" });
+            return res.render("info", { message: "Комната удалена" });
           }
         })
         .catch(err => console.log(err));
