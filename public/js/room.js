@@ -380,6 +380,7 @@ socket.on("NewRoomGroupCoach", function(roomPlayer) {
 });
 
 socket.on("GameFinished", () => {
+  $(".animated_timer").empty();
   Swal.fire("Игра завершена", "Спасибо за участие", "success").then(result => {
     document.location.reload(true);
   });
