@@ -1,17 +1,9 @@
-const { Op } = require("sequelize");
-const Game = require("../../models/Game");
 const Team = require("../../models/Team");
-const Player = require("../../models/Player");
-const GameTeam = require("../../models/GameTeam");
-const Category = require("../../models/Category");
-const Question = require("../../models/Question");
-const Answer = require("../../models/Answer");
-const Room = require("../../models/Room");
 const User = require("../../models/User");
 const notification = require("../../modules/teamplay-notifications");
 
 module.exports = function(socket, io) {
-  const session = socket.request.session;
+  const { session } = socket.request;
   socket.on("CreateTeam", function(TeamName) {
     if (session.passport.user) {
       if (TeamName) {
@@ -25,11 +17,11 @@ module.exports = function(socket, io) {
           user => {
             if (user)
               if (user.dataValues.Team_Id == 0)
-                Team.findOrCreate({ where: { TeamTag: TeamTag } })
+                Team.findOrCreate({ where: { TeamTag } })
                   .then(([team, created]) => {
                     if (created == true) {
                       team
-                        .update({ TeamName: TeamName })
+                        .update({ TeamName })
                         .then(() => {
                           user
                             .update({
@@ -78,7 +70,7 @@ module.exports = function(socket, io) {
                       shouldCreate: "true",
                       senderId: session.passport.user,
                       header: team.TeamName,
-                      mainText: "Вы были исключены из команды",
+                      mainText: `Вы были исключены из команды "${team.TeamName}"`,
                       isInfoNotification: true,
                       invitationType: "info"
                     },
@@ -139,7 +131,6 @@ module.exports = function(socket, io) {
               }
             }
           });
-          // }
         }
       });
     }

@@ -9,66 +9,97 @@ router.get("/notification", function(req, res) {
   res.render("notifications");
 });
 
-router.get("/notificationAction", function(req, res) {
-  let findUserId;
-  let setUserId;
-  notificationModel
-    .findOne({ where: { InvitationHash: req.query.InvitationHash } })
-    .then(notification => {
-      if (!notification.get().isAnswered) {
-        notification.update({ isAnswered: 1, isViewed: 1 });
-        if (!notification.isInfoNotification) {
-          if (notification.InvitationType == "joinTeam") {
-            setUserId = notification.senderId;
-            findUserId = notification.receiverId;
-          } else if (notification.InvitationType == "inviteTeam") {
-            setUserId = notification.receiverId;
-            findUserId = notification.senderId;
-          }
-          userModel
-            .findOne({ where: { UserId: findUserId }, raw: true })
-            .then(userSender => {
-              Team.findOne({
-                where: { TeamId: userSender.Team_Id },
-                raw: true
-              }).then(team => {
-                if (team) {
-                  userModel
-                    .findOne({ where: { UserId: setUserId } })
-                    .then(userReceiver => {
-                      if (
-                        req.query.action == "accept" &&
-                        userReceiver.Team_Id == 0
-                      )
-                        userReceiver.update({ Team_Id: team.TeamId });
-                      io.emitUser(notification.senderId, "sendAnswer", {
-                        // sender full name при join team в notificationSocket
-                        senderFullName: `${
-                          userSender.UserFamily
-                        } ${userSender.UserName.slice(
-                          0,
-                          1
-                        )}. ${userSender.UserLastName.slice(0, 1)}.`,
-                        receiverFullName: `${
-                          userReceiver.UserFamily
-                        } ${userReceiver.UserName.slice(
-                          0,
-                          1
-                        )}. ${userReceiver.UserLastName.slice(0, 1)}.`,
-                        answer: req.query.action,
-                        InvitationType: notification.InvitationType,
-                        TeamId: userReceiver.TeamId
-                      });
-                    });
-                }
-              });
-            })
-            .then(res.redirect("/"))
-            .catch(err => {
-              console.log("userModel error: " + err);
+router.get("/notificationAction", async function(req, res) {
+  let destinationId;
+  let addresserId;
+  await notificationModel
+    .findOne({ where: { NotificationHash: req.query.NotificationHash } })
+    .then(async notification => {
+      if (notification) {
+        addresserId = notification.senderId;
+        destinationId = notification.receiverId;
+        if (notification.isAnswered == 0) {
+          await notification.update({
+            isAnswered: 1,
+            isViewed: 1
+          });
+          if (!notification.isInfoNotification) {
+            if (notification.InvitationType == "joinTeam") {
+              addresserId = notification.receiverId;
+              destinationId = notification.senderId;
+            }
+
+            console.log({
+              type: notification.InvitationType,
+              addresserId,
+              destinationId
             });
-        }
-      } else res.end("You have already responded to this message.");
+
+            await userModel
+              .findOne({ where: { UserId: addresserId }, raw: true })
+              .then(async userSender => {
+                await Team.findOne({
+                  where: { TeamId: userSender.Team_Id },
+                  raw: true
+                }).then(async team => {
+                  if (team) {
+                    await userModel
+                      .findOne({ where: { UserId: destinationId } })
+                      .then(async userReceiver => {
+                        console.log({
+                          userSender,
+                          userReceiver: userReceiver.get()
+                        });
+                        if (userReceiver.Team_Id == 0) {
+                          if (req.query.action == "accept") {
+                            await Promise.all([
+                              userReceiver.update({ Team_Id: team.TeamId }),
+                              notification.update({ answer: true })
+                            ]);
+                          }
+                          io.emitUser(notification.senderId, "sendAnswer", {
+                            receiverFullName: `${
+                              userReceiver.UserFamily
+                            } ${userReceiver.UserName.slice(
+                              0,
+                              1
+                            )}. ${userReceiver.UserLastName.slice(0, 1)}.`,
+                            answer: req.query.action,
+                            InvitationType: notification.InvitationType,
+                            TeamId: userReceiver.TeamId,
+                            teamName: team.TeamName
+                          });
+                        } else if (
+                          notification.InvitationType == "inviteUser"
+                        ) {
+                          io.emitUser(
+                            destinationId,
+                            "sendInfo",
+                            "Вы уже находитесь в команде"
+                          );
+                        } else if (notification.InvitationType == "joinTeam") {
+                          io.emitUser(
+                            addresserId,
+                            "sendInfo",
+                            "Этот игрок уже находится в команде"
+                          );
+                        }
+                      });
+                  }
+                });
+              })
+              .catch(err => {
+                console.log(`userModel error: ${err}`);
+              });
+          }
+          res.json(notification.get());
+        } else
+          io.emitUser(
+            addresserId,
+            "sendInfo",
+            "Вы уже ответили на это уведомление"
+          );
+      }
     })
     .catch(err => {
       console.log(err);

@@ -706,7 +706,6 @@ function NewGamePlayGeneration(socket, io) {
 
   async function getCanStartGameMessage() {
     let message = "true";
-    console.log({ session });
     await RoomTeam.findAll({
       where: { Room_Id: session.roomId, Team_Id: { [Op.gt]: 0 } },
       raw: true

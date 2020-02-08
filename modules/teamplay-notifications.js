@@ -6,6 +6,7 @@ const notificationModel = require("../models/Notification");
 const User = require("../models/User");
 const io = require("../config/sockets/index");
 const Team = require("../models/Team");
+const timeConverter = require("../modules/timeConverter");
 
 const transporter = nodeMailer.createTransport({
   host: "mail.alexall.dev",
@@ -34,13 +35,10 @@ module.exports = function(notificationData, req, callback) {
     .then(async user => {
       if (user) {
         if (shouldCreate == "true") {
-          const invitationHash =
-            isInfoNotification == "false"
-              ? crypto
-                  .randomBytes(Math.ceil(120 / 2))
-                  .toString("hex")
-                  .slice(0, 120)
-              : "";
+          const notificationHash = crypto
+            .randomBytes(Math.ceil(120 / 2))
+            .toString("hex")
+            .slice(0, 120);
           if (isInfoNotification == "false")
             await notificationModel
               .findOrCreate({
@@ -55,12 +53,15 @@ module.exports = function(notificationData, req, callback) {
                   mainText,
                   isInfoNotification,
                   isViewed: false,
-                  InvitationHash: invitationHash
+                  notificationHash
                 }
               })
               .then(async ([notificationObj, wasCreated]) => {
                 created = wasCreated;
                 notification = notificationObj.get();
+                notification.textTimestamp = timeConverter(
+                  notification.timestamp
+                );
                 await User.findOne({ where: { UserId: senderId }, raw: true })
                   .then(async userSender => {
                     notification.senderFIO = `${
@@ -103,13 +104,13 @@ module.exports = function(notificationData, req, callback) {
                       } ${notification.senderFIO.slice(0, -1)}: <br>
 												${notification.mainText}${html_mail_text[1]}${req.protocol}://${
                         req.hostname
-                      }/notification/notificationAction?InvitationHash=${
-                        notification.InvitationHash
+                      }/notification/notificationAction?NotificationHash=${
+                        notification.notificationHash
                       }&action=accept&type=email
 												${html_mail_array[1]}${req.protocol}://${
                         req.hostname
-                      }/notification/notificationAction?InvitationHash=${
-                        notification.InvitationHash
+                      }/notification/notificationAction?NotificationHash=${
+                        notification.notificationHash
                       }&action=reject&type=email
 												${html_mail_array[2]}`;
                       transporter.sendMail({
@@ -135,13 +136,17 @@ module.exports = function(notificationData, req, callback) {
                 mainText,
                 isInfoNotification,
                 isViewed: false,
-                InvitationHash: invitationHash
+                notificationHash
               })
               .then(async notificationObj => {
                 notification = notificationObj.get();
+                notification.textTimestamp = timeConverter(
+                  notification.timestamp
+                );
                 created = true;
                 await User.findOne({ where: { UserId: senderId }, raw: true })
                   .then(userSender => {
+                    notification.senderId = senderId;
                     notification.senderFIO = `${
                       userSender.UserFamily
                     } ${userSender.UserName.slice(
@@ -165,7 +170,7 @@ module.exports = function(notificationData, req, callback) {
                 shouldAdd: created || notification.isInfoNotification,
                 addToStart: true
               },
-              actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
+              notificationActionLink: `notification/notificationAction?NotificationHash=${notification.notificationHash}&action=`
             }
           );
         } else if (shouldCreate == "false") {
@@ -180,6 +185,9 @@ module.exports = function(notificationData, req, callback) {
             .then(async notifications => {
               if (notifications.length > 0) {
                 for await (const notification of notifications) {
+                  notification.textTimestamp = timeConverter(
+                    notification.timestamp
+                  );
                   await User.findOne({
                     where: { UserId: notification.senderId },
                     raw: true
@@ -196,7 +204,10 @@ module.exports = function(notificationData, req, callback) {
                           where: { TeamId: userSender.Team_Id }
                         })
                           .then(team => {
-                            notification.userTeam = team ? team.TeamName : 0;
+                            if (team) {
+                              notification.teamName = team.TeamName;
+                              notification.teamId = team.TeamId;
+                            }
                           })
                           .catch(err => {
                             console.log(
@@ -210,7 +221,7 @@ module.exports = function(notificationData, req, callback) {
                           shouldAdd: true,
                           addToStart: false
                         },
-                        actionUrl: `${req.protocol}://${req.hostname}/notification/notificationAction?InvitationHash=${notification.InvitationHash}&action=`
+                        notificationActionLink: `notification/notificationAction?NotificationHash=${notification.notificationHash}&action=`
                       });
                     })
                     .catch(err => {

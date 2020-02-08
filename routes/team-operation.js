@@ -76,7 +76,7 @@ router.post("/invite", urlencodedParser, async function(req, res) {
               (sender_user.Team_Id != 0 || !reciever_user.isCoach))
           )
             canSend = false;
-          else invitationType = sender_user.isCoach ? "inviteTeam" : "joinTeam";
+          else invitationType = sender_user.isCoach ? "inviteUser" : "joinTeam";
       })
       .catch(err => console.log(err));
 

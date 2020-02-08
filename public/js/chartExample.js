@@ -13,7 +13,7 @@ socket.on("SendStatData", datesGamesTeamResults => {
     data: {
       labels: datesGamesTeamResults.map(
         dateGameTeamResult =>
-          `${dateGameTeamResult.date.month}, ${dateGameTeamResult.date.year}`
+          `${dateGameTeamResult.date.textMonth}, ${dateGameTeamResult.date.year}`
       ),
       datasets: [
         {

@@ -5,28 +5,7 @@ const UserResultQuestion = require("../../models/UserResultQuestion");
 const GameResultQuestion = require("../../models/GameResultQuestion");
 const GameResultAnswer = require("../../models/GameResultAnswer");
 const User = require("../../models/User");
-
-function timeConverter(unixTimestamp) {
-  const date = new Date(unixTimestamp * 1000);
-  const months = [
-    "Январь",
-    "Февраль",
-    "Март",
-    "Апрель",
-    "Май",
-    "Июнь",
-    "Июль",
-    "Август",
-    "Сентябрь",
-    "Октябрь",
-    "Ноябрь",
-    "Декабрь"
-  ];
-  const year = date.getFullYear();
-  const month = months[date.getMonth()];
-  const time = { month, year };
-  return time;
-}
+const timeConverter = require("../../modules/timeConverter");
 
 module.exports = function(socket, io) {
   socket.on("GetStatData", async userId => {
@@ -160,14 +139,12 @@ module.exports = function(socket, io) {
       })
         .catch(err => console.log(err))
         .map(userGameResult => {
-          const date = new Date(userGameResult.Timestamp * 1000);
-          const hours = date.getHours();
-          const minutes = date.getMinutes();
+          const { hours, minutes, month, year, dayOfMonth } = timeConverter(
+            userGameResult.Timestamp
+          );
           return {
             GameName: userGameResult.team_result.game_result.GameName,
-            Timestamp: `${hours < 10 ? `0${hours}` : `${hours}`}:${
-              minutes < 10 ? `0${minutes}` : `${minutes}`
-            } ${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`,
+            Timestamp: `${hours}:${minutes} ${month + 1}/${dayOfMonth}/${year}`,
             questions: userGameResult.user_results_questions.map(
               userResultQuestion => {
                 return {
