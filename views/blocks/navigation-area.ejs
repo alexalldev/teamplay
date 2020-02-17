@@ -1,0 +1,24 @@
+<div class="navigation-area">
+    <div class="menu-item <%= page == 'home' ? 'current' : '' %>" href="/home">
+        <span class="mr-1"><i class="fas fa-th-large"></i></span>
+        <span class="item-name">Мои викторины</span>
+    </div>
+    <div class="menu-item <%= page == 'rooms' ? 'current' : '' %>" href="/rooms">
+        <span class="mr-1"><i class="fas fa-vector-square"></i></span>
+        <span class="item-name">Комнаты</span>
+    </div>
+    <div class="menu-item <%= page == 'teams' ? 'current' : '' %>" href="/teams">
+        <span class="mr-1"><i class="fas fa-users"></i></span>
+        <span class="item-name">Команды</span>
+    </div>
+    <div class="menu-item <%= page == 'users' ? 'current' : '' %>" href="/users">
+        <span class="mr-1"><i class="fas fa-user-friends"></i></span>
+        <span class="item-name">Игроки</span>
+    </div>
+</div>
+
+<script>
+    $('.menu-item').click(function() {
+        location.href = $(this).attr('href');
+    });
+</script>

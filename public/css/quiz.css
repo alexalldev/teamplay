@@ -1,0 +1,27 @@
+.quiz {
+	margin: 5px;
+	width: 16rem;
+	height: 10rem;
+	border: solid 0.75px rgb(51, 51, 51)!important;
+	border-radius: 1px;
+	display: inline-block;
+}
+
+.quiz-name {
+	max-height: 11rem;
+	overflow: hidden;
+	transition: all 0.4s;
+}
+
+.quiz-hover {
+	font-size: 0px;
+	transition: all 0.4s;
+}
+
+.quiz-row:hover .quiz-name{
+	font-size: 15px;
+}
+
+.quiz-row:hover .quiz-hover {
+	font-size: 25px;
+}

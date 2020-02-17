@@ -1,0 +1,21 @@
+.user {
+    text-align: center;
+	margin: 5px;
+	width: 10rem;
+	height: 10rem;
+	border: solid 0.75px rgb(51, 51, 51)!important;
+	border-radius: 10rem;
+    display: inline-block;
+}
+
+.fa-user, .fa-user-tie {
+    margin-top: 1rem;
+}
+
+.btn-invite {   
+
+    top: 0;
+    right: 25px;
+    height: 25px;
+    padding: 0!important;
+}

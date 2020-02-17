@@ -45,6 +45,8 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+sessions/
+IMAGES/QUESTIONS_IMAGES/
 
 # TypeScript v1 declaration files
 typings/
@@ -93,11 +95,7 @@ typings/
 .dynamodb/
 
 ### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode/
 
 ### VisualStudioCode Patch ###
 # Ignore all local history of files

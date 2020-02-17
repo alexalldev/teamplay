@@ -1,4 +1,3 @@
-var socket = io.connect(location.protocol + '//' + location.host);
 $(document).ready(function() {
     
     socket.emit('LoadGames');

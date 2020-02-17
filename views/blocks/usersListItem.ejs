@@ -1,0 +1,21 @@
+<div class="user row Player Player-<%= user.UserId %> mt-2 mb-2">
+  <div class="col-md-12 text-left">
+    <img class="user_organizer" title="Игрок команды" src="/public/user-icon.png" alt="" />
+    <a href="/user/<%= user.UserId %>" style="font-size: 30px; position:relative; top: 5%"><%= user.userFIO %></a>
+    <% if (!user.userTeam && senderIsCoach) { %>
+    <button class=" btn btn-outline-success ml-2 mt-2 h1" onclick="teamInvite('<%= user.UserId %>', 'Пригласить')">
+      <i class="fas fa-user-plus"></i> Пригласить
+    </button>
+    <% } %> <% if (user.userTeam) { %>
+    <div class="row">
+      <div class="quiz-col-40">
+        <div class="row">
+          <div class="col-md-12 text-left">
+            <a href="/team/<%=user.userTeamTag%>"><i class="fas fa-users"></i><%=user.userTeam%></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>

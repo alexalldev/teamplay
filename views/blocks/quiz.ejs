@@ -1,0 +1,28 @@
+<div class="btn btn-outline-success btnCreateQuiz btnCreate">
+        <table class="centred-table">
+                <tr align="center" class="quiz-row">
+                        <td valign="center">
+                                <div class="quiz-name">
+                                        <i class="fa fa-plus"></i>
+                                </div>
+                        </td>
+                </tr>
+        </table>
+</div>
+<% games.forEach(function(quiz) { %>
+        <div class="quiz alert" gameTag="<%= quiz.GameTag %>">
+                        <table class="centred-table">
+                                <tr align="center" class="quiz-row">
+                                        <td valign="center">
+                                                <div class="quiz-name h1">
+                                                        <%= quiz.GameName %>
+                                                </div>
+                                                <div class="quiz-hover">
+                                                        <a href="/EditGame/<%= quiz.GameTag %>" class="mr-5"><i class="fas fa-pencil-alt"></i></a>
+                                                        <a href="#" class="btnRemoveGame" gameId="<%= quiz.GameId %>"><i class="fa fa-trash ml-5"></i></a>
+                                                </div>
+                                        </td>
+                                </tr>
+                        </table>
+                </div>
+<% }); %>

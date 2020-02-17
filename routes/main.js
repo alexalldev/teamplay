@@ -1,322 +1,532 @@
-let {
-    express,
-    router,
-    passport,
-    Team,
-    Admin,
-    Player,
-    Game,
-    GameTeam,
-    app,
-    bodyParser,
-    urlencodedParser,
-    io,
-    Category,
-    Question,
-    Answer
-} = require('../config/routers-config');
+const GamePlay = require("../models/GamePlay");
+const GamePlayCategory = require("../models/GamePlayCategory");
+const Answer = require("../models/Answer");
+const GetTeamNamesPoints = require("../modules/getTeamNamesPoints");
+const RoomOfferAnswer = require("../models/RoomOfferAnswer");
+const GetOffersUsersFIOs = require("../modules/getOffersUsersFIOs");
+const {
+  router,
+  passport,
+  Team,
+  app,
+  urlencodedParser,
+  io,
+  Category,
+  Question,
+  User,
+  Room
+} = require("../config/routers-config");
+const RoomPlayers = require("../models/RoomPlayer");
+const RoomTeam = require("../models/RoomTeam");
 
-var formidable = require('formidable');
-
-const Op = require('sequelize').Op;
-
-const GamePlay = require('../models/GamePlay');
-  
-router.get('/', RedirectRules, function(req, res)
-{
-    Team.hasMany(Player, {foreignKey: "Team_Id"});
-    Player.belongsTo(Team, {foreignKey: "Team_Id"});
-    Player.findAll({
-        raw: true,
-        include: [Team],
-        where:
-        {
-            Capitan: true
-        }
-    })
-    .then(teams => {
-        res.render('index', {teams});
-    })
-    .catch(err => {
-        console.log(err);
-        res.end("LoadTeamsError");
-    });
+router.get("/", RedirectRules, function(req, res) {
+  res.render("index", { Code: req.query.Code, User: req.query.User });
 });
 
-router.get('/Admin', RedirectRules, function(req, res) {
-    Admin.findAll({
-        raw: true
-    })
-    .then(admins => {
-        res.render('admin.ejs', {admins});
-    })
-    .catch(err => {
-        res.end(err);
-    })
-});
-  
-router.get('/Room', function(req, res) {
-    if (req.session.Game)
-        res.redirect('/Room/' + req.session.Game.Tag);
-    else if (req.session.Team)
-    Team.findOne({raw: true, where: {TeamId: req.session.Team.TeamId}})
-    .then(team => {
-        if (team != null)
-            Player.findAll({raw: true, where: {Team_Id: req.session.Team.TeamId}})
-            .then(players => res.render('room', {team: team, players: players}))
-            .catch(err => console.log(err));
-        else
-            res.render('info', {message: "Команда была удалена."});
-    })
-    .catch(err => console.log(err))
-    else
-        res.redirect("/");
+router.post("/getCurrUserId", urlencodedParser, function(req, res) {
+  res.json({ userId: req.session.passport.user });
 });
 
-router.get('/Room/:GameTag', function(req, res) {
-    if (req.session.Team)
-    {
-        Game.findOne({where: {GameTag: req.params.GameTag}})
-        .then(game => {
-            if (game != null)
-            {
-                if (req.session.Game)
-                {
-                    //Для тех, кто обновляет страницу
-                    GameTeam.findOne({raw: true, where: {Game_Id: req.session.Game.Id}})
-                    .then(gameTeam => {
-                        if (gameTeam)
-                        {
-                            return res.render('game', {game: game, team: req.session.Team, verified: gameTeam.Verified});
-                        }
-                        return res.render('info', {message: "Игра уже идет. Дождитесь окночания и подключитесь позже."});
-                    })
-                    .catch(err => res.end(JSON.stringify(err)));
-                }
-                else
-                {
-                    //Для тех, которые входят в игру в первый раз
-                    GameTeam.findOne({raw: true, where: {Game_Id: game.GameId, Play: {[Op.gt]: 0}}})
-                    .then(gameTeam => {
-                        if (gameTeam == null)
-                        {
-                            GameTeam.findOrCreate({
-                                where: {
-                                    Game_Id: game.GameId,
-                                    Team_Id: req.session.Team.TeamId
-                                }
-                            })
-                            .then(([gameTeam, created]) => {
-                                if (created == true)
-                                {
-                                    req.session.Game = 
-                                    {
-                                        Id: game.GameId,
-                                        GameTeamId: gameTeam.GameTeamId,
-                                        Tag: game.GameTag,
-                                    }
-                                    Team.findOne({raw: true, where: {TeamId: gameTeam.Team_Id}})
-                                        .then(team => {
-                                            if (team != null)
-                                                Team.AddTeamPlayers(team, function(fullTeam) {
-                                                    fullTeam.GameTeamId = gameTeam.GameTeamId
-                                                    res.render('game', {game: game, team: team, verified: false});
-                                                    io.to('Admins' + req.session.Game.Id).emit("JoinTeam", fullTeam);
-                                                    
-                                                })
-                                            else
-                                                res.render('info', {message: "Команда была удалена"}); 
-                                        })
-                                        .catch(err => console.log(err))
-                                }
-                                else
-                                {
-                                    if (req.session.Game)
-                                        if (req.session.Game.Tag == req.params.GameTag)
-                                        {
-                                            return res.render('game', {game: game, team: req.session.Team, verified: gameTeam.Verified});
-                                        }
-                                    res.render('info', {message: "Такая команда уже участвует в игре"});
-                                }
-                            })
-                            .catch(err => console.log(err))
-                        }
-                        else
-                            return res.render('info', {message: "Игра уже идет. Дождитесь окночания и подключитесь позже."});
-                    })
-                    .catch(err => res.end(JSON.stringify(err)));
-                }
-            }
-            else
-                res.render('info', {message: "Игра была удалена"});
+async function GetGamePlayQuestionData(gamePlay, session) {
+  const gamePlayQuestionData = {};
+  await GamePlayCategory.findOne({
+    where: {
+      GamePlay_Id: gamePlay.GamePlayId
+    },
+    raw: true
+  })
+    .then(async gamePlayCategory => {
+      if (gamePlayCategory)
+        await Category.findOne({
+          where: {
+            CategoryId: gamePlayCategory.Category_Id
+          },
+          raw: true
         })
-        .catch(err => console.log(err));
-    }
-    else
-    res.redirect('/');
-});
-
-router.post('/Start', urlencodedParser, function(req, res) {
-    var teamId = req.body.TeamId;
-    if (!req.body) res.sendStatus(400);
-    Team.findByPk(teamId, {raw: true})
-    .then(team => {
-        if (team)
-        {
-            req.session.Team = team;
-            res.end('1');
-        }
-        else
-            res.end("team_not_exists")
-    })
-    .catch(err => {
-        res.end(err)
-    })
-});
-
-router.get('/logout', function(req, res) {
-    req.query.reason ? LogOut(req, res, req.query.reason) : LogOut(req, res)
-});
-
-function LogOut(req, res, reason = '')
-{
-    if (req.session.Team)
-    {
-        if (req.session.Game)
-        {
-            if (req.session.Game.GameTeamId)
-            {
-                GameTeam.destroy({where: {GameTeamId: req.session.Game.GameTeamId}})
-                .then(gameTeam =>
-                    {
-                        io.to('Admins' + req.session.Game.Id).emit('LeftTeam', req.session.Game.GameTeamId);
-                        
-                        delete req.session.Game;
-                        delete req.session.Team;
-                        reason != '' ? res.render('info', {message: reason}) : res.redirect('/');
+          .then(async category => {
+            if (category) {
+              await Question.findOne({
+                where: {
+                  QuestionId: gamePlay.CurrentQuestionId
+                },
+                raw: true
+              })
+                .then(async currQuestion => {
+                  if (currQuestion) {
+                    const answers = await Answer.findAll({
+                      where: {
+                        Question_Id: currQuestion.QuestionId
+                      }
                     })
-                .catch(err => console.log(err))
+                      .catch(err => console.log(err))
+                      .map(answer => answer.get({ plain: true }));
+                    gamePlayQuestionData.answers = session.isRoomCreator
+                      ? answers.filter(answer => answer.Correct)
+                      : answers;
+                    gamePlayQuestionData.type =
+                      answers.length == 1 ? "text" : "checkbox";
+                    gamePlayQuestionData.currentQuestion = currQuestion;
+                  }
+                })
+                .catch(err => console.log(err));
             }
-        }
-        else
-        {
-            delete req.session.Team;
-            reason != '' ? res.render('info', {message: reason}) : res.redirect('/');
-        }
-    }
-    else
-    {
-        if (req.session.Game)
-            delete req.session.Game;
-        req.logout();
-        if (reason == 'ADMIN_KICK')
-            res.redirect('/');
-        else
-            res.redirect('/Admin');
-    }
+            gamePlayQuestionData.isAnsweredCorrectly =
+              gamePlay.isAnsweredCorrectly;
+            gamePlayQuestionData.wasGameStarted = !!gamePlay;
+            gamePlayQuestionData.isAnsweringTime = gamePlay.isAnsweringTime;
+            gamePlayQuestionData.isRoomCreator = session.isRoomCreator;
+            gamePlayQuestionData.categoryName = category.CategoryName;
+          })
+          .catch(err => console.log(err));
+    })
+    .catch(err => console.log(err));
+  return gamePlayQuestionData;
 }
 
-router.post('/AdminEnter', RedirectRules, function(req, res, next) {
-    if (!req.session.Team) passport.authenticate('local', {failureFlash: true}, function(err, admin, info) {
-        if (err) return next(err);
-        if (info) return res.send(info.message);
-        if (!admin) return res.send("USER IS NULL");
-    
-        req.logIn(admin, function(err) {
-        if (err) {
-            return next(admin);
-        }
-        return res.send(true);
-        });
-    })(req, res, next);
-});
+async function checkGamePlay(gamePlay, session) {
+  let gamePlayData = {};
+  if (gamePlay) {
+    await Promise.all([
+      GetTeamNamesPoints(gamePlay.Room_Id),
+      GetGamePlayQuestionData(gamePlay, session)
+    ])
+      .then(([teamsResultsData, questionData]) => {
+        gamePlayData = { teamNamesPoints: teamsResultsData, ...questionData };
+      })
+      .catch(err => console.log(err));
+  }
+  return gamePlayData;
+}
 
-router.get('/ControlPanel', app.protect, function(req, res) {
-    if (req.session.Game)
-        delete req.session.Game;
-    res.render('controlPanel');
-});
-
-router.get('/ControlPanel/:GameTag', app.protect, function(req, res) {
-    Game.findOne({where: {GameTag: req.params.GameTag}})
-    .then(async game => {
-        if (game != null)
-        {
-            req.session.Game = 
-            {
-                Id: game.GameId,
-                Tag: game.GameTag,
+// FIXME: нормально переписать
+router.get("/room/:RoomTag", app.protect, function(req, res) {
+  Room.findOne({ where: { RoomTag: req.params.RoomTag }, raw: true })
+    .then(room => {
+      GamePlay.findOne({ where: { Room_Id: room.RoomId }, raw: true })
+        .then(async gamePlay => {
+          console.log("checkGamePlayText");
+          console.log(await checkGamePlay(gamePlay, req.session));
+          const {
+            wasGameStarted,
+            isAnsweringTime,
+            currentQuestion,
+            answers,
+            type,
+            isRoomCreator,
+            categoryName,
+            teamNamesPoints,
+            isAnsweredCorrectly
+          } = await checkGamePlay(gamePlay, req.session);
+          console.log({ isAnsweredCorrectly });
+          if (room) {
+            if (req.session.roomPlayersId) {
+              await RoomPlayers.findOne({
+                where: { RoomPlayersId: req.session.roomPlayersId }
+              })
+                .then(roomPlayer => {
+                  if (!roomPlayer) {
+                    delete req.session.roomTeamId;
+                    delete req.session.isGroupCoach;
+                    delete req.session.roomId;
+                    delete req.session.isRoomCreator;
+                    delete req.session.roomPlayersId;
+                    // return res.render("info", {
+                    //   message:
+                    //     "Вы были отключены по причине потери соединения. Обновите Страницу"
+                    // });
+                  }
+                })
+                .catch(err => console.log(err));
             }
-            streamLink = req.protocol + '://' + req.hostname + '/stream/' + game.GameTag;
-            await res.render('controlGame', {game: game, streamLink: streamLink})
-        }
-        else
-            res.render('info', {message: "Игры " + req.params.GameTag + ' не существует или она была удалена.'});
+            if (req.session.passport.user == room.RoomCreatorId)
+              req.session.isRoomCreator = true;
+            else req.session.isRoomCreator = false;
+            await User.findOne({
+              where: { UserId: req.session.passport.user },
+              raw: true
+            })
+              .then(user => {
+                RoomTeam.findOne({
+                  where: { Room_Id: room.RoomId, Team_Id: user.Team_Id }
+                })
+                  .then(roomTeam => {
+                    if (
+                      ((roomTeam || req.session.isRoomCreator) && gamePlay) ||
+                      !gamePlay
+                    ) {
+                      if (
+                        user &&
+                        (req.session.isRoomCreator || user.Team_Id > 0)
+                      ) {
+                        RoomPlayers.findOne({
+                          where: { User_Id: req.session.passport.user },
+                          raw: true
+                        })
+                          .then(roomPlayer => {
+                            if (roomPlayer == null) {
+                              RoomPlayers.findAll({
+                                where: {
+                                  Team_Id: user.Team_Id,
+                                  Room_Id: room.RoomId
+                                }
+                              })
+                                .then(roomPlayers => {
+                                  if (
+                                    roomPlayers.length < room.RoomMaxTeamPlayers
+                                  ) {
+                                    RoomPlayers.findOrCreate({
+                                      where: {
+                                        Room_Id: room.RoomId,
+                                        User_Id: req.session.passport.user,
+                                        Team_Id: req.session.isRoomCreator
+                                          ? -1
+                                          : user.Team_Id,
+                                        isRoomCreator:
+                                          req.session.isRoomCreator,
+                                        isGroupCoach: req.session.isRoomCreator
+                                          ? false
+                                          : roomPlayers.length == 0
+                                      }
+                                    })
+                                      .then(
+                                        async ([
+                                          createdRoomPlayer,
+                                          created
+                                        ]) => {
+                                          req.session.roomPlayersId =
+                                            createdRoomPlayer.RoomPlayersId;
+                                          Team.findOne({
+                                            where: {
+                                              TeamId: createdRoomPlayer.Team_Id
+                                            },
+                                            raw: true
+                                          })
+                                            .then(async team => {
+                                              req.session.roomId = room.RoomId;
+                                              req.session.TeamId =
+                                                createdRoomPlayer.Team_Id;
+                                              const player = {
+                                                RoomPlayersId:
+                                                  createdRoomPlayer.RoomPlayersId,
+                                                UserName: user.UserName,
+                                                UserFamily: user.UserFamily,
+                                                UserLastName: user.UserLastName,
+                                                RoomId:
+                                                  createdRoomPlayer.Room_Id,
+                                                TeamId:
+                                                  createdRoomPlayer.Team_Id,
+                                                TeamName: createdRoomPlayer.isRoomCreator
+                                                  ? ""
+                                                  : team.TeamName,
+                                                isRoomCreator:
+                                                  createdRoomPlayer.isRoomCreator,
+                                                isGroupCoach:
+                                                  createdRoomPlayer.isGroupCoach
+                                              };
+                                              await RoomTeam.findOrCreate({
+                                                where: {
+                                                  Team_Id:
+                                                    createdRoomPlayer.Team_Id,
+                                                  Room_Id:
+                                                    createdRoomPlayer.Room_Id
+                                                },
+                                                raw: true
+                                              })
+                                                .then(
+                                                  ([roomTeam2, created2]) => {
+                                                    req.session.roomTeamId =
+                                                      roomTeam2.RoomTeamId;
+                                                    req.session.isGroupCoach =
+                                                      createdRoomPlayer.isGroupCoach;
+                                                    if (
+                                                      !req.session.isRoomCreator
+                                                    )
+                                                      io.to(
+                                                        `RoomUsers${room.RoomId}`
+                                                      ).emit(
+                                                        "AddUserToRoom",
+                                                        player
+                                                      );
+
+                                                    RoomPlayers.count({
+                                                      where: {
+                                                        Room_Id: room.RoomId,
+                                                        isRoomCreator: false
+                                                      }
+                                                    })
+                                                      .then(roomOnline => {
+                                                        RoomOfferAnswer.findAll(
+                                                          {
+                                                            where: {
+                                                              RoomTeam_Id:
+                                                                roomTeam2.RoomTeamId
+                                                            }
+                                                          }
+                                                        )
+                                                          .then(
+                                                            roomOffersAnswers => {
+                                                              io.emit(
+                                                                "RoomOnline",
+                                                                {
+                                                                  roomId:
+                                                                    room.RoomId,
+                                                                  online: roomOnline
+                                                                }
+                                                              );
+                                                              console.log({
+                                                                wasGameStarted
+                                                              });
+                                                              res.render(
+                                                                "room",
+                                                                {
+                                                                  room,
+                                                                  roomPlayer:
+                                                                    createdRoomPlayer.dataValues,
+                                                                  readyState:
+                                                                    roomTeam2.ReadyState,
+                                                                  wasGameStarted,
+                                                                  isAnsweringTime,
+                                                                  currentQuestion,
+                                                                  answers,
+                                                                  type,
+                                                                  isRoomCreator,
+                                                                  categoryName,
+                                                                  teamNamesPoints,
+                                                                  myTeamId:
+                                                                    req.session
+                                                                      .TeamId,
+                                                                  isAnsweredCorrectly,
+                                                                  roomOffersAnswers: roomOffersAnswers.map(
+                                                                    roomOfferAnswer =>
+                                                                      roomOfferAnswer.get(
+                                                                        {
+                                                                          plain: true
+                                                                        }
+                                                                      )
+                                                                  )
+                                                                }
+                                                              );
+                                                            }
+                                                          )
+                                                          .catch(err =>
+                                                            console.log(err)
+                                                          );
+                                                      })
+                                                      .catch(err =>
+                                                        console.log(err)
+                                                      );
+                                                  }
+                                                )
+                                                .catch(err => console.log(err));
+                                            })
+                                            .catch(err => console.log(err));
+                                        }
+                                      )
+                                      .catch(err => console.log(err));
+                                  } else
+                                    return res.render("info", {
+                                      message:
+                                        "Достигнуто максимально число игроков от вашей команды"
+                                    });
+                                })
+                                .catch(err => console.log(err));
+                            } else {
+                              Room.findOne({
+                                where: { roomId: roomPlayer.Room_Id },
+                                raw: true
+                              })
+                                .then(findedRoom => {
+                                  if (findedRoom)
+                                    if (
+                                      req.params.RoomTag == findedRoom.RoomTag
+                                    ) {
+                                      RoomTeam.findOne({
+                                        where: {
+                                          Room_Id: findedRoom.RoomId,
+                                          Team_Id: req.session.TeamId
+                                        }
+                                      }).then(async roomTeam2 => {
+                                        console.log({
+                                          Room_Id: findedRoom.RoomId,
+                                          Team_Id: req.session.TeamId
+                                        });
+                                        console.log({
+                                          wasGameStarted,
+                                          gamePlay
+                                        });
+                                        res.render("room", {
+                                          room: findedRoom,
+                                          roomPlayer,
+                                          readyState: roomTeam2.ReadyState,
+                                          wasGameStarted,
+                                          isAnsweringTime,
+                                          currentQuestion,
+                                          answers,
+                                          type,
+                                          isRoomCreator,
+                                          categoryName,
+                                          teamNamesPoints,
+                                          myTeamId: req.session.TeamId,
+                                          isAnsweredCorrectly,
+                                          offersUsersFIOs: await GetOffersUsersFIOs(
+                                            roomTeam2.RoomTeamId
+                                          )
+                                        });
+                                      });
+                                    } else
+                                      res.redirect(
+                                        `/room/${findedRoom.RoomTag}`
+                                      );
+                                  else
+                                    res.redirect(`/room/${req.params.RoomTag}`);
+                                })
+                                .catch(err => console.log(err));
+                            }
+                          })
+                          .catch(err => console.log(err));
+                      } else
+                        return res.render("info", {
+                          message:
+                            "Для участия в игре вам необходимо находиться в команде"
+                        });
+                    } else {
+                      res.render("info", {
+                        message:
+                          "Игра уже начата и в ней нет кого-либо из вашей команды"
+                      });
+                    }
+                  })
+                  .catch(err => console.log(err));
+              })
+              .catch(err => console.log(err));
+          } else
+            res.render("info", {
+              message: "Такой комнаты не существует либо она была удалена"
+            });
+        })
+        .catch(err => console.log(err));
     })
     .catch(err => console.log(err));
 });
 
-router.post('/SetStreamBackground', urlencodedParser, function(req, res) {
-    if (req.session.passport )
-    {
-        if (req.session.Game)
-        {
-            var form = formidable.IncomingForm();
-            form.uploadDir = './IMAGES/STREAM_IMAGES';
-            form.parse(req, function(err, fields, files) {
-                if (files.StreamImage)
-                {
-                    if (files.StreamImage.size < 20000000)
-                    {
-                        var StreamImagePath = files.StreamImage.path.split('STREAM_IMAGES')[1].replace(/\\/g, '');
-                        
-                        if (files.StreamImage.type == 'image/png' || files.StreamImage.type == 'image/jpeg' || files.StreamImage.type == 'image/gif' || files.StreamImage.type == 'image/svg')
-                        {
-                            GamePlay.findOne({where: {Game_Id: req.session.Game.Id}})
-                            .then((gamePlay) => {
-                                var returnData = {};
-                                gamePlay.update({StreamImagePath: StreamImagePath})
-                                .then(updated => {
-                                    if (updated)
-                                    {
-                                        returnData.StreamImage = req.protocol + '://' + req.hostname + '/StreamImage?GamePlayId=' + gamePlay.dataValues.GamePlayId;
-                                        res.end(JSON.stringify(returnData));
-                                    }
-                                    else
-                                    {
-                                        console.log('NoUpdated');
-                                        res.end('null');
-                                    }
-                                })
-                            })
-                            .catch(err => res.end(JSON.stringify(err)));
+router.get("/leaveRoom", app.protect, async function(req, res) {
+  if (req.session.roomId)
+    await Room.findOne({ where: { RoomId: req.session.roomId }, raw: true })
+      .then(async room => {
+        if (room) {
+          await RoomPlayers.destroy({
+            where: { RoomPlayersId: req.session.roomPlayersId }
+          })
+            .then(async () => {
+              if (!req.session.isRoomCreator)
+                io.to(`RoomUsers${req.session.roomId}`).emit(
+                  "RoomPlayerLeaved",
+                  req.session.roomPlayersId
+                );
+              await RoomPlayers.count({
+                where: {
+                  Room_Id: room.RoomId,
+                  Team_Id: req.session.TeamId
+                }
+              })
+                .then(async roomPlayersNum => {
+                  if (req.session.roomTeamId) {
+                    if (roomPlayersNum == 0) {
+                      await RoomTeam.destroy({
+                        where: { RoomTeamId: req.session.roomTeamId }
+                      })
+                        .then(() => {
+                          io.to(`RoomUsers${req.session.roomId}`).emit(
+                            "RoomGroupRemoved",
+                            req.session.TeamId
+                          );
+                        })
+                        .catch(err => console.log(err));
+                    } else {
+                      await RoomPlayers.findOne({
+                        where: {
+                          Room_Id: req.session.roomId,
+                          Team_Id: req.session.TeamId
                         }
-                        else
-                            res.end('incorrect_format');
+                      })
+                        .then(async roomPlayer => {
+                          if (roomPlayer) {
+                            await roomPlayer
+                              .update({ isGroupCoach: true })
+                              .then(newCoach => {
+                                io.to(`RoomUsers${req.session.roomId}`).emit(
+                                  "NewRoomGroupCoach",
+                                  newCoach.get()
+                                );
+                              })
+                              .catch(err => console.log(err));
+                          }
+                        })
+                        .catch(err => console.log(err));
                     }
-                    else
-                        res.end('incorrect_size');
-                }
-                else
-                {
-                    res.end('null');
-                }
-            });
-        }
-        else
-            res.end('null');
-    }
-    else
-        res.end('null');
+                  }
+                  await RoomPlayers.count({
+                    where: { Room_Id: room.RoomId }
+                  })
+                    .then(roomOnlineresult => {
+                      io.emit("RoomOnline", {
+                        roomId: room.RoomId,
+                        online: roomOnlineresult
+                      });
+                      delete req.session.roomTeamId;
+                      delete req.session.isGroupCoach;
+                      delete req.session.roomId;
+                      delete req.session.isRoomCreator;
+                      delete req.session.roomPlayersId;
+                      res.redirect("/");
+                    })
+                    .catch(err => console.log(err));
+                })
+                .catch(err => console.log(err));
+            })
+            .catch(err => console.log(err));
+        } else res.redirect("/");
+      })
+      .catch(err => console.log(err));
+  else res.redirect("/");
 });
 
+router.post("/SignIn", RedirectRules, function(req, res, next) {
+  passport.authenticate(
+    "local",
+    { failureRedirect: "/", failureFlash: true },
+    function(err, User, info) {
+      if (err) return next(err);
+      if (info) return res.send(info.message);
+      if (!User) return res.send("USER IS NULL");
+
+      req.logIn(User, function(err) {
+        if (err) {
+          return next(User);
+        }
+        return res.send({
+          result: true,
+          UserName: User.UserName,
+          UserImage: (streamLink = `${req.protocol}://${req.hostname}/UserImage?UserId=${User.UserId}`)
+        });
+      });
+    }
+  )(req, res, next);
+});
+
+function LogOut(req, res, reason = "") {
+  req.session.destroy();
+  req.logout();
+  res.redirect("/");
+}
+
+router.get("/logout", app.protect, function(req, res) {
+  req.query.reason ? LogOut(req, res, req.query.reason) : LogOut(req, res);
+});
 module.exports = router;
 
 function RedirectRules(req, res, next) {
-    if (req.session.Team)
-        res.redirect('Room');
-    else if (req.isAuthenticated())
-        res.redirect('ControlPanel');
-    else
-        next();
+  if (req.session.Team) res.redirect("Room");
+  else if (req.isAuthenticated()) res.redirect("home");
+  else next();
 }

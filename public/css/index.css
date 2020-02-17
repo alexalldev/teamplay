@@ -1,0 +1,137 @@
+a {
+  cursor: pointer;
+  color: whitesmoke;
+}
+
+a:focus {
+  color: whitesmoke;
+}
+
+a:hover {
+  color: whitesmoke;
+}
+
+.block {
+  width: 100%;
+}
+
+.face {
+  height: 40rem;
+  background: rgb(65, 158, 206);
+}
+
+.sign-in {
+  background-color: #28a745;
+  border-bottom-left-radius: 3rem;
+}
+
+.sign-up {
+  background-color: rgb(65, 158, 206);
+  animation: animate-border 4s infinite;
+  transition: all 2s;
+}
+
+.face > .container {
+  height: 100%;
+}
+
+h1 {
+  color: whitesmoke;
+  margin-top: 10rem;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+.cta {
+  color: whitesmoke;
+  background-color: #d4584d;
+  border-radius: 20px;
+  font-size: 20px;
+}
+
+.promo-2 {
+  margin-top: 5rem;
+}
+
+.answers {
+  font-size: 20px;
+}
+
+.answer {
+  margin-bottom: 15px;
+}
+
+.form-control {
+  border-radius: 20px;
+}
+
+.sign-up-container {
+  margin-top: 5rem !important;
+  margin-bottom: 5rem;
+}
+
+#Info {
+  color: gold;
+  font-size: 18px;
+}
+
+.hidden {
+  display: none;
+}
+
+.SignUpInfo {
+  position: absolute;
+  top: 40%;
+  left: 5%;
+  text-align: center;
+}
+
+.span-sign-in {
+  color: whitesmoke;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@media screen and (max-width: 500px) {
+  .SignUpInfo {
+    position: absolute;
+    top: 20%;
+    left: 5%;
+    text-align: center;
+  }
+}
+
+@keyframes animate-border {
+  0% {
+    border-bottom-left-radius: 1rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 0rem;
+    border-bottom-right-radius: 0rem;
+  }
+  25% {
+    border-bottom-left-radius: 0rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    border-bottom-right-radius: 0rem;
+  }
+  50% {
+    border-bottom-left-radius: 0rem;
+    border-top-left-radius: 0rem;
+    border-top-right-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+  }
+  75% {
+    border-bottom-left-radius: 1rem;
+    border-top-left-radius: 0rem;
+    border-top-right-radius: 0rem;
+    border-bottom-right-radius: 1rem;
+  }
+  100% {
+    border-bottom-left-radius: 1rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 0rem;
+    border-bottom-right-radius: 0rem;
+  }
+}

@@ -1,15 +1,13 @@
-var socket = io.connect(location.protocol + '//' + location.host);
-
-$(document).ready(function() {
+$(document).ready(function () {
     socket.emit('Update');
 })
 
 function AddTeam(Team) {
 
-    $('.TeamsList').html($('.TeamsList').html() + '<tr class="Team NewTeam" id="Team-'+ Team.GameTeamId +'" GameTeamId="'+ Team.GameTeamId +'">\
-        <td class=" h3 TeamPoints TeamPoints-'+ Team.GameTeamId +'">'+ Team.Points +'</td>\
-        <td class="h3">'+ Team.PlayId +'</td>\
-        <td class="h3 TeamName-'+ Team.GameTeamId +'">'+ Team.TeamName +'</td>\
+    $('.TeamsList').html($('.TeamsList').html() + '<tr class="Team NewTeam" id="Team-' + Team.GameTeamId + '" GameTeamId="' + Team.GameTeamId + '">\
+        <td class=" h3 TeamPoints TeamPoints-'+ Team.GameTeamId + '">' + Team.Points + '</td>\
+        <td class="h3">'+ Team.PlayId + '</td>\
+        <td class="h3 TeamName-'+ Team.GameTeamId + '">' + Team.TeamName + '</td>\
     </tr>');
     setTimeout(() => {
         $('.Team').removeClass('NewTeam');
@@ -25,7 +23,7 @@ function ClearQuestion() {
     $('.QuestionImage').attr('src', '');
 }
 
-socket.on('ReciveTeams', function(teams) {
+socket.on('ReciveTeams', function (teams) {
     ClearTeamsList();
     ClearQuestion();
     $('.TeamsContainer').html('<div class="row">\
@@ -48,13 +46,13 @@ socket.on('ReciveTeams', function(teams) {
         AddTeam(team)
 })
 
-socket.on('ReciveQuestion', function(question) {
+socket.on('ReciveQuestion', function (question) {
     ClearTeamsList();
     ClearQuestion();
     $('.QuestionText').text(question.QuestionText);
     $('.QuestionImage').attr('src', location.protocol + '//' + location.host + '/QuestionImage?QuestionId=' + question.QuestionId);
 });
 
-socket.on('UpdateStream', function() {
+socket.on('UpdateStream', function () {
     socket.emit('Update');
 })

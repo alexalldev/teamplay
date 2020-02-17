@@ -1,21 +1,112 @@
-@import url('https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300');
+@import url("https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300");
 
-section
-{
-	font-family: 'Open Sans Condensed', sans-serif;
+section {
+  font-family: "Open Sans Condensed", sans-serif;
 }
 
-.Info
-{
-	font-family: 'Open Sans Condensed', sans-serif;
+.Info {
+  font-family: "Open Sans Condensed", sans-serif;
 }
 
-* ::selection
-{
-	background-color: #99CCFF;
+* ::selection {
+  background-color: #99ccff;
 }
 
-a:hover
-{
-	color: red;
+a:hover {
+  color: red;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+.nav-item {
+  cursor: pointer;
+}
+
+.notifications-menu {
+  display: none;
+  height: 50%;
+  width: 10rem;
+  border: solid 1px #aaa;
+  position: absolute;
+  right: 0;
+  border-radius: 2px;
+  z-index: 2;
+  background: #fff;
+  overflow: auto;
+  top: 3rem;
+}
+
+.notifications-menu::-webkit-scrollbar {
+  width: 2px;
+}
+
+.notifications-menu::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.3);
+  -webkit-border-radius: 1px;
+  border-radius: 1px;
+}
+
+.notifications-menu::-webkit-scrollbar-thumb {
+  -webkit-border-radius: 1px;
+  border-radius: 1px;
+  background: #a8a8a8;
+  -webkit-box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.notifications-menu::-webkit-scrollbar-thumb:window-inactive {
+  background: #eee;
+}
+
+.nav-notification {
+  min-width: 95%;
+  min-height: 25%;
+  border: solid;
+  border-radius: 10px;
+  margin: 5%;
+}
+
+.Answered {
+  border-color: gray;
+  background-color: #eeeded;
+}
+
+.notAnswered {
+  background-color: white;
+  border: solid;
+}
+
+.notificationTimestamp {
+  color: gray;
+}
+
+.nav-col-50 {
+  width: 50%;
+}
+
+.navbar-toggler {
+  display: none;
+}
+
+.btnChangePassword {
+  cursor: pointer;
+}
+
+.btnCreate {
+  width: 98%;
+  height: 2.5rem;
+  border-radius: 100px !important;
+  display: inline-block;
+  color: whitesmoke;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 767px) {
+  .navbar-toggler {
+    display: block;
+  }
 }

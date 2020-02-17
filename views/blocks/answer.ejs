@@ -1,0 +1,17 @@
+<div class="col-md-12 text-center mb-2 answer answer-<%=answer.AnswerId%>">
+    <%if(isRoomCreator) {%>
+    Правильный ответ: <%=answer.AnswerText%>
+    <%} else {%>
+    <button answerid="<%=answer.AnswerId%>"
+        class="alert <%=usersFIOs.length > 0 ? 'alert-primary chosen-answer' : 'alert-info'%> answerButton"
+        onclick="chooseAnswer('answer-<%=answer.AnswerId%>')">
+        <%=answer.AnswerText%>
+    </button>
+    <div class="col-md-12 text-center mb-2 whoAnswered">
+        <%#=JSON.stringify(offerUsersFIOs)%>
+        <% usersFIOs.forEach(function(userFIO){ %>
+        <%=userFIO%>
+        <% }); %>
+    </div>
+    <%}%>
+</div>

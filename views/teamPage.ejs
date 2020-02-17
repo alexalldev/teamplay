@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>TeamPlay Home</title>
+    <link rel="stylesheet" href="/public/css/home.css">
+    <% include blocks/title %>
+</head>
+
+<body>
+    <% include blocks/loader %>
+    <% include blocks/header %>
+    <section class="app-container">
+        <div class="container">
+            <div class="row">
+                <%- include('blocks/navigation-area', {page:"teams"}) %>
+                <div class="container working-area mt-2">
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <% if(isMyTeam) {%>
+                            <span class="h1">Моя команда</span>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <span class='h1'><%=users.teamName%></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <% if(isMyTeam) {%>
+                            <button class="btn btn-outline-danger ml-2 mt-2 h1 btnLeaveTeamModal">Покинуть
+                                команду</button>
+                            <% } %>
+                            <% for(let i = 0; i < users.length; i++){ %>
+                            <% if (i === 0) users[i].isCoach = true; %>
+                            <%- include('blocks/teamPageUser', {user: users[i], amICoach}); %>
+                            <% }; %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <h2>Статистика игр</h2>
+                    <div style="width: 100%; height: 100%;">
+                        <!-- <canvas class="myChart"></canvas> -->
+                    </div>
+                </div>
+            </div>
+            <!-- The Modal -->
+            <div class="modal fade" id="leaveTeamModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+
+                        <!-- Modal Header -->
+                        <div class="modal-header">
+                            <% if (amICoach) { %>
+                            <% if (users.length > 1) {%>
+                            <h4 class="modal-title">Выберите преемника, который станет новым коучем команды</h4>
+                            <% } else { %>
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h4 class="modal-title">Команда будет удалена, потому что вы являетесь
+                                            единственным игроком</h4>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <span class="h5"><a href="/users">Пригласите</a> игроков и оставьте приемника
+                                            перед уходом из команды</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+                            <% } else { %>
+                            <h4 class="modal-title">Покинуть команду</h4>
+                            <% } %>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+
+                        <!-- Modal body -->
+                        <div class="modal-body">
+                            <form action="javascript:void(null)">
+                                <% if (users.length > 1 && amICoach) { %>
+                                <select class="form-control mb-2" id="SuccessorId" name="SuccessorId">
+                                    <% users.forEach(function(user){ %>
+                                    <% if (!user.isCoach) { %>
+                                    <option value="<%= user.userId %>"><%= user.FIO %></option>
+                                    <% } %>
+                                    <% }) %>
+                                </select>
+                                <% } %>
+                                <button class="btn btn-danger btnLeaveTeam">Покинуть команду</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+    <% include blocks/footer %>
+</body>
+<% include blocks/socket %>
+<script src="/public/js/animateCSS.js"></script>
+<script src="/public/js/listItemAction.js"></script>
+<script src="/public/js/home.js"></script>
+
+
+</html>

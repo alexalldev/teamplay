@@ -1,70 +1,153 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>TeamPlay Room</title>
-    <link rel="stylesheet" href="/public/css/ControlPanel/style.css">
-    <% include blocks/tittle %>
-  </head>
-  <body>
-		<% include blocks/loader %>
-		<% include blocks/header %>
-  	<section>
-			<div class="container">
-				<div class="row mb-4">
-					<div class="col-md-12 text-center">
-						<h1 class="h1">Выберите игру</h1>
-					</div>
-				</div>
-				<div class="row mb-4">
-					<div class="col-md-12 text-center GamesList">
-							<span class="h2 NullGames">Нет активных игр</span>
-					</div>
-				</div>
-			</div>
-			<div class="container mt-5">
-					<div class="row mb-2">
-						<div class="col-md-12 text-center">
-							<span class="h1">
-								<%= team.TeamName %>
-							</span>
-						</div>
-					</div>
-					<div class="row mb-2">
-							<div class="col-md-12 text-center">
-								<span class="h1">
-									<%= team.GroupName %>
-								</span>
-							</div>
-					</div>
-					<div class="row">
-							<div class="col-md-12 text-center">
-								<span class="h2">Игровой состав</span>
-								<table class="table table-hover">
-									<thead>
-										<th>Фамилия</th>
-										<th>Имя</th>
-										<th>Отчество</th>
-									</thead>
-									<tbody>
-										<%for (var player in players) {%>
-											<% if(players[player].Capitan == true){ %>
-												<tr class="shadow sm" title="Капитан">
-											<% } else{ %>  
-												<tr title="Игрок">
-										 <% } %>
-													<td><%= players[player].PlayerFamily %></td>
-													<td><%= players[player].PlayerName %></td>
-													<td><%= players[player].PlayerLastName %></td>
-											</tr>
-										<%}%>
-									</tbody>
-								</table>
-							</div>
-					</div>
-			</div>
-  	</section>
-  </body>
-  <script src="/socket.io/socket.io.js"></script>
-	<script src="/public/js/Room/index.js"></script>
+
+<head>
+  <meta charset="utf-8" />
+  <title>TeamPlay Room</title>
+  <link rel="stylesheet" href="/public/css/animate.css">
+  <link rel="stylesheet" href="/public/css/animated_timer.css">
+  <link rel="stylesheet" href="/public/css/room.css" />
+  <% include blocks/title %>
+</head>
+
+<body>
+  <% include blocks/loader %> <% include blocks/header %>
+  <section class="app-container <%=wasGameStarted%>">
+    <div class="organizer">
+      <span class="organizer-connection" connection="false">•</span>
+      <img class="user_organizer" src="/public/user_organizer.png" alt="" />
+      <span class="organizer_name"></span>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h1 id="RoomName"><%= room.RoomName %></h1>
+        </div>
+      </div>
+      <% if(roomPlayer.isRoomCreator == true) {%>
+      <div class="row">
+        <div class="col-md-12 text-center mb-2 roomActions">
+          <% if (!wasGameStarted) {%>
+          <button class="btn btn-success btnStartGame mr-sm-5 mr-2 mb-2" roomId="<%= room.RoomId %>">
+            <i class="fas fa-flag-checkered mr-2"></i><span class="h5">Начать игру</span>
+          </button>
+          <button class="btn btn-danger btnRemoveRoom mb-2" roomId="<%= room.RoomId %>">
+            <i class="fa fa-trash text-white mr-2"></i><span class="h5">Удалить комнату</span>
+          </button>
+          <% } else if (wasGameStarted) {%>
+          <button class="btn btn-danger btnFinishGame mb-2" onclick="FinishGame()" roomId="<%= room.RoomId %>">
+            <i class="fas fa-ban mr-1"></i><span class="h5">Завершить игру</span>
+          </button>
+          <%}%>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12 text-center"></div>
+        </div>
+        <%} else if (roomPlayer.isGroupCoach) { %>
+          <%if (!wasGameStarted) {%>
+          <div class="row">
+            <div class="col-md-12 text-center mb-2">
+              <%if (readyState == true) {%>
+              <button class="btn btn-danger btnGroupReady" teamId="<%= roomPlayer.Team_Id%>">
+                <i class="far fa-times-circle pr-1"></i>
+                <span>Отмена</span>
+              </button>
+            </div>
+          </div>
+          <%} else {%>
+          <button class="btn btn-success btnGroupReady" teamId="<%= roomPlayer.Team_Id %>">
+            <i class="far fa-check-circle pr-1"></i>
+            <span>Команда готова!</span>
+          </button>
+          <%}%> 
+          <%}%>
+          <%}%>
+          <div class="row">
+            <div class="col-md-12 text-center mb-2">
+              <div class="QuestionArea">
+          <%if (wasGameStarted) {%>
+          <% include blocks/question %>
+          <%}%>
+              </div>
+            </div>
+          </div>
+          <div class="answers-form">
+          <%if (wasGameStarted) { %>
+          <%if (isAnsweringTime) {%>
+          <% answers.forEach(function(answer){ %>
+          <%- include("blocks/answer", { answer, type, isRoomCreator: roomPlayer.isRoomCreator, usersFIOs: offersUsersFIOs.filter(offerUserFIO => offerUserFIO.Answer_Id == answer.AnswerId).map(correctOfferUserFIO => correctOfferUserFIO.UserFIO)  }) %>
+          <% }); %>
+          <%} else if(!isRoomCreator){%>
+          <div class="row">
+            <div class="col-md-12 text-center mb-2">
+              <%=isAnsweredCorrectly == 1 ? 'ВЕРНО' : 'НЕВЕРНО'%>
+            </div>
+          </div>
+          <%}%>
+          <%}%>
+        </div>
+        <table class="table table-hover">
+          <%if (wasGameStarted && !isAnsweringTime) {%>
+          <thead>
+            <th>
+              Команда
+            </th>
+            <th>
+              Очки
+            </th>
+          </thead>
+          <%}%>
+            <tbody class="table-teams-rating">
+          <%if (wasGameStarted && !isAnsweringTime) {%>
+          <% teamNamesPoints.forEach(function(teamNamePoints){ %>
+          <% if (teamNamePoints.TeamId == myTeamId) {%>
+          <% teamNamePoints.isMyTeam = true; %>
+          <%}%>
+          <%- include("blocks/resultsTableRow", { teamNamePoints })%>
+          <% }); %>
+          <%}%>
+        </tbody>
+          </table>
+          <%if (!wasGameStarted) {%>
+          <div class="row group-list text-center"></div>
+          <%}%>
+      </div>
+    </section>
+    <% include blocks/footer %>
+          <div class="Info">
+            <div class="animated_timer">
+              <h2 class="animated_timer_value"></h2>
+              <%if (isAnsweringTime && wasGameStarted) {%>
+              <svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+                <g>
+                  <title>Layer 1</title>
+                  <circle id="circle" class="circle_animation" r="25" cy="40" cx="40" stroke-width="5" stroke="#6fdb6f"
+                    fill="none" />
+                </g>
+              </svg>
+              <%}%>
+            </div>
+              <div class="Points">
+              <span class="h2 AddPoints text-success"></span>
+              <span class="h2 PointsCount">
+                <%if (!isRoomCreator && wasGameStarted) {%>
+              <%const myTeamNamePoints = teamNamesPoints.find(teamNamePoints => teamNamePoints.TeamId == myTeamId)%>
+              <%=myTeamNamePoints ? myTeamNamePoints.Points : 0%>
+              <%}%>
+              </span>
+              <div class="points-ticket">
+              <%if (!isRoomCreator && wasGameStarted) {%>
+              <i class="fas fa-ticket-alt"></i>
+              <%}%>
+                </div>
+              </div>
+
+            </div>
+</body>
+<% include blocks/socket %>
+              <script src="/public/js/animated_timer.js"></script>
+              <script src="/public/js/animateCSS.js"></script>
+              <script src="/public/js/room.js"></script>
+
 </html>

@@ -1,93 +1,234 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>TeamPlay HOME</title>
-    <% include blocks/tittle %>
-    <link rel="stylesheet" href="/public/css/ControlPanel/style.css">
-  </head>
-  <% include blocks/loader %>
-  <body>
-  	<section>
-  		<table style="width: 100vw; height: 100vh;">
-  			<tr>
-  				<td>
-  					<div class="container">
-  						<div class="row">
-  							<div class="col-md-12 text-center">
-                  <div class="row mb-2">
-                    <div class="col-md-12">
-                      <img src="public/images/logo.svg" width="100" height="100">
-                    </div>
-                  </div>
-                  <div class="row mb-2">
-                    <div class="col-md-12">
-                      <h1>TeamPlay</h1>
-                    </div>
-                  </div>
-                  <div class="row mb-2">
-                      <div class="col-md-12">
-                        <h2>Выберите команду</h2>
-                      </div>
-                    </div>
-  								<form class="StartForm" action="javascript:void(null)">
-  									<div class="form-group">
-                        <div class="container">
-                            <div class="card-columns">
-                                <% for(var team in teams) {%>
-                                  <div class="card Team" id="Team-<%= teams[team]['team.TeamId'] %>" title="Нажмите для входа">
-                                      <div class="card-body text-center">
-                                          <div class="row">
-                                              <div class="col-md-12">
-                                                  <span class="h1"><%= teams[team]['team.TeamName'] %></span>
-                                              </div>
-                                          </div>
-                                          <div class="row">
-                                              <div class="col-md-12">
-                                                  <span class="h2"><%= teams[team]['team.GroupName']%></span>
-                                              </div>
-                                          </div>
-                                          <div class="row">
-                                              <div class="col-md-12 text-center">
-                                                  <span class="h4"><u>Capitan: <%= teams[team].PlayerFamily
-                                                     + '.' + teams[team].PlayerName.charAt(0)
-                                                     + '.' + teams[team].PlayerLastName.charAt(0) %></u></span>
-                                              </div>
-                                          </div>
-                                      </div>
-                                  </div>
-                                <%} %>
-                            </div>
-                        </div>
-                    </div>
-  								</form>
-  							</div>
-  						</div>
+<head>
+  <meta charset="utf-8">
+  <meta name="keywords" content="Проведите викторину онлайн в TeamPlay!">
+  <meta name="description" content="Соберите команду и участвуйте в викторинах.">
+  <title>Teamplay</title>
+  <% include blocks/title %>
+  <link rel="stylesheet" href="/public/css/animated_loader.css">
+  <link rel="stylesheet" href="/public/css/index.css">
+  <link rel="stylesheet" href="/public/css/animate.css">
+</head>
+<% include blocks/loader %>
+<body>
+  <nav class="navbar bg-dark navbar-dark fixed">
+    <a class="navbar-brand" href="/">
+      <img src="/public/images/logo.svg" width="30" height="30" class="d-inline-block align-top" alt="">
+      <span>TeamPlay</span>
+    </a>
+    <div>
+      <span href="#signin" class="mr-1 signin text-white span-sign-in">Sign in</span>
+      <a href="#signup" class="btn btn-secondary">Sign up</a>
+    </div>
+  </nav>
+  <div class="block face">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Проведите онлайн викторину в TeamPlay!</h1>
+        </div>
+        <div class="col-md-12">
+          <div class="cta-first">
+            <a class="cta btn btn-danger" href="#signup">Провести виторину</a>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <h2 class="text-white promo-2">Или создайте свою команду и станьте коучем для своих игроков</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="block question">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h2>Почему это круто?</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="answers row">
+            <div class="answer col-md-3 text-left">
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <i class="fas fa-globe-americas fa-5x text-primary"></i>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <span>Потому что можно находиться где угодно во время игры</span>
+                </div>
+              </div>
             </div>
-  				</td>
-  			</tr>
-  		</table>
-  	</section>
-  </body>
-  <script>
-    $(document).ready(function() {
-      $('.Team').click(function () {
-        $.ajax({
-          type: "POST",
-          url: 'Start',
-          data: {TeamId: $(this).attr('id').split('Team-')[1]},
-          dataType: 'text',
-          success: function(data) {
-            if (data)
-              location.href = 'Room';
-            if (data == 'team_not_exists')
-              Swal("Ошибка", "Такой команды не существует или она была удалена", "error");
-          },
-          error: function(xhr, str) {
-            alert('Возникла ошибка: ' + xhr.responseCode);
-          }
-        });
-      });
-    });
-  </script>
+            <div class="answer col-md-3 text-left">
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <i class="fas fa-thumbs-up fa-5x text-success"></i>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <span>Можно классно провести время с друзьями</span>
+                </div>
+              </div>
+            </div>
+            <div class="answer col-md-3 text-left">
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <i class="fas fa-mobile-alt fa-5x text-secondary"></i>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <span>Быстро запускается на любом устройстве</span>
+                </div>
+              </div>
+            </div>
+            <div class="answer col-md-3 text-left">
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <i class="fas fa-user-tie fa-5x text-primary"></i>
+                </div>
+              </div>
+              <div class="row">
+                <div class="cl-md-12 text-center">
+                  <span>Можно развить навыки лидера и командной работы</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="block advantages">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h2>Для кого подойдёт?</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="answers row">
+            <div class="answer col-md-6 text-left">
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <i class="fas fa-chalkboard-teacher fa-5x text-success"></i>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <span>Для учителя. Создайте и проведите викторину, проверьте знания своей группы. Проведите урок
+                    по-новому</span>
+                </div>
+              </div>
+            </div>
+            <div class="answer col-md-6 text-left">
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <i class="fas fa-user-graduate fa-5x text-primary"></i>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <span>Для учащегося. Научитесь работать в команде, обсуждая решения онлайн. Станьте коучем своей
+                    команды и руководите процессом</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="block ">
+    <div class="container sign-up-container">
+      <div class="row">
+        <div class="col-md-12 sign-up">
+          <a name="signup"></a>
+          <form class="sign-up-form" action="javascript:void(null)">
+            <div class="form-group text-center">
+              <span class="h1 text-white">Регистрация</span>
+            </div>
+            <div class="form-group">
+              <span id="Info"></span>
+            </div>
+            <div class="form-group">
+              <input class="form-control name" name="fullname" id="sign-up-name" type="text" placeholder="ФИО" required>
+            </div>
+            <div class="form-group">
+              <input class="form-control email" name="email" id="sign-up-email" type="email" placeholder="Email"
+                required>
+            </div>
+            <div class="form-group">
+              <input class="form-control password" name="password" id="sign-up-password" type="password"
+                placeholder="Пароль" required>
+            </div>
+            <div class="form-group">
+              <input class="form-control password-onemore" name="confirmpassword" id="sign-up-password-onemore"
+                type="password" placeholder="Пароль еще раз" required>
+            </div>
+            <div class="form-group text-right">
+              <button type="submit" class="btn btn-danger">Вперед!</button>
+            </div>
+          </form>
+          <span class="h1 text-white SignUpInfo hidden">Успешная регистрация! Подтвердите аккаунт по почте</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="bg-dark">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 text-center">
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <span class="h4 text-white">Пиши нам!</span>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <span class="text-white">alexalldev@gmail.com</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 text-center">
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <span class="h4 text-white">Присоединяйся!</span>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <a class="cta btn btn-danger" href="#signup">Провести виторину</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <script src="/public/js/index.js"></script>
+  <script src="/public/js/form-validators.js"></script>
+</body>
+
 </html>
+
+
+<!--div class="col-md-6 sign-in">
+    <a name="signin"></a>
+    <form class="login-form" action="javascript:void(null)">
+      <div class="form-group text-center">
+        <span class="h1 text-white">Вход в TeamPlay</span>
+      </div>
+      <div class="form-group">
+        <input class="form-control email" id="sign-in-email" type="email" placeholder="Email" class="email">
+      </div>
+      <div class="form-group">
+        <input class="form-control password" id="sign-in-password" type="password" placeholder="Пароль" class="password">
+      </div>
+    </form>
+  </div-->

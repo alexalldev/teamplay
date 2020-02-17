@@ -1,0 +1,58 @@
+body {
+	background-color: beige;
+}
+
+.user_organizer {
+	width: 3rem;
+}
+
+.Player {
+	border: solid 1.75px #eee;
+}
+
+.main-menu > .btn {
+	width: 100%;
+	margin-bottom: 1rem;
+}
+
+.app-container {
+	padding-right: 0px !important;
+	padding-left: 0px !important;
+	margin-right: unset !important;
+	margin-left: unset !important;
+}
+
+.navbar {
+	position: fixed!important;
+    width: 100%!important;
+    z-index: 2;
+}
+
+.TeamCoach {
+	left: 50%;
+	position: relative;
+}
+
+.greetings-img {
+	width: 5rem;
+}
+
+.centred-table {
+	width: 100%;
+	height: 100%;
+	position: relative;
+}
+
+@media screen and (max-width: 400px) {
+	.main-menu > .btn {
+		margin-bottom: 5px;
+	}
+}
+
+.imgbord {
+	border: solid 2px rgba(4, 18, 48, 0.281);
+}
+
+.page-header {
+	border-color: #343a40!important;
+}
