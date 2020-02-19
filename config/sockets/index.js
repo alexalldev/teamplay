@@ -485,6 +485,6 @@ async function AddTeamsPlayers(teams, callback) {
   callback(teams);
 }
 
-server.listen(80);
+server.listen(process.env.PORT);
 
 module.exports = io;

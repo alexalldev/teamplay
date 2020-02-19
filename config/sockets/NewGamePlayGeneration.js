@@ -24,8 +24,8 @@ const GetTeamNamesPoints = require("../../modules/getTeamNamesPoints");
 const GetOffersUsersFIOs = require("../../modules/getOffersUsersFIOs");
 const GamePlayStructure = require("./GamePlayStructure");
 
-const ANSWERING_TIMERS = [];
-const CHECKING_TIMERS = [];
+const AnsweringTimers = {};
+const CheckingTimers = {};
 
 function NewGamePlayGeneration(socket, io) {
   const { session } = socket.request;
@@ -276,6 +276,13 @@ function NewGamePlayGeneration(socket, io) {
     }
     return roomTeamIdsAddedPoints;
   }
+
+  socket.on("EarlySwitchToCheckAnswers", (gamePlayId, roomId) => {
+    GamePlay.findOne({ where: { GamePlayId: gamePlayId } }).then(gamePlay => {
+      checkAnswers(gamePlay.CurrentQuestionId, roomId);
+    });
+  });
+
   function checkAnswers(question, roomId) {
     RoomTeam.findAll({ where: { Team_Id: { [Op.gt]: 0 }, Room_Id: roomId } })
       .then(async roomTeams => {
@@ -442,27 +449,23 @@ function NewGamePlayGeneration(socket, io) {
       .then(gamePlay => {
         if (gamePlay) {
           gamePlay.update({ isAnsweringTime: true });
-          const answeringTimer = {
-            timer: setTimeout(async function() {
-              gamePlay.update({ isAnsweringTime: false });
-              const checkingTimer = {
-                timer: setTimeout(async function() {
-                  const canDelete = await DeleteGamePlayQuestion(
-                    category,
-                    question
-                  );
-                  if (canDelete) {
-                    await NextRandomQuestion();
-                  }
-                }, 5 * 1000),
-                RoomId
-              };
-              checkAnswers(question, RoomId);
-              CHECKING_TIMERS.push(checkingTimer);
-            }, question.AnswerTime * 1000),
-            RoomId
-          };
-          ANSWERING_TIMERS.push(answeringTimer);
+          const answeringTimer = setTimeout(async function() {
+            gamePlay.update({ isAnsweringTime: false });
+            const checkingTimer = setTimeout(async function() {
+              const canDelete = await DeleteGamePlayQuestion(
+                category,
+                question
+              );
+              if (canDelete) {
+                await NextRandomQuestion();
+              }
+            }, 10 * 1000);
+            checkAnswers(question, RoomId);
+            CheckingTimers[RoomId] = checkingTimer;
+          }, question.AnswerTime * 1000);
+
+          AnsweringTimers[RoomId] = answeringTimer;
+          console.log(AnsweringTimers);
         }
       })
       .catch(err => console.log(err));
