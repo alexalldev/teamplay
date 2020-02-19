@@ -24,8 +24,8 @@ const GetTeamNamesPoints = require("../../modules/getTeamNamesPoints");
 const GetOffersUsersFIOs = require("../../modules/getOffersUsersFIOs");
 const GamePlayStructure = require("./GamePlayStructure");
 
-const AnsweringTimers = {};
-const CheckingTimers = {};
+const answeringTimers = {};
+const checkingTimers = {};
 
 function NewGamePlayGeneration(socket, io) {
   const { session } = socket.request;
@@ -461,11 +461,11 @@ function NewGamePlayGeneration(socket, io) {
               }
             }, 10 * 1000);
             checkAnswers(question, RoomId);
-            CheckingTimers[RoomId] = checkingTimer;
+            if (checkingTimers[RoomId]) clearTimeout(checkingTimers[RoomId]);
+            checkingTimers[RoomId] = checkingTimer;
           }, question.AnswerTime * 1000);
-
-          AnsweringTimers[RoomId] = answeringTimer;
-          console.log(AnsweringTimers);
+          if (answeringTimers[RoomId]) clearTimeout(answeringTimers[RoomId]);
+          answeringTimers[RoomId] = answeringTimer;
         }
       })
       .catch(err => console.log(err));
@@ -822,16 +822,10 @@ function NewGamePlayGeneration(socket, io) {
           where: { GamePlay_Id: gamePlayIds }
         })
           .then(gamePlayCategories => {
-            const answerTimers = ANSWERING_TIMERS.filter(
-              answeringTimer => answeringTimer.RoomId == session.roomId
-            );
-            if (answerTimers.length > 0)
-              answerTimers.map(answerTimer => clearTimeout(answerTimer.timer));
-            const checkTimers = CHECKING_TIMERS.filter(
-              checkingTimer => checkingTimer.RoomId == session.roomId
-            );
-            if (checkTimers.length > 0)
-              checkTimers.map(checkTimer => clearTimeout(checkTimer.timer));
+            if (answeringTimers[session.roomId])
+              clearTimeout(answeringTimers[session.roomId]);
+            if (checkingTimers[session.roomId])
+              clearTimeout(checkingTimers[session.roomId]);
             GamePlayQuestion.destroy({
               where: {
                 GamePlayCategory_Id: gamePlayCategories.map(
