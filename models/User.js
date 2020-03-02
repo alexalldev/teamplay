@@ -36,6 +36,11 @@ const User = db.define("user", {
   Team_Id: {
     type: Sequelize.INTEGER,
     defaultValue: 0
+  },
+  UserRegistrationTimestamp: {
+    type: "TIMESTAMP",
+    defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+    allowNull: false
   }
 });
 
