@@ -3,11 +3,11 @@
     <div class="row">
       <div class="col-md-12">
         <div class="row">
-            <div class="col-md-12 text-center">
-              <h1 class="h1 text-info"><%= game.GameName %></h1>
-            </div>
+          <div class="col-md-12 text-center">
+            <h1 class="h1 text-info"><%= game.GameName %></h1>
           </div>
-          <!-- <div class="row SettingsGroup mt-2">
+        </div>
+        <!-- <div class="row SettingsGroup mt-2">
             <div class="col-md-12 m-2 text-center">
               <span class="h4">Ограничение на выбор вопроса</span>
               <br><span class="Time_info_label"></span>
@@ -25,24 +25,27 @@
               </table>
             </div>
           </div> -->
-          <div class="row SettingsGroup mt-2">
-            <div class="col-md-12 text-center">
-              <div class="alert alert-primary text-center CreateCategory mt-2" data-toggle="modal"
-                data-target="#CreateCategoryModal">
-                <i class="fa fa-plus fa-2x text-secondary"></i><span class="h2"> Добавить категорию</span>
-              </div>
-              <div class="alert alert-success m-2 text-center CreateQuestion mt-2" onclick="OpenCreateQuestionModal();">
-                <i class="fa fa-plus fa-2x text-secondary"></i><span class="h2"> Добавить вопрос</span>
-              </div>
+        <% if (isQuizCreator) {%>
+        <div class="row SettingsGroup mt-2">
+          <div class="col-md-12 text-center">
+            <div class="alert alert-primary text-center CreateCategory mt-2" data-toggle="modal"
+              data-target="#CreateCategoryModal">
+              <i class="fa fa-plus fa-2x text-secondary"></i><span class="h2"> Добавить категорию</span>
+            </div>
+            <div class="alert alert-success m-2 text-center CreateQuestion mt-2" onclick="OpenCreateQuestionModal();">
+              <i class="fa fa-plus fa-2x text-secondary"></i><span class="h2"> Добавить вопрос</span>
             </div>
           </div>
-          <div class="row mt-2 SettingsGroup CategoriesList">
-    
-          </div>
+        </div>
+        <%}%>
+
+        <div class="row mt-2 SettingsGroup CategoriesList" gameTag="<%=game.GameTag%>">
+
       </div>
     </div>
   </div>
-
+  </div>
+  <% if (isQuizCreator) {%>
   <div class="modal fade" id="CreateCategoryModal">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -68,7 +71,6 @@
       </div>
     </div>
   </div>
-
   <div class="modal fade" id="CreateQuestionModal">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -89,8 +91,8 @@
               </select>
             </div>
             <div class="form-group">
-              <input type="text" class="form-control" name="QuestionText" id="QuestionText"
-                placeholder="Текст вопроса" required="">
+              <input type="text" class="form-control" name="QuestionText" id="QuestionText" placeholder="Текст вопроса"
+                required="">
             </div>
             <div class="form-group">
               <input type="number" class="form-control" name="QuestionCost" id="QuestionCost" min="0" step="10"
@@ -114,7 +116,6 @@
       </div>
     </div>
   </div>
-
   <div class="modal fade" id="EditModal">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -140,4 +141,6 @@
       </div>
     </div>
   </div>
+  <%}%>
+
 </section>

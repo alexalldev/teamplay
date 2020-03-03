@@ -16,7 +16,6 @@ const RoomPlayers = require("../models/RoomPlayer");
 
 router.get("/home", app.protect, function(req, res) {
   Game.findAll({
-    where: { QuizCreatorId: req.session.passport.user },
     raw: true
   })
     .then(async games => {
@@ -26,6 +25,7 @@ router.get("/home", app.protect, function(req, res) {
         ).getMonth()}.${new Date(game.Timestamp).getFullYear()} ${new Date(
           game.Timestamp
         ).getHours()}:${new Date(game.Timestamp).getMinutes()}`;
+        game.isQuizCreator = req.session.passport.user === game.QuizCreatorId;
         await Category.findAll({
           where: { Game_Id: game.GameId },
           raw: true
@@ -48,7 +48,10 @@ router.get("/home", app.protect, function(req, res) {
           }
         });
       }
-      res.render("view", { games, page: "home" });
+      res.render("view", {
+        games,
+        page: "home"
+      });
     })
     .catch(err => console.log(err));
 });

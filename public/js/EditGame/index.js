@@ -123,9 +123,10 @@ $(document).ready(function() {
                 "src",
                 `${location.protocol}//${location.host}/QuestionImage?QuestionId=${id}`
               );
-              $(`.DeleteQuestionImageContainer-${id}`).html(`<button class="btn btn-outline-secondary btnDeleteQuestionImage" onclick="RemoveQuestionImage(${id})"><i class="fa fa-trash"></i></button>`);
-            }
-            else {
+              $(`.DeleteQuestionImageContainer-${id}`).html(
+                `<button class="btn btn-outline-secondary btnDeleteQuestionImage" onclick="RemoveQuestionImage(${id})"><i class="fa fa-trash"></i></button>`
+              );
+            } else {
               $(`.DeleteQuestionImageContainer-${id}`).html(``);
             }
             $(`.QuestionText-${id}`).text($(".EditQuestionText").val());
@@ -140,10 +141,7 @@ $(document).ready(function() {
               "questioncost",
               $(".EditQuestionCost").val()
             );
-            $(`.Question-${id}`).attr(
-              "answertime",
-              $(".EditAnswerTime").val()
-            );
+            $(`.Question-${id}`).attr("answertime", $(".EditAnswerTime").val());
 
             $("#EditModal").modal("hide");
           }
@@ -211,7 +209,7 @@ function OpenCreateQuestionModal() {
   $("#CreateQuestionModal").modal();
 }
 
-function AddCategory(category) {
+function AddCategory(category, isQuizCreator) {
   // Добавить блок категории
   $(".CategoriesList").html(
     `${$(
@@ -228,13 +226,13 @@ function AddCategory(category) {
     }">\
                     <table style="width: 100%">\
                         <tr>\
-                            <td align="left">\
-                            <i class="fa fa-trash fa-2x text-secondary" onclick="RemoveCategory(${
-                              category.CategoryId
-                            })"></i>\
-                            <i class="fa fa-edit fa-2x text-secondary" onclick="Edit(1, ${
-                              category.CategoryId
-                            })"></i>\
+                        ${
+                          isQuizCreator
+                            ? `<td align="left">\
+<i class="fa fa-trash fa-2x text-secondary" onclick="RemoveCategory(${category.CategoryId})"></i>\
+<i class="fa fa-edit fa-2x text-secondary" onclick="Edit(1, ${category.CategoryId})"></i>`
+                            : ``
+                        }
                             </td>\
                             <td align="right"><span class="h5">Category: </span><span class="h2 CategoryName-${
                               category.CategoryId
@@ -250,28 +248,32 @@ function AddCategory(category) {
   $("#CreateCategoryModal").modal("hide");
 }
 
-function AddQuestion(question) {
+function AddQuestion(question, isQuizCreator) {
   // Добавить блок вопроса в нужную категорию
   $(`.QuestionsList-${question.Category_Id}`).append(
     `\
     <div class="QuestionsContainer-${question.QuestionId}">\
         <div class="alert alert-secondary text-center Question Question-${
           question.QuestionId
-        }" onclick="OpenQuestion(${question.QuestionId})" ImgSrc="${
+        }" onclick="OpenQuestion(${
+      question.QuestionId
+    }, ${isQuizCreator})" ImgSrc="${
       question.QuestionImage ? question.QuestionImage : "/QuestionImage"
-    }" HasImage="${question.hasImage}" QuestionText="${question.QuestionText}" QuestionCost="${
-      question.QuestionCost
-    } " AnswerTime="${question.AnswerTime}">\
+    }" HasImage="${question.hasImage}" QuestionText="${
+      question.QuestionText
+    }" QuestionCost="${question.QuestionCost} " AnswerTime="${
+      question.AnswerTime
+    }">\
         <table style="width: 100%">\
             <tr>\
-                <td align="left">\
-                <i class="fa fa-trash fa-2x text-secondary" onclick="RemoveQuestion(${
-                  question.QuestionId
-                })"></i>\
-                <i class="fa fa-edit fa-2x text-secondary" onclick="Edit(2, ${
-                  question.QuestionId
-                })"></i>\
-                </td>\
+            ${
+              isQuizCreator
+                ? `<td align="left">\
+              <i class="fa fa-trash fa-2x text-secondary" onclick="RemoveQuestion(${question.QuestionId})"></i>\
+              <i class="fa fa-edit fa-2x text-secondary" onclick="Edit(2, ${question.QuestionId})"></i>\
+              </td>`
+                : ``
+            }
                 <td><span class="h2 QuestionText-${question.QuestionId}">${
       question.QuestionText
     }</span></td>\
@@ -290,37 +292,45 @@ function AddQuestion(question) {
   $("#CreateQuestionModal").modal("hide");
 }
 
-function AddAnswer(answer) {
+function AddAnswer(answer, isQuizCreator) {
   // Добавить блок ответа в нужную категорию
   $(`.AnswersList-${answer.Question_Id}`).append(
     `<div class="row Answer Answer-${answer.AnswerId}">\
         <div class="col-md-12">\
             <table style="width: 100%">\
                 <tr>\
-                <td><i class="fa fa-trash fa-2x pointer text-danger pointer" onclick="RemoveAnswer(${
-                  answer.AnswerId
-                })"></i></td>\
-                    <td><input type="text" class="form-control m-2 AnswerText AnswerText-${
-                      answer.AnswerId
-                    }" oninput="UpdateAnswer(${
+                ${
+                  isQuizCreator
+                    ? `                <td><i class="fa fa-trash fa-2x pointer text-danger pointer" onclick="RemoveAnswer(${answer.AnswerId})"></i></td>`
+                    : ``
+                }
+                    <td><input type="text" ${
+                      isQuizCreator ? "" : "readonly"
+                    } class="form-control m-2 AnswerText AnswerText-${
+      answer.AnswerId
+    }" oninput="UpdateAnswer(${
       answer.AnswerId
     }, $(this).val(), $('.AnswerCorrect-${
       answer.AnswerId
     }').prop('checked'));" value="${answer.AnswerText}"></td>\
-                    <td>\
-                        <div class="d-flex align-items-center justify-content-center h-1">\
-                            <label class="Checkcontainer text-center mb-4 ml-1">\
-                                <input class="ExistCheck AnswerCorrect-${
-                                  answer.AnswerId
-                                }" type="checkbox" ${
-      answer.Correct ? "checked" : ""
-    } onchange="UpdateAnswer(${answer.AnswerId}, $('.AnswerText-${
-      answer.AnswerId
-    }').val(), $(this).prop('checked'));">\
-                                <span class="checkmark"></span>\
-                            </label>\
-                        </div>\
-                    </td>\
+    ${
+      isQuizCreator
+        ? `                    <td>\
+      <div class="d-flex align-items-center justify-content-center h-1">\
+          <label class="Checkcontainer text-center mb-4 ml-1">\
+              <input class="ExistCheck AnswerCorrect-${
+                answer.AnswerId
+              }" type="checkbox" ${
+            answer.Correct ? "checked" : ""
+          } onchange="UpdateAnswer(${answer.AnswerId}, $('.AnswerText-${
+            answer.AnswerId
+          }').val(), $(this).prop('checked'));">\
+              <span class="checkmark"></span>\
+          </label>\
+      </div>\
+  </td>`
+        : ``
+    }
                 </tr>\
             </table>\
         </div>\
@@ -346,26 +356,34 @@ function OpenCategory(categoryId) {
   }
 }
 
-function OpenQuestion(questionId) {
+function OpenQuestion(questionId, isQuizCreator) {
   // Сработает один раз для одного вопроса
   if (!$(".AnswersList").is(`.AnswersList-${questionId}`)) {
     const ImgSrc = $(`.Question-${questionId}`).attr("ImgSrc");
     const HasImage = $(`.Question-${questionId}`).attr("hasImage");
     $(`.QuestionsContainer-${questionId}`).append(
-      `<div class="collapse m-2 AnswersList AnswersList-${questionId}">\
-            <div class="row mb-2">\
+      `<div class="collapse AnswersList AnswersList-${questionId}">\
+            ${
+              isQuizCreator
+                ? `<div class="row">\
                 <div class="col-md-12 text-center">\
                   <div class="DeleteQuestionImageContainer-${questionId}">
-                    ${HasImage == 'true' ? `<button class="btn btn-outline-secondary btnDeleteQuestionImage" onclick="RemoveQuestionImage(${questionId})"><i class="fa fa-trash"></i></button>` : ''}
+                    ${
+                      HasImage == "true"
+                        ? `<button class="btn btn-outline-secondary btnDeleteQuestionImage" onclick="RemoveQuestionImage(${questionId})"><i class="fa fa-trash"></i></button>`
+                        : ""
+                    }
                   </div>
                     <img src="${ImgSrc}" class="QuestionImage QuestionImage-${questionId}" alt="">\
                 </div>\
             </div>\
-            <div class="row">\
-                <div class="col-md-12 text-center">\
-                    <button class="btn btn-outline-success" onclick="CreateAnswer(${questionId})">Добавить ответ</button>\
-                </div>\
+                <div class="row mt-2">\
+            <div class="col-md-12 text-center">\
+                <button class="btn btn-outline-success" onclick="CreateAnswer(${questionId})">Добавить ответ</button>\
             </div>\
+        </div>`
+                : ``
+            }
         </div>`
     );
     Load.Answers(questionId); // Загрузка вопросов категории
@@ -495,7 +513,7 @@ function RemoveQuestionImage(questionId) {
         dataType: "text",
         success(data) {
           if (data == "true") {
-            $(`.QuestionImage-${questionId}`).attr('src', '');
+            $(`.QuestionImage-${questionId}`).attr("src", "");
             $(`.DeleteQuestionImageContainer-${questionId}`).html(``);
           }
         },
@@ -598,32 +616,35 @@ function LoadThings(loadType, categoryId = "", questionId = "") {
     url: "Load",
     data: {
       LoadType: loadType,
+      GameTag: $(".CategoriesList").attr("gameTag"),
       CategoryId: categoryId,
       QuestionId: questionId
     },
-    dataType: "text",
-    success(data) {
-      if (data !== "null") {
-        const res = JSON.parse(data);
+    dataType: "json",
+    success(res) {
+      if (res) {
         if (res.name)
           Swal("Ошибка", `Данные не были получены: ${res.name}`, "error");
         else {
           if (loadType == 1) {
             // LoadCategories To CategoriesList
-            for (let i = 0; i < res.length; i++) {
-              AddCategory(res[i]);
+            const { categories, isQuizCreator } = res;
+            for (let i = 0; i < categories.length; i++) {
+              AddCategory(categories[i], isQuizCreator);
             }
           }
           if (loadType == 2) {
             // LoadQuestions To QuestionsList
-            for (let i = 0; i < res.length; i++) {
-              AddQuestion(res[i]);
+            const { questions, isQuizCreator } = res;
+            for (let i = 0; i < questions.length; i++) {
+              AddQuestion(questions[i], isQuizCreator);
             }
             $(`.QuestionsList-${categoryId}`).collapse();
           }
           if (loadType == 3) {
-            for (let i = 0; i < res.length; i++) {
-              AddAnswer(res[i]);
+            const { answers, isQuizCreator } = res;
+            for (let i = 0; i < answers.length; i++) {
+              AddAnswer(answers[i], isQuizCreator);
             }
             $(`.AnswersList-${questionId}`).collapse();
           }
